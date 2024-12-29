@@ -1,0 +1,20 @@
+ # Build option
+option('build_fmt', type : 'combo',
+  choices : ['auto', 'fmtlib', 'stdformat'] ,
+  value : 'auto',
+  description : 'format library'
+)
+
+option('build_embed_ignore', type : 'boolean',
+  value : false,
+  description : 'embed default ignore'
+)
+
+option('gir_dir', type : 'string',
+  description : 'extra GIR search directory'
+)
+
+option('link_stdfs', type : 'boolean',
+  value : false,
+  description : 'link to stdc++fs'
+)

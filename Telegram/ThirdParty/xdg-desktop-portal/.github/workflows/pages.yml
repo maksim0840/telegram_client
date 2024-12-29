@@ -1,0 +1,94 @@
+name: Documentation & Website
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    container:
+      image: ubuntu:22.04
+    steps:
+      - name: Install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update
+          apt-get upgrade -y
+          apt-get install -y --no-install-recommends \
+            desktop-file-utils \
+            fuse3 \
+            gcc \
+            gettext \
+            gnome-desktop-testing \
+            gtk-doc-tools \
+            libcap2-bin \
+            libflatpak-dev \
+            libfontconfig1-dev \
+            libfuse3-dev \
+            libgdk-pixbuf-2.0-dev \
+            libgeoclue-2-dev \
+            libglib2.0-dev \
+            libjson-glib-dev \
+            libpipewire-0.3-dev \
+            libportal-dev \
+            libsystemd-dev \
+            llvm \
+            meson \
+            python3-gi \
+            shared-mime-info
+
+      - name: Install dependencies for doc builds
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get install -y --no-install-recommends \
+            ca-certificates \
+            git \
+            xmlto
+
+      - name: Check out xdg-desktop-portal
+        uses: actions/checkout@v3
+
+      - name: Build docs
+        run: |
+          meson setup builddir -Ddocbook-docs=enabled
+          meson compile -C builddir
+
+      - name: Build website
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./doc/website
+          destination: ./_site
+
+      - name: Prepare docs
+        working-directory: builddir/doc
+        run: |
+          mkdir ../../_site/docs/
+          mv portal-docs.html ../../_site/docs/index.html
+          mv redirect.html ../../_site/docs/portal-docs.html
+          mv docbook.css ../../_site/docs/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+
+  # Deployment job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2

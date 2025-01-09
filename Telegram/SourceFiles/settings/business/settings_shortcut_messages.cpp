@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "settings/business/settings_shortcut_messages.h"
 
 #include "api/api_editing.h"
@@ -1185,6 +1186,7 @@ Api::SendAction ShortcutMessages::prepareSendAction(
 }
 
 void ShortcutMessages::send() {
+	std::cout << "settings_shortcut_messages.cpp send()\n";
 	if (_composeControls->getTextWithAppliedMarkdown().text.isEmpty()) {
 		return;
 	}
@@ -1215,6 +1217,7 @@ void ShortcutMessages::send(Api::SendOptions options) {
 	_cornerButtons.clearReplyReturns();
 
 	auto message = Api::MessageToSend(prepareSendAction(options));
+	std::cout << "settings_shortcut_messages.cpp send(options)\n";
 	message.textWithTags = _composeControls->getTextWithAppliedMarkdown();
 	message.webPage = _composeControls->webPageDraft();
 
@@ -1346,7 +1349,7 @@ bool ShortcutMessages::confirmSendingFiles(
 	} else if (showSendingFilesError(list)) {
 		return false;
 	}
-
+	std::cout << "settings_shortcut_messages.cpp confirmSendingFiles\n";
 	auto box = Box<SendFilesBox>(
 		_controller,
 		std::move(list),

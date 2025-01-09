@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "history/view/controls/history_view_compose_controls.h"
 
 #include "base/call_delayed.h"
@@ -1242,6 +1243,7 @@ void ComposeControls::showForGrab() {
 }
 
 TextWithTags ComposeControls::getTextWithAppliedMarkdown() const {
+	std::cout << "history_view_compose_controls.cpp getTextWithAppliedMarkdown\n";
 	return _field->getTextWithAppliedMarkdown();
 }
 
@@ -3364,6 +3366,7 @@ Fn<void()> ComposeControls::restoreTextCallback(
 	const auto cursor = _field->textCursor();
 	const auto position = cursor.position();
 	const auto anchor = cursor.anchor();
+	std::cout << "history_view_compose_controls.cpp restoreTextCallback\n";
 	const auto text = getTextWithAppliedMarkdown();
 
 	_field->setTextWithTags({});
@@ -3390,6 +3393,7 @@ TextWithEntities ComposeControls::prepareTextForEditMsg() const {
 	if (!_history) {
 		return {};
 	}
+	std::cout << "history_view_compose_controls.cpp prepareTextForEditMsg\n";
 	const auto textWithTags = getTextWithAppliedMarkdown();
 	const auto prepareFlags = Ui::ItemTextOptions(
 		_history,

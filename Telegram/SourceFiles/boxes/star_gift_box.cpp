@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "boxes/star_gift_box.h"
 
 #include "base/event_filter.h"
@@ -947,6 +948,7 @@ void SendGiftBox(
 		limit);
 	text->changes() | rpl::start_with_next([=] {
 		auto now = state->details.current();
+		std::cout << "star_gift_box.cpp SendGiftBox\n";
 		auto textWithTags = text->getTextWithAppliedMarkdown();
 		now.text = TextWithEntities{
 			std::move(textWithTags.text),

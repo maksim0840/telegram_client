@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "boxes/edit_caption_box.h"
 
 #include "api/api_editing.h"
@@ -629,7 +630,7 @@ void EditCaptionBox::setInitialText() {
 	auto cursor = _field->textCursor();
 	cursor.movePosition(QTextCursor::End);
 	_field->setTextCursor(cursor);
-
+	std::cout << "edit_caption_box.cpp setInitialText\n";
 	_checkChangedTimer.setCallback([=] {
 		if (_field->getTextWithAppliedMarkdown() == _initialText
 			&& _preparedList.files.empty()) {
@@ -987,7 +988,7 @@ void EditCaptionBox::save() {
 		update();
 		return;
 	}
-
+	std::cout << "edit_caption_box.cpp save1\n";
 	const auto textWithTags = _field->getTextWithAppliedMarkdown();
 	if (!validateLength(textWithTags.text)) {
 		return;
@@ -1018,7 +1019,7 @@ void EditCaptionBox::save() {
 			_preparedList.files.front().spoiler = false;
 			applyChanges();
 		}
-
+		std::cout << "edit_caption_box.cpp save2\n";
 		_controller->session().api().editMedia(
 			std::move(_preparedList),
 			(_isPhoto && !_asFile && CanBeCompressed(_albumType))

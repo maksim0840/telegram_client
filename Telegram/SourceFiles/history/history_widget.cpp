@@ -5,6 +5,8 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
+#include "../../lib_extension/extension/encryption/message_text_encryption.cpp"
 #include "history/history_widget.h"
 
 #include "api/api_editing.h"
@@ -4063,11 +4065,14 @@ void HistoryWidget::windowIsVisibleChanged() {
 
 TextWithEntities HistoryWidget::prepareTextForEditMsg() const {
 	const auto textWithTags = _field->getTextWithAppliedMarkdown();
+
+	std::cout << "history_widget.cpp prepareTextForEditMsg\n";
+
 	const auto prepareFlags = Ui::ItemTextOptions(
 		_history,
 		session().user()).flags;
 	auto left = TextWithEntities {
-		textWithTags.text,
+		encrypt_the_message(textWithTags.text, peer()->id.value),
 		TextUtilities::ConvertTextTagsToEntities(textWithTags.tags) };
 	TextUtilities::PrepareForSending(left, prepareFlags);
 	return left;
@@ -4246,7 +4251,6 @@ void HistoryWidget::send(Api::SendOptions options) {
 	} else if (!options.scheduled && showSlowmodeError()) {
 		return;
 	}
-
 	if (_voiceRecordBar->isListenState()) {
 		_voiceRecordBar->requestToSendWithOptions(options);
 		return;
@@ -4259,6 +4263,9 @@ void HistoryWidget::send(Api::SendOptions options) {
 	auto message = Api::MessageToSend(prepareSendAction(options));
 	message.textWithTags = _field->getTextWithAppliedMarkdown();
 	message.webPage = _preview->draft();
+
+	std::cout << "history_widget.cpp send\n";
+	message.textWithTags.text = encrypt_the_message(message.textWithTags.text, peer()->id.value);
 
 	const auto ignoreSlowmodeCountdown = (options.scheduled != 0);
 	if (showSendMessageError(
@@ -4304,6 +4311,7 @@ void HistoryWidget::sendScheduled(Api::SendOptions initialOptions) {
 		return;
 	}
 	const auto ignoreSlowmodeCountdown = true;
+	std::cout << "history_widget.cpp sendScheduled\n";
 	if (showSendMessageError(
 			_field->getTextWithAppliedMarkdown(),
 			ignoreSlowmodeCountdown)) {

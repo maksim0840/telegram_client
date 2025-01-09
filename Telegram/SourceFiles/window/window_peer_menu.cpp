@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "window/window_peer_menu.h"
 
 #include "menu/menu_check_item.h"
@@ -2317,6 +2318,7 @@ QPointer<Ui::BoxContent> ShowForwardMessagesBox(
 
 	const auto submit = [=](Api::SendOptions options) {
 		const auto peers = state->box->collectSelectedRows();
+		std::cout << "window_peer_menu.cpp submit\n";
 		send(
 			ranges::views::all(
 				peers

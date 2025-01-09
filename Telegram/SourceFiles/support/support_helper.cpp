@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "support/support_helper.h"
 
 #include "dialogs/dialogs_key.h"
@@ -95,7 +96,7 @@ EditInfoBox::EditInfoBox(
 
 void EditInfoBox::prepare() {
 	setTitle(rpl::single(u"Edit support information"_q)); // #TODO hard_lang
-
+	std::cout << "support_helper.cpp prepare\n";
 	const auto save = [=] {
 		const auto done = crl::guard(this, [=](bool success) {
 			if (success) {

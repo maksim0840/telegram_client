@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "boxes/share_box.h"
 
 #include "api/api_premium.h"
@@ -645,6 +646,7 @@ void ShareBox::innerSelectedChanged(
 }
 
 void ShareBox::submit(Api::SendOptions options) {
+	std::cout << "share_box.cpp submit\n";
 	if (const auto onstack = _descriptor.submitCallback) {
 		const auto forwardOptions = (_forwardOptions.captionsCount
 			&& _forwardOptions.dropCaptions)

@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "window/notifications_manager_default.h"
 
 #include "platform/platform_notifications_manager.h"
@@ -1122,7 +1123,7 @@ void Notification::showReplyField() {
 
 void Notification::sendReply() {
 	if (!_history) return;
-
+	std::cout << "notifications_manager_default.cpp sendReply\n";
 	manager()->notificationReplied(
 		myId(),
 		_replyArea->getTextWithAppliedMarkdown());

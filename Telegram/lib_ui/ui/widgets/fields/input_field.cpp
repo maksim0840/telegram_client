@@ -4,6 +4,7 @@
 // For license and copyright information please follow this link:
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
+#include <iostream>
 #include "ui/widgets/fields/input_field.h"
 
 #include "ui/text/text.h"
@@ -3768,6 +3769,9 @@ TextWithTags InputField::getTextWithTagsPart(int start, int end) const {
 }
 
 TextWithTags InputField::getTextWithAppliedMarkdown() const {
+
+	std::cout << "--getTextWithAppliedMarkdown";
+	
 	if (_markdownEnabledState.disabled() || _lastMarkdownTags.empty()) {
 		return getTextWithTags();
 	}

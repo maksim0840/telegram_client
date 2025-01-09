@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "history/view/history_view_replies_section.h"
 
 #include "history/view/controls/history_view_compose_controls.h"
@@ -1018,6 +1019,7 @@ bool RepliesWidget::confirmSendingFiles(
 		return false;
 	}
 
+	std::cout << "history_view_replies_section.cpp confirmSendingFiles\n";
 	auto box = Box<SendFilesBox>(
 		controller(),
 		std::move(list),
@@ -1214,6 +1216,7 @@ Api::SendAction RepliesWidget::prepareSendAction(
 }
 
 void RepliesWidget::send() {
+	std::cout << "history_view_replies_section.cpp send()\n";
 	if (_composeControls->getTextWithAppliedMarkdown().text.isEmpty()) {
 		return;
 	}
@@ -1244,6 +1247,7 @@ void RepliesWidget::send(Api::SendOptions options) {
 	}
 
 	auto message = Api::MessageToSend(prepareSendAction(options));
+	std::cout << "history_view_replies_section.cpp send(options)\n";
 	message.textWithTags = _composeControls->getTextWithAppliedMarkdown();
 	message.webPage = _composeControls->webPageDraft();
 

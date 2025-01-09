@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "media/stories/media_stories_reply.h"
 
 #include "api/api_common.h"
@@ -205,6 +206,7 @@ void ReplyArea::send(Api::SendOptions options) {
 	const auto webPageDraft = _controls->webPageDraft();
 
 	auto message = Api::MessageToSend(prepareSendAction(options));
+	std::cout << "media_stories_reply.cpp send(options)\n";
 	message.textWithTags = _controls->getTextWithAppliedMarkdown();
 	message.webPage = webPageDraft;
 
@@ -527,6 +529,7 @@ bool ReplyArea::confirmSendingFiles(
 	auto confirmed = [=](auto &&...args) {
 		sendingFilesConfirmed(std::forward<decltype(args)>(args)...);
 	};
+	std::cout << "media_stories_reply.cpp confirmSendingFiles\n";
 	show->show(Box<SendFilesBox>(SendFilesBoxDescriptor{
 		.show = show,
 		.list = std::move(list),

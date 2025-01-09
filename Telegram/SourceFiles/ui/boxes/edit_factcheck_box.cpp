@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "ui/boxes/edit_factcheck_box.h"
 
 #include "lang/lang_keys.h"
@@ -64,6 +65,7 @@ void EditFactcheckBox(
 				}
 			});
 		} else {
+			std::cout << "edit_factcheck_box.cpp EditFactcheckBox\n";
 			box->addButton(tr::lng_settings_save(), [=] {
 				auto result = field->getTextWithAppliedMarkdown();
 				if (result.text.size() > limit) {

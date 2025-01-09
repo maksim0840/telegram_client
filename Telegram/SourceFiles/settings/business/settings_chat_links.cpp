@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "settings/business/settings_chat_links.h"
 
 #include "api/api_chat_links.h"
@@ -419,6 +420,7 @@ void EditChatLinkBox(
 	const auto save = [=] {
 		auto copy = data;
 		copy.title = title->getLastText().trimmed();
+		std::cout << "settings_chat_links.cpp EditChatLinkBox1\n";
 		auto textWithTags = field->getTextWithAppliedMarkdown();
 		copy.message = TextWithEntities{
 			textWithTags.text,
@@ -480,6 +482,7 @@ void EditChatLinkBox(
 	field->setTextCursor(cursor);
 
 	const auto checkChangedTimer = lifetime.make_state<base::Timer>([=] {
+		std::cout << "settings_chat_links.cpp EditChatLinkBox2\n";
 		if (field->getTextWithAppliedMarkdown() == initial) {
 			box->setCloseByOutsideClick(true);
 		}

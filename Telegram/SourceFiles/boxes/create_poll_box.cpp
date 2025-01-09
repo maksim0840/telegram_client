@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "boxes/create_poll_box.h"
 
 #include "base/call_delayed.h"
@@ -1145,6 +1146,7 @@ object_ptr<Ui::RpWidget> CreatePollBox::setupContent() {
 			textWithTags.tags);
 		TextUtilities::Trim(result.question);
 		result.answers = options->toPollAnswers();
+		std::cout << "create_poll_box.cpp setupContent\n";
 		const auto solutionWithTags = quiz->checked()
 			? solution->getTextWithAppliedMarkdown()
 			: TextWithTags();

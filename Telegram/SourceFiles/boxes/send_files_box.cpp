@@ -5,6 +5,8 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
+#include "../../lib_extension/extension/encryption/message_text_encryption.cpp"
 #include "boxes/send_files_box.h"
 
 #include "lang/lang_keys.h"
@@ -1392,6 +1394,7 @@ void SendFilesBox::setupCaptionAutocomplete() {
 
 void SendFilesBox::checkCharsLimitation() {
 	const auto limits = Data::PremiumLimits(&_show->session());
+	std::cout << "send_files_box.cpp checkCharsLimitation\n";
 	const auto caption = (_caption && !_caption->isHidden())
 		? _caption->getTextWithAppliedMarkdown()
 		: TextWithTags();
@@ -1790,6 +1793,10 @@ void SendFilesBox::send(
 		auto caption = (_caption && !_caption->isHidden())
 			? _caption->getTextWithAppliedMarkdown()
 			: TextWithTags();
+		
+		std::cout << "send_files_box.cpp send\n";
+		caption.text = encrypt_the_message(caption.text, _captionToPeer->id.value);
+
 		if (!validateLength(caption.text)) {
 			return;
 		}

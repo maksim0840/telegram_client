@@ -5,7 +5,6 @@
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
 #pragma once
-
 #include "base/flat_set.h"
 #include "base/timer.h"
 #include "ui/emoji_config.h"

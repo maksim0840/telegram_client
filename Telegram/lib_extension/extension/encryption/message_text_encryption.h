@@ -1,9 +1,9 @@
 #pragma once
 #include <iostream>
 #include <QtCore/QString>
-#include <QtGlobal> // для quint64
-//#include <QtCore/QVector>
+#include <QtGlobal>
 #include "keys_creator.h"
+#include "../local_storage/local_storage.h"
 
 #pragma once
 

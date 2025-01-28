@@ -21,4 +21,5 @@ PUBLIC
     desktop-app::external_qt_static_plugins
     desktop-app::external_qt
     desktop-app::external_openssl
+    extension_local_storage
 )

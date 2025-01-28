@@ -16,7 +16,11 @@ PUBLIC
 
 target_link_libraries(extension_local_storage
 PUBLIC
-    desktop-app::external_qt_static_plugins
-    desktop-app::external_qt
-    desktop-app::external_openssl
+    SQLiteCpp
+    sqlite3
+    pthread
+    dl
 )
+
+# Путь до папки с базами данных (определение макроса)
+target_compile_definitions(extension_local_storage PRIVATE DB_PATH_DEFINED_BY_CMAKELISTS="${CMAKE_CURRENT_SOURCE_DIR}/../../db")

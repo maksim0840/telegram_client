@@ -7,7 +7,7 @@ std::string DataBase::get_name() {
 }
 
 std::string DataBase::get_filepath() {
-    return DB_RELATIVE_PATH + name_ + DB_FILE_FORMAT;
+    return DB_PATH_DEFINED_BY_CMAKELISTS + name_ + DB_FILE_FORMAT;
 }
 
 void DataBase::open_db_file(const std::string& filepath) {
@@ -284,5 +284,4 @@ void KeysDataBase::increase_messages_counter(const std::string& chat_id) {
 KeysDataBase::KeysDataBase() : DataBase(DB_KEYS) {
     create_keys_tables();
 }
-
 

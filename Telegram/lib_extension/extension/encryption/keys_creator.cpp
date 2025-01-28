@@ -42,7 +42,7 @@ RsaKeyCreator::RsaKeyCreator() {
     private_bio = nullptr;
 }
 
-~RsaKeyCreator::RsaKeyCreator() {
+RsaKeyCreator::~RsaKeyCreator() {
     clear();
 }
 

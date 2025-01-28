@@ -5,10 +5,9 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
-#include <iostream>
-#include "../../lib_extension/extension/encryption/message_text_encryption.cpp"
-#include "boxes/send_files_box.h"
+#include "../../lib_extension/extension/encryption/message_text_encryption.h"
 
+#include "boxes/send_files_box.h"
 #include "lang/lang_keys.h"
 #include "storage/localstorage.h"
 #include "storage/storage_media_prepare.h"

@@ -7,7 +7,6 @@
 #include <iomanip>
 #include <type_traits>
 
-#define DB_RELATIVE_PATH "../../db/"
 #define DB_FILE_FORMAT ".db"
 #define DB_KEYS "keys"
 

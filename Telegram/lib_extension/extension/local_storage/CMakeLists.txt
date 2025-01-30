@@ -11,7 +11,7 @@ PRIVATE
 
 target_include_directories(extension_local_storage
 PUBLIC
-        ${src_loc}
+    ${src_loc}
 )
 
 target_link_libraries(extension_local_storage
@@ -22,5 +22,4 @@ PUBLIC
     dl
 )
 
-# Путь до папки с базами данных (определение макроса)
-target_compile_definitions(extension_local_storage PRIVATE DB_PATH_DEFINED_BY_CMAKELISTS="${CMAKE_CURRENT_SOURCE_DIR}/../../db")
+

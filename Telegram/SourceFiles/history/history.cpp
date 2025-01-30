@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "history/history.h"
 
 #include "history/view/history_view_element.h"
@@ -447,6 +448,13 @@ not_null<HistoryItem*> History::createItem(
 		MessageFlags localFlags,
 		bool detachExistingItem,
 		bool newMessage) {
+	
+	// Обрабатываем только тип MTPDmessage
+	message.match([](const MTPDmessage &msg) {
+		std::cout << "history.cpp createItem: " << msg.vmessage().v.toStdString() << '\n';},
+		[](auto &) {}
+	);
+
 	if (const auto result = owner().message(peer, id)) {
 		if (detachExistingItem) {
 			result->removeMainView();
@@ -467,6 +475,7 @@ not_null<HistoryItem*> History::createItem(
 
 std::vector<not_null<HistoryItem*>> History::createItems(
 		const QVector<MTPMessage> &data) {
+	std::cout << "history.cpp createItems\n";
 	auto result = std::vector<not_null<HistoryItem*>>();
 	result.reserve(data.size());
 	const auto localFlags = MessageFlags();
@@ -1397,6 +1406,7 @@ void History::addEdgesToSharedMedia() {
 }
 
 void History::addOlderSlice(const QVector<MTPMessage> &slice) {
+	std::cout << "history.cpp addOlderSlice\n";
 	if (slice.isEmpty()) {
 		_loadedAtTop = true;
 		checkLocalMessages();
@@ -1416,6 +1426,7 @@ void History::addOlderSlice(const QVector<MTPMessage> &slice) {
 
 void History::addCreatedOlderSlice(
 		const std::vector<not_null<HistoryItem*>> &items) {
+	std::cout << "history.cpp addCreatedOlderSlice\n";
 	startBuildingFrontBlock(items.size());
 	for (const auto &item : items) {
 		addItemToBlock(item);
@@ -1437,7 +1448,7 @@ void History::addCreatedOlderSlice(
 
 void History::addNewerSlice(const QVector<MTPMessage> &slice) {
 	bool wasLoadedAtBottom = loadedAtBottom();
-
+	std::cout << "history.cpp addNewerSlice\n";
 	if (slice.isEmpty()) {
 		_loadedAtBottom = true;
 		if (!lastMessage()) {
@@ -1573,6 +1584,7 @@ void History::checkAddAllToUnreadMentions() {
 
 void History::addToSharedMedia(
 		const std::vector<not_null<HistoryItem*>> &items) {
+	std::cout << "history.cpp addToSharedMedia\n";
 	std::vector<MsgId> medias[Storage::kSharedMediaTypeCount];
 	auto topicsWithPinned = base::flat_set<not_null<Data::ForumTopic*>>();
 	for (const auto &item : items) {
@@ -2598,6 +2610,7 @@ void History::setChatListMessageUnknown() {
 }
 
 void History::requestChatListMessage() {
+	std::cout << "history.cpp requestChatListMessage\n";
 	if (!lastMessageKnown()) {
 		owner().histories().requestDialogEntry(this, [=] {
 			requestChatListMessage();
@@ -2796,6 +2809,7 @@ bool History::isServerSideUnread(not_null<const HistoryItem*> item) const {
 void History::applyDialog(
 		Data::Folder *requestFolder,
 		const MTPDdialog &data) {
+	std::cout << "history.cpp applyDialog\n";
 	const auto folderId = data.vfolder_id();
 	const auto folder = !folderId
 		? requestFolder
@@ -2846,6 +2860,7 @@ void History::applyDialog(
 }
 
 void History::dialogEntryApplied() {
+	std::cout << "history.cpp dialogEntryApplied\n";
 	if (!lastServerMessageKnown()) {
 		setLastServerMessage(nullptr);
 	} else if (!lastMessageKnown()) {

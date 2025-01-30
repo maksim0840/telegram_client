@@ -4,6 +4,7 @@
 // For license and copyright information please follow this link:
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
+#include <iostream>
 #include "ui/text/text_renderer.h"
 
 #include "ui/text/text_bidi_algorithm.h"
@@ -112,6 +113,9 @@ void Renderer::draw(QPainter &p, const PaintContext &context) {
 	if (_t->isEmpty()) {
 		return;
 	}
+
+	// std::cout << "text_renderer.cpp Renderer::draw" << '\n';
+    // std::cout << "text: " << _t->_text.toStdString() << "\n\n";
 
 	_p = &p;
 	_p->setFont(_t->_st->font);

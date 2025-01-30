@@ -7,19 +7,16 @@ nice_target_sources(extension_encryption ${src_loc}
 PRIVATE
     extension/encryption/message_text_encryption.cpp
     extension/encryption/message_text_encryption.h
-    extension/encryption/keys_creator.cpp
-    extension/encryption/keys_creator.h
 )
 
 target_include_directories(extension_encryption
 PUBLIC
-        ${src_loc}
+    ${src_loc}
 )
 
 target_link_libraries(extension_encryption
 PUBLIC
     desktop-app::external_qt_static_plugins
     desktop-app::external_qt
-    desktop-app::external_openssl
-    extension_local_storage
+    extension_commands_manager
 )

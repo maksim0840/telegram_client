@@ -7,7 +7,7 @@ std::string DataBase::get_name() {
 }
 
 std::string DataBase::get_filepath() {
-    return DB_PATH_DEFINED_BY_CMAKELISTS + name_ + DB_FILE_FORMAT;
+    return std::string(DB_DIR_PATH) + "/" + name_ + DB_FILE_FORMAT;
 }
 
 void DataBase::open_db_file(const std::string& filepath) {

@@ -1,4 +1,7 @@
 add_subdirectory(extension/encryption)
+# add_subdirectory(extension/decryption) !!!!!!!!!!
+add_subdirectory(extension/keys_manager)
+add_subdirectory(extension/commands_manager)
 add_subdirectory(extension/local_storage)
 add_subdirectory(ThirdParty/SQLiteCpp)
 
@@ -6,4 +9,5 @@ add_subdirectory(ThirdParty/SQLiteCpp)
 target_link_libraries(Telegram
 PUBLIC
     extension_encryption
+    # extension_decryption !!!!!!!!!!
 )

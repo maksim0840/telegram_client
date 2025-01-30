@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "history/view/history_view_message.h"
 
 #include "core/click_handler_types.h" // ClickHandlerContext
@@ -1094,6 +1095,8 @@ void Message::draw(Painter &p, const PaintContext &context) const {
 
 	const auto item = data();
 	const auto media = this->media();
+
+	//std::cout << "history_view_message.cpp: Message::draw: " << item->originalText().text.toStdString() << "\n\n";
 
 	const auto hasGesture = context.gestureHorizontal.translation
 		&& (context.gestureHorizontal.msgBareId == item->fullId().msg.bare);

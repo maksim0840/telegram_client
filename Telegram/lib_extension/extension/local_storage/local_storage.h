@@ -7,6 +7,8 @@
 #include <iomanip>
 #include <type_traits>
 
+// Путь указывать без последней '/' (только путь до папки)
+#define DB_DIR_PATH "/home/user/Documents/tdesktop/Telegram/lib_extension/db"
 #define DB_FILE_FORMAT ".db"
 #define DB_KEYS "keys"
 
@@ -175,14 +177,10 @@ private:
     // Создание таблиц
     void create_keys_tables();
 
-    // Перевод статуса ключей из стостояний в состояние
-    void disable_other_keys(const std::string& chat_id, const DbTablesDefs table);
-    void enable_key(const std::string& chat_id, const DbTablesDefs table);
-
 public:
     // Шаблонные методы получения отдельных параметров в таблице
     template <typename T, typename = std::enable_if_t<is_keys_column<T>>>
-    std::string get_active_param_text(const std::string& chat_id, const DbTablesDefs table, const T column, const int active_status) {
+    std::string get_active_param_text(const std::string& chat_id, const DbTablesDefs table, const T column, const int active_status = 1) {
         const std::string sql_request = "SELECT * FROM " + DbTablesUndefs.at(table) +" WHERE chat_id = ? AND status = ?;";
         Statement stmt(db, sql_request);
         stmt.bind_text(1, chat_id);
@@ -190,13 +188,17 @@ public:
         return stmt.execute_text(static_cast<int>(column));
     }
     template <typename T, typename = std::enable_if_t<is_keys_column<T>>>
-    int get_active_param_int(const std::string& chat_id, const DbTablesDefs table, const T column, const int active_status) {
+    int get_active_param_int(const std::string& chat_id, const DbTablesDefs table, const T column, const int active_status = 1) {
         const std::string sql_request = "SELECT * FROM " + DbTablesUndefs.at(table) +" WHERE chat_id = ? AND status = ?;";
         Statement stmt(db, sql_request);
         stmt.bind_text(1, chat_id);
         stmt.bind_int(2, active_status);
         return stmt.execute_int(static_cast<int>(column));
     }
+
+    // Перевод статуса ключей из стостояний в состояние
+    void disable_other_keys(const std::string& chat_id, const DbTablesDefs table);
+    void enable_key(const std::string& chat_id, const DbTablesDefs table);
 
     // Создание своих ключей rsa и aes
     void add_aes_key(const AesParamsFiller& data);

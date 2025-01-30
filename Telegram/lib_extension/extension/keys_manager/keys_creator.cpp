@@ -1,5 +1,7 @@
 #include "keys_creator.h"
 
+/* class RsaKeyCreator */
+
 void RsaKeyCreator::fill() {
     rsa = RSA_new();
     if (!rsa) throw std::runtime_error("Ошибка создания RSA");
@@ -72,7 +74,7 @@ std::pair<std::string, std::string> RsaKeyCreator::generate(const int key_len) {
         ERR_clear_error();
         throw std::runtime_error(error_message);
     }
-    std::string public_key = extract_bio_data(public_bio);
+    std::string public_key_pem = extract_bio_data(public_bio);
 
     // Получаем приватный ключ из буфера и преобразуем в строковый формат PEM
     if (!PEM_write_bio_RSAPrivateKey(private_bio, rsa, nullptr, nullptr, 0, nullptr, nullptr)) {
@@ -80,12 +82,17 @@ std::pair<std::string, std::string> RsaKeyCreator::generate(const int key_len) {
         ERR_clear_error();
         throw std::runtime_error(error_message);
     }
-    std::string private_key = extract_bio_data(private_bio);
+    std::string private_key_pem = extract_bio_data(private_bio);
+
+    // Кодируем ключи дополнительно в строковый формат Base64
+    std::string public_key_pem_base64 = encoder.encode(std::vector<unsigned char>(public_key_pem.begin(), public_key_pem.end()));
+    std::string private_key_pem_base64 = encoder.encode(std::vector<unsigned char>(private_key_pem.begin(), private_key_pem.end()));
 
     clear();
-    return {public_key, private_key};
+    return {public_key_pem_base64, private_key_pem_base64};
 }
 
+/* class AesKeyCreator */
 
 std::string AesKeyCreator::generate() {
     size_t key_len_bytes = AES_KEY_LEN / 8;
@@ -98,5 +105,5 @@ std::string AesKeyCreator::generate() {
         throw std::runtime_error(error_message);
     }
 
-    return std::string(reinterpret_cast<const char*>(key), key_len_bytes);
+    return encoder.encode(std::vector<unsigned char>(key, key + key_len_bytes));
 }

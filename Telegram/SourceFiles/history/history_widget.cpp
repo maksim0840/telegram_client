@@ -3510,15 +3510,6 @@ void HistoryWidget::messagesReceived(
 	} break;
 	}
 
-	std::cout << "messagesReceived: \n";
-	for (const auto &mtpMessage : *histList) {
-		const MTPDmessage &messageData = mtpMessage.c_message(); // Получаем объект MTPDmessage
-		std::string text = messageData.vmessage().v.toStdString(); // Извлекаем строку
-
-		std::cout << text << "\n"; // Выводим сообщение в консоль
-	}
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 	if (_preloadRequest == requestId) {
 		addMessagesToFront(peer, *histList);
 		_preloadRequest = 0;
@@ -3620,7 +3611,6 @@ void HistoryWidget::firstLoadMessages() {
 	if (!_history || _firstLoadRequest) {
 		return;
 	}
-	std::cout << "\n" << "firstLoadMessages" << "\n";
 	auto from = _history;
 	auto offsetId = MsgId();
 	auto offset = 0;
@@ -3686,7 +3676,6 @@ void HistoryWidget::firstLoadMessages() {
 }
 
 void HistoryWidget::loadMessages() {
-	std::cout << "\n" << "loadMessages" << "\n";
 	if (!_history || _preloadRequest) {
 		return;
 	}
@@ -3745,14 +3734,11 @@ void HistoryWidget::loadMessages() {
 }
 
 void HistoryWidget::loadMessagesDown() {
-	std::cout << "\n" << "loadMessagesDown";
 	if (!_history || _preloadDownRequest) {
-		std::cout << 1 << '\n'; 
 		return;
 	}
 
 	if (_history->isEmpty() && _migrated && _migrated->isEmpty()) {
-		std::cout << 2<< '\n';
 		return firstLoadMessages();
 	}
 
@@ -3765,7 +3751,6 @@ void HistoryWidget::loadMessagesDown() {
 		if (_sponsoredMessagesStateKnown) {
 			session().sponsoredMessages().request(_history, nullptr);
 		}
-		std::cout << 3<< '\n';
 		return;
 	}
 
@@ -3774,7 +3759,6 @@ void HistoryWidget::loadMessagesDown() {
 	auto offsetId = from->maxMsgId();
 	if (!offsetId) {
 		if (loadMigrated || !_migrated) {
-			std::cout << 4<< '\n';
 			return;
 		}
 		++offsetId;
@@ -3813,7 +3797,6 @@ void HistoryWidget::loadMessagesDown() {
 			finish();
 		}).send();
 	});
-	std::cout << 5<< '\n';
 }
 
 void HistoryWidget::delayedShowAt(
@@ -4326,7 +4309,6 @@ void HistoryWidget::sendScheduled(Api::SendOptions initialOptions) {
 		return;
 	}
 	const auto ignoreSlowmodeCountdown = true;
-	std::cout << "history_widget.cpp sendScheduled\n";
 	if (showSendMessageError(
 			_field->getTextWithAppliedMarkdown(),
 			ignoreSlowmodeCountdown)) {
@@ -6573,7 +6555,6 @@ std::optional<int> HistoryWidget::unreadBarTop() const {
 void HistoryWidget::addMessagesToFront(
 		not_null<PeerData*> peer,
 		const QVector<MTPMessage> &messages) {
-	std::cout << "\n" << "addMessagesToFront" << "\n";
 	_list->messagesReceived(peer, messages);
 	if (!_firstLoadRequest) {
 		updateHistoryGeometry();
@@ -6584,7 +6565,6 @@ void HistoryWidget::addMessagesToFront(
 void HistoryWidget::addMessagesToBack(
 		not_null<PeerData*> peer,
 		const QVector<MTPMessage> &messages) {
-	std::cout << "\n" << "addMessagesToBack" << "\n";
 	const auto checkForUnreadStart = [&] {
 		if (_history->unreadBar() || !_history->trackUnreadMessages()) {
 			return false;

@@ -5,7 +5,6 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
-#include <iostream>
 #include "data/components/sponsored_messages.h"
 
 #include "api/api_text_entities.h"
@@ -267,21 +266,10 @@ void SponsoredMessages::parse(
 		auto &list = _data.emplace(history, List()).first->second;
 		list.entries.clear();
 		list.received = crl::now();
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		std::cout << "parse:\n\n";
+		
         for (const auto &message : messages) {
-            // Извлекаем текст
-            const auto &messageData = message.c_sponsoredMessage().vmessage();
-            std::string text = messageData.v.toStdString(); // Получаем текст
-            
-            // Выводим текст в консоль
-            std::cout << text << std::endl;
-
-            // Добавляем сообщение в историю
             append(history, list, message);
         }
-		std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		if (const auto postsBetween = data.vposts_between()) {
 			list.postsBetween = postsBetween->v;
 			list.state = State::InjectToMiddle;

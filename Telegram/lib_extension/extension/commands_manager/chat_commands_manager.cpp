@@ -1,22 +1,23 @@
 #include "chat_commands_manager.h"
+#include <iostream>
 
 ChatCommandsManager::ChatCommandsManager(const std::string& chat_id) {
     chat_id_ = chat_id;
 }
 
 std::string ChatCommandsManager::start_rsa(const int key_len) {
-    auto [public_key_pem_base64, private_key_pem_base64] = rsa_key_creator.generate(key_len);
-
+    auto [public_key, private_key] = rsa_manager.create_key(key_len);
+    
     RsaParamsFiller rsa_params = {
         .chat_id = chat_id_,
         .key_len = 0, // изменить в настройках базы данных
         .total_members = 0, // изменить в настройках данного класса
-        .private_key = private_key_pem_base64,
+        .private_key = private_key,
         .initiator = 1
     };
     db_keys.add_rsa_key(rsa_params);
 
-    return "[extension]/add_rsa " + public_key_pem_base64;
+    return "[extension]/add_rsa " + public_key;
 }
 
 std::string ChatCommandsManager::start_aes() {
@@ -25,12 +26,12 @@ std::string ChatCommandsManager::start_aes() {
 }
 
 std::string ChatCommandsManager::finish_aes() {
-    auto aes_key_pem_base64 = aes_key_creator.generate();
+    auto aes_key = aes_manager.create_key();
 
     /* ВРЕМЕННО: для всех чатов создаётся личный ключ (только для себя) */
     AesParamsFiller aes_params = {
         .chat_id = chat_id_,
-        .session_key = aes_key_pem_base64,
+        .session_key = aes_key,
         .initiator = 1
     };
     db_keys.add_aes_key(aes_params);

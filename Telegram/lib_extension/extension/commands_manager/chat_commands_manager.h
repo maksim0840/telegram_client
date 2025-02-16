@@ -1,13 +1,13 @@
 #include "../local_storage/local_storage.h"
-#include "../keys_manager/keys_creator.h"
+#include "../keys_manager/keys_manager.h"
 
 #pragma once
 
 class ChatCommandsManager {
 private:
     KeysDataBase db_keys;
-    RsaKeyCreator rsa_key_creator;
-    AesKeyCreator aes_key_creator;
+    RsaKeyManager rsa_manager;
+    AesKeyManager aes_manager;
     std::string chat_id_;
 
 public:

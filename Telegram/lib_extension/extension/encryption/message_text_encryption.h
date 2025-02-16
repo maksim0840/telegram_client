@@ -9,5 +9,4 @@
 
 int extract_num(const std::string& str, const int start, const int end);
 std::string get_command_result(const std::string& text_str, const std::string& chat_id_str);
-std::vector<unsigned char> aes256_encrypt(const std::vector<unsigned char>& key_aes, const std::string& plaintext);
 QString encrypt_the_message(const QString& text, const quint64 peer_id);

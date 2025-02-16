@@ -1,6 +1,4 @@
 #include "message_text_encryption.h"
-#include <openssl/evp.h>
-#include <openssl/rand.h>
 
 int extract_num(const std::string& str, const int start, const int end) {
     if (start < 0 || start > end) {
@@ -48,67 +46,21 @@ std::string get_command_result(const std::string& text_str, const std::string& c
 }
 
 
-std::vector<unsigned char> aes256_encrypt(const std::vector<unsigned char>& key_aes, const std::string& plaintext) {
-    if (key_aes.size() != 32) {
-        throw std::runtime_error("Ошибка: Неверный размер ключа AES. Должен быть 256 бит (32 байта).");
-    }
-
-    std::vector<unsigned char> iv(16);
-    if (!RAND_bytes(iv.data(), iv.size())) {
-        throw std::runtime_error("Ошибка: Не удалось сгенерировать IV.");
-    }
-
-    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
-    if (!ctx) {
-        throw std::runtime_error("Ошибка: Не удалось создать контекст шифрования.");
-    }
-
-    if (EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key_aes.data(), iv.data()) != 1) {
-        EVP_CIPHER_CTX_free(ctx);
-        throw std::runtime_error("Ошибка: Не удалось инициализировать шифрование AES-256 CBC.");
-    }
-
-    std::vector<unsigned char> ciphertext(plaintext.size() + 16);
-    int len = 0, ciphertext_len = 0;
-
-    if (EVP_EncryptUpdate(ctx, ciphertext.data(), &len, reinterpret_cast<const unsigned char*>(plaintext.data()), plaintext.size()) != 1) {
-        EVP_CIPHER_CTX_free(ctx);
-        throw std::runtime_error("Ошибка: Не удалось зашифровать данные.");
-    }
-    ciphertext_len += len;
-
-    if (EVP_EncryptFinal_ex(ctx, ciphertext.data() + ciphertext_len, &len) != 1) {
-        EVP_CIPHER_CTX_free(ctx);
-        throw std::runtime_error("Ошибка: Не удалось выполнить финальную стадию шифрования.");
-    }
-    ciphertext_len += len;
-
-    EVP_CIPHER_CTX_free(ctx);
-
-    ciphertext.resize(ciphertext_len);
-    ciphertext.insert(ciphertext.begin(), iv.begin(), iv.end());
-
-    return ciphertext;
-}
-
-
 QString encrypt_the_message(const QString& text, const quint64 chat_id) {
     
-    std::string text_str = text.toStdString();
-    std::string chat_id_str = std::to_string(chat_id);
-    std::string new_text_str = get_command_result(text_str, chat_id_str);
+    std::string text_str = text.toStdString(); // перехваченное сообщение
+    std::string chat_id_str = std::to_string(chat_id); // id чата
+    std::string new_text_str = get_command_result(text_str, chat_id_str); // сообщение на отправку
     
-    if (new_text_str == "") {
+    if (new_text_str == "") { // в тексте отсутсвуют команды (сообщение должно быть зашифровано)
         try {
             KeysDataBase db;
-            std::string key_aes_base64 = db.get_active_param_text(chat_id_str, DbTablesDefs::AES, AesColumnsDefs::SESSION_KEY);
+            std::string key_aes = db.get_active_param_text(chat_id_str, DbTablesDefs::AES, AesColumnsDefs::SESSION_KEY);
 
-            Base64Format format;
-            std::vector<unsigned char> key_aes = format.decode(key_aes_base64);
-            std::vector<unsigned char> text_by_aes = aes256_encrypt(key_aes, text_str);
-
-            new_text_str = format.encode(text_by_aes);
-        } catch (const std::exception& e) {
+            AesKeyManager aes_manager;
+            new_text_str = aes_manager.encrypt_message(text_str, key_aes);
+        }
+        catch (const std::exception& e) {
             new_text_str = text_str;
         }
     }

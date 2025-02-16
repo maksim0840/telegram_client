@@ -1,0 +1,49 @@
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
+#include <openssl/bn.h> 
+#include <openssl/err.h>
+#include <openssl/rand.h>
+#include <utility>
+#include "keys_format.h"
+
+#define AES_KEY_LEN 256
+
+#pragma once
+
+class RsaKeyManager {
+private:
+    RSA* rsa;             // структура для хранения частей RSA ключей
+    BIGNUM* bn;           // большое число для проведения операций
+    BIO* public_bio;      // поток для вывода публичного ключа
+    BIO* private_bio;     // поток для вывода приватного ключа
+    Base64Format format_converter;
+
+    void fill(); // создание необходимых структур для генерации ключей
+    void clear(); // освобождение ресурсов
+    std::string extract_bio_data(BIO* bio); // извлечение данных из bio в строку
+
+public:
+    RsaKeyManager();
+    ~RsaKeyManager();
+
+    // Генерация ключей RSA заданной длины и их возврат в паре (публичный, приватный ключ)
+    std::pair<std::string, std::string> create_key(const int key_len = 2048);
+    // Шифрует сообщения по public RSA ключу
+    std::string encrypt_message(const std::string& message, const std::string& public_key);
+    // Расшифровывает сообщения по private RSA ключу
+    std::string decrypt_message(const std::string& message, const std::string& private_key);
+};
+
+
+class AesKeyManager {
+private:
+    Base64Format format_converter;
+
+public:
+    std::string create_key();
+
+    // Шифрует сообщения по AES-256 ключу
+    std::string encrypt_message(const std::string& message, const std::string& key);
+    // Расшифровывает сообщения по AES-256 ключу
+    std::string decrypt_message(const std::string& message, const std::string& key);
+};

@@ -31,7 +31,7 @@ Base64Format::~Base64Format() {
     clear();
 }
 
-std::string Base64Format::encode(const std::vector<unsigned char>& data) {
+std::string Base64Format::encode_to_base64(const std::vector<unsigned char>& data) {
     fill();
 
     // Запись данных в буфер bio (предварительно кодируясь через b64)
@@ -56,19 +56,22 @@ std::string Base64Format::encode(const std::vector<unsigned char>& data) {
     return result;
 }
 
-std::vector<unsigned char> Base64Format::decode(const std::string& data) {
+std::vector<unsigned char> Base64Format::decode_from_base64(const std::string& data) {
     std::vector<unsigned char> result(data.size());
 
-    BIO* bio = BIO_new_mem_buf(data.data(), data.size());
-    BIO* b64 = BIO_new(BIO_f_base64());
 
-    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-    bio = BIO_push(b64, bio);
+    BIO* bio = BIO_new_mem_buf(data.data(), data.size()); // буфер входных данных
+    BIO* b64 = BIO_new(BIO_f_base64()); // буфер для декодирования
 
+    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL); // отключение переноса на новую строку
+    bio = BIO_push(b64, bio); // связывание буфферов (перед записью в bio данные проходят шифровку в b64)
+
+    // Получение информации из буфера
     int result_len = BIO_read(bio, result.data(), result.size());
     if (result_len > 0) {
         result.resize(result_len);
-    } else {
+    }
+    else {
         result.clear();
     }
 

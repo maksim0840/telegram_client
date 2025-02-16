@@ -5,8 +5,8 @@ get_filename_component(src_loc ../.. REALPATH)
 
 nice_target_sources(extension_keys_manager ${src_loc}
 PRIVATE
-    extension/keys_manager/keys_creator.cpp
-    extension/keys_manager/keys_creator.h
+    extension/keys_manager/keys_manager.cpp
+    extension/keys_manager/keys_manager.h
     extension/keys_manager/keys_format.cpp
     extension/keys_manager/keys_format.h
 )

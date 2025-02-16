@@ -1,9 +1,9 @@
-#include <openssl/bio.h>
-#include <openssl/evp.h>
 #include <stdexcept>
 #include <string>
 #include <vector> 
 #include <openssl/buffer.h>
+#include <openssl/bio.h>
+#include <openssl/evp.h>
 
 #pragma once
 
@@ -22,8 +22,8 @@ public:
     ~Base64Format();
     
     // Функция для кодирования в формат Base64
-    std::string encode(const std::vector<unsigned char>& data);
+    std::string encode_to_base64(const std::vector<unsigned char>& data);
 
     // Функция для декодирования из формата Base64
-    std::vector<unsigned char> decode(const std::string& data);
+    std::vector<unsigned char> decode_from_base64(const std::string& data);
 };

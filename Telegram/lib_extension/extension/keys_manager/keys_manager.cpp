@@ -185,7 +185,7 @@ std::string RsaKeyManager::decrypt_message(const std::string& message, const std
 
 /* class AesKeyManager */
 
-std::string AesKeyManager::create_key() {
+std::string AesKeyManager::create_key_solo() {
     size_t key_len_bytes = AES_KEY_LEN / 8;
     unsigned char key[key_len_bytes];
 
@@ -200,6 +200,74 @@ std::string AesKeyManager::create_key() {
     return format_converter.encode_to_base64(std::vector<unsigned char>(key, key + key_len_bytes));
 }
 
+std::string AesKeyManager::create_key_duo(const DHParamsStr& my_params, const std::string& other_public_key) {
+    
+    // Декодируем параметры из base64 в бинарный формат
+    DHParamsByte my_params_byte;
+    my_params_byte.p = format_converter.decode_from_base64(my_params.p);
+    my_params_byte.g = format_converter.decode_from_base64(my_params.g);
+    my_params_byte.public_key = format_converter.decode_from_base64(my_params.public_key);
+    my_params_byte.private_key = format_converter.decode_from_base64(my_params.private_key);
+    std::vector<unsigned char> other_public = format_converter.decode_from_base64(other_public_key);
+    
+    // Восстановиление структур DH
+    DH* my_dh = DiffieHellman::fill_dh(my_params_byte);
+    
+    // Cоставление общего секрета
+    std::vector<unsigned char> secret1 = DiffieHellman::get_shared_secret(my_dh, other_public);
+    
+    // Конвертация секрета в формат 256 символов
+    std::vector<unsigned char> key = DiffieHellman::derive_256bit_key(secret1);
+
+    // Преобразуем в формат base64
+    std::string key_base64 = format_converter.encode_to_base64(key);
+    return key_base64;
+}
+
+DHParamsStr AesKeyManager::get_dh_params(bool fast_mode, const int p_length, const int g_value) {
+    // // Получаем структуру с новыми параметрами алгоритма DH
+    DH* dh = nullptr;
+    if (fast_mode) {
+        dh = DiffieHellman::generate_dh_fast(p_length); // быстрый, но лучше не использовать для сверхсекретных перепесок
+    }
+    else {
+        dh = DiffieHellman::generate_dh(p_length, g_value); // 100% надёжный, но долгий (10-20 секунд)
+    }
+
+    // Получаем сгенерированные параметры
+    DHParamsByte bytes_params = DiffieHellman::get_params_dh(dh);
+
+    // Преобразуем в формат base64
+    DHParamsStr str_params;
+    str_params.p = format_converter.encode_to_base64(bytes_params.p);
+    str_params.g = format_converter.encode_to_base64(bytes_params.g);
+    str_params.public_key = format_converter.encode_to_base64(bytes_params.public_key);
+    str_params.private_key = format_converter.encode_to_base64(bytes_params.private_key);
+
+    return str_params;
+}
+
+DHParamsStr AesKeyManager::get_dh_params_secondly(const std::string p, const std::string g) {
+
+    // Декодируем параметры из base64 в бинарный формат
+    std::vector<unsigned char> p_byte = format_converter.decode_from_base64(p);
+    std::vector<unsigned char> g_byte = format_converter.decode_from_base64(g);
+
+    // Генерируем структуру собственных параметров на основе известных
+    DH* dh = DiffieHellman::generate_peer_dh(p_byte, g_byte);
+
+    // Получаем сгенерированные параметры
+    DHParamsByte bytes_params = DiffieHellman::get_params_dh(dh);
+
+    // Преобразуем в формат base64
+    DHParamsStr str_params;
+    str_params.p = format_converter.encode_to_base64(bytes_params.p);
+    str_params.g = format_converter.encode_to_base64(bytes_params.g);
+    str_params.public_key = format_converter.encode_to_base64(bytes_params.public_key);
+    str_params.private_key = format_converter.encode_to_base64(bytes_params.private_key);
+    
+    return str_params;
+}
 
 std::string AesKeyManager::encrypt_message(const std::string& message, const std::string& key) {
 
@@ -322,4 +390,17 @@ std::string AesKeyManager::decrypt_message(const std::string& message, const std
 
     EVP_CIPHER_CTX_free(ctx);
     return std::string(decrypted_data.begin(), decrypted_data.end());
+}
+
+int main(void) {
+    AesKeyManager aes_manager;
+
+    DHParamsStr params1 = aes_manager.get_dh_params();
+    DHParamsStr params2 = aes_manager.get_dh_params_secondly(params1.p, params1.g);
+
+    std::string key1 = aes_manager.create_key_duo(params1, params2.public_key);
+    std::string key2 = aes_manager.create_key_duo(params2, params1.public_key);
+
+    std::cout << "\n\n" << key1 << "\n\n" << key2 << "\n\n";
+
 }

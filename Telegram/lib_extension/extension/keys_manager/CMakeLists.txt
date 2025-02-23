@@ -9,6 +9,8 @@ PRIVATE
     extension/keys_manager/keys_manager.h
     extension/keys_manager/keys_format.cpp
     extension/keys_manager/keys_format.h
+    extension/keys_manager/dh.cpp
+    extension/keys_manager/dh.h
 )
 
 target_include_directories(extension_keys_manager

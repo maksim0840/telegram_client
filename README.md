@@ -68,3 +68,8 @@ Telegram/SourceFiles/history/history_widget.cpp
 Стоит изучить:
 
 *data_shortcut_messages - возможная быстрая панель сообщений
+
+
+Поелзные команды, но не используются:
+
+peer()->asChat()->participants - id участников чата

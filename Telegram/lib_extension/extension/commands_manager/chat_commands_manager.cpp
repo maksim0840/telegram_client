@@ -26,7 +26,7 @@ std::string ChatCommandsManager::start_aes() {
 }
 
 std::string ChatCommandsManager::finish_aes() {
-    auto aes_key = aes_manager.create_key();
+    auto aes_key = aes_manager.create_key_solo();
 
     /* ВРЕМЕННО: для всех чатов создаётся личный ключ (только для себя) */
     AesParamsFiller aes_params = {

@@ -290,7 +290,7 @@ public:
 	[[nodiscard]] bool wasFullUpdated() const {
 		return (_lastFullUpdate != 0);
 	}
-
+	
 	[[nodiscard]] int nameVersion() const;
 	[[nodiscard]] const QString &name() const;
 	[[nodiscard]] const QString &shortName() const;

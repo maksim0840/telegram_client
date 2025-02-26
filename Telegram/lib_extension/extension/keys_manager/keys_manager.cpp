@@ -214,10 +214,38 @@ std::string AesKeyManager::create_key_duo(const DHParamsStr& my_params, const st
     DH* my_dh = DiffieHellman::fill_dh(my_params_byte);
     
     // Cоставление общего секрета
-    std::vector<unsigned char> secret1 = DiffieHellman::get_shared_secret(my_dh, other_public);
+    std::vector<unsigned char> secret = DiffieHellman::get_shared_secret(my_dh, other_public);
     
     // Конвертация секрета в формат 256 символов
-    std::vector<unsigned char> key = DiffieHellman::derive_256bit_key(secret1);
+    std::vector<unsigned char> key = DiffieHellman::derive_256bit_key(secret);
+
+    // Преобразуем в формат base64
+    std::string key_base64 = format_converter.encode_to_base64(key);
+    return key_base64;
+}
+
+std::string AesKeyManager::сreate_key_multi(const DHParamsStr& my_params, const std::vector<std::string>& other_public_keys) {
+    
+    // Декодируем параметры из base64 в бинарный формат
+    DHParamsByte my_params_byte;
+    my_params_byte.p = format_converter.decode_from_base64(my_params.p);
+    my_params_byte.g = format_converter.decode_from_base64(my_params.g);
+    my_params_byte.public_key = format_converter.decode_from_base64(my_params.public_key);
+    my_params_byte.private_key = format_converter.decode_from_base64(my_params.private_key);
+
+    std::vector<std::vector<unsigned char>> other_public;
+    for (const auto& key : other_public_keys) {
+        other_public.push_back(format_converter.decode_from_base64(key));
+    }
+    
+    // Восстановиление структур DH
+    DH* my_dh = DiffieHellman::fill_dh(my_params_byte);
+    
+    // Cоставление общего секрета
+    std::vector<unsigned char> secret = MultiDiffieHellman::get_shared_secret(my_dh, other_public);
+    
+    // Конвертация секрета в формат 256 символов
+    std::vector<unsigned char> key = DiffieHellman::derive_256bit_key(secret);
 
     // Преобразуем в формат base64
     std::string key_base64 = format_converter.encode_to_base64(key);
@@ -397,10 +425,16 @@ int main(void) {
 
     DHParamsStr params1 = aes_manager.get_dh_params();
     DHParamsStr params2 = aes_manager.get_dh_params_secondly(params1.p, params1.g);
+    DHParamsStr params3 = aes_manager.get_dh_params_secondly(params1.p, params1.g);
+    DHParamsStr params4 = aes_manager.get_dh_params_secondly(params1.p, params1.g);
 
-    std::string key1 = aes_manager.create_key_duo(params1, params2.public_key);
-    std::string key2 = aes_manager.create_key_duo(params2, params1.public_key);
+    
+    std::string key1 = aes_manager.сreate_key_multi(params1, {params2.public_key, params3.public_key, params4.public_key});
+    std::string key2 = aes_manager.сreate_key_multi(params2, {params1.public_key, params3.public_key, params4.public_key});
+    std::string key3 = aes_manager.сreate_key_multi(params3, {params1.public_key, params2.public_key, params4.public_key});
+    std::string key4 = aes_manager.сreate_key_multi(params4, {params1.public_key, params2.public_key, params3.public_key});
 
-    std::cout << "\n\n" << key1 << "\n\n" << key2 << "\n\n";
+    //std::cout << "\n\n" << key1 << "\n\n" << key2 << "\n\n" << key3 << "\n\n" << key4 << "\n\n";
+    std::cout << "\n\n" << params1.p << "\n\n" << params2.p << "\n\n" << params3.p << "\n\n" << params4.p << "\n\n";
 
 }

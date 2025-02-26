@@ -911,12 +911,22 @@ ExternalGenerator tl_to_generator('+  fullTypeName(name) + ' &&request) {\n\
       botsOnlyPrms = data[12]
 
       dataText = ''
+
+      # Генерация объявления функции доступа к приватным полям
+      if (fullDataName(name) == "MTPDmessage"):
+        dataText += "\nvoid MTPDmessage_private_fields_access(const MTPDmessage &msg);\n" 
+
       if (len(prms) > len(trivialConditions) + len(botsOnlyPrms)):
         withData = 1
         dataText += '\nclass ' + fullDataName(name) + ' : public tl::details::type_data {\n'; # data class
       else:
         dataText += '\nclass ' + fullDataName(name) + ' {\n'; # empty data class for visitors
       dataText += 'public:\n'
+
+      # Добавление функции доступа к приватным полям в качестве friend
+      if (fullDataName(name) == "MTPDmessage"): 
+        dataText += "\tfriend void MTPDmessage_private_fields_access(const MTPDmessage &msg);\n\n" 
+
       dataText += '\ttemplate <typename Other>\n'
       dataText += '\tstatic constexpr bool Is() { return std::is_same_v<std::decay_t<Other>, ' + fullDataName(name) + '>; };\n\n'
       creatorParams = []

@@ -1,5 +1,6 @@
 #include "dh.h"
 
+/* DiffieHellman */
 
 DH* DiffieHellman::generate_dh_fast(const int p_length) {
 
@@ -224,4 +225,67 @@ std::vector<unsigned char> DiffieHellman::derive_256bit_key(const std::vector<un
     // Применяем хэш функцию SHA256 для изменения размера секрета ровно до 256 бит
     SHA256(shared_secret.data(), shared_secret.size(), key.data());
     return key;
+}
+
+/* MultiDiffieHellman */
+
+std::vector<unsigned char> MultiDiffieHellman::get_shared_secret(DH* dh, const std::vector<std::vector<unsigned char>>& other_public_keys) {
+
+    // Создаём большое число, содержащий нейтральный элемент
+    BIGNUM* shared_key = BN_new();
+    if (!shared_key) {
+        throw std::runtime_error("Ошибка выделения памяти для BIGNUM shared_key");
+    }
+    BN_one(shared_key);
+    BN_CTX* ctx = BN_CTX_new();
+    if (!ctx) {
+        throw std::runtime_error("Ошибка выделения памяти для BN_CTX");
+    }
+    
+    for (const auto& pub_key : other_public_keys) {
+        // Преобразуем вектор байтов в BIGNUM
+        BIGNUM* pub_key_bn = BN_bin2bn(pub_key.data(), pub_key.size(), nullptr);
+        if (!pub_key_bn) {
+            BN_free(pub_key_bn);
+            throw std::runtime_error("Ошибка преобразования ключа в BIGNUM");
+        }
+        
+        // Перемножаем публичные ключи других участников
+        if (!BN_mod_mul(shared_key, shared_key, pub_key_bn, DH_get0_p(dh), ctx)) {
+            std::string error_message = "Ошибка вычисления общего ключа" + std::string(ERR_error_string(ERR_get_error(), nullptr));
+            ERR_clear_error();
+            BN_free(shared_key);
+            BN_CTX_free(ctx);
+            throw std::runtime_error(error_message);
+        }
+        BN_free(pub_key_bn);
+    }
+
+    // Получение своего приватного ключа DH
+    const BIGNUM* private_key = nullptr;
+    DH_get0_key(dh, nullptr, &private_key);
+    if (!private_key) {
+        throw std::runtime_error("Ошибка получения приватного ключа");
+    }
+
+    // Возводим в степень своего приватного ключа
+    BIGNUM* final_shared_key = BN_new();
+    if (!BN_mod_exp(final_shared_key, shared_key, private_key, DH_get0_p(dh), ctx)) {
+        std::string error_message = "Ошибка возведения в степень" + std::string(ERR_error_string(ERR_get_error(), nullptr));
+        ERR_clear_error();
+        BN_free(shared_key);
+        BN_free(final_shared_key);
+        BN_CTX_free(ctx);
+        throw std::runtime_error(error_message);
+    }
+
+    // Конвертируем BIGNUM в вектор байтов
+    std::vector<unsigned char> shared_secret(BN_num_bytes(final_shared_key));
+    BN_bn2bin(final_shared_key, shared_secret.data());
+
+    BN_free(shared_key);
+    BN_free(final_shared_key);
+    BN_CTX_free(ctx);
+
+    return shared_secret;
 }

@@ -45,13 +45,14 @@ std::string get_command_result(const std::string& text_str, const std::string& c
     return "";
 }
 
-
 QString encrypt_the_message(const QString& text, const quint64 chat_id) {
     
     std::string text_str = text.toStdString(); // перехваченное сообщение
     std::string chat_id_str = std::to_string(chat_id); // id чата
-    std::string new_text_str = get_command_result(text_str, chat_id_str); // сообщение на отправку
     
+    //std::string new_text_str = get_command_result(text_str, chat_id_str); // сообщение на отправку
+    std::string new_text_str = "";
+
     if (new_text_str == "") { // в тексте отсутсвуют команды (сообщение должно быть зашифровано)
         try {
             KeysDataBase db;

@@ -44,9 +44,15 @@ public:
     // Генерация открытого и закрытого ключа пользователя для алгоритма DH
     static DHParamsByte get_params_dh(DH* dh);
 
-    // Функция вычисления общего секрета
+    // Функция вычисления общего секрета для двух собеседников
     static std::vector<unsigned char> get_shared_secret(DH* dh, const std::vector<unsigned char>& other_public_key);
 
     // Функция создания 256-битного ключа
     static std::vector<unsigned char> derive_256bit_key(const std::vector<unsigned char>& shared_secret);
+};
+
+class MultiDiffieHellman {
+public:
+    // Функция вычисления общего секрета для нескольких собеседников
+    static std::vector<unsigned char> get_shared_secret(DH* dh, const std::vector<std::vector<unsigned char>>& other_public_keys);
 };

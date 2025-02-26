@@ -45,6 +45,8 @@ public:
     std::string create_key_solo();
     // Получить ключ для двух собеседников
     std::string create_key_duo(const DHParamsStr& my_params, const std::string& other_public_key);
+    // Получить ключ для нескольких собеседников
+    std::string сreate_key_multi(const DHParamsStr& my_params, const std::vector<std::string>& other_public_keys);
 
     // Сгенерировать параметры для алгоритм dh
     DHParamsStr get_dh_params(bool fast_mode = true, const int p_length = 2048, const int g_value = DH_GENERATOR_2);

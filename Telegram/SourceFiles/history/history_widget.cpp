@@ -4266,11 +4266,11 @@ void HistoryWidget::send(Api::SendOptions options) {
 	std::cout << "history_widget.cpp send\n";
 	std::cout << "isUser: " << peer()->isUser() << '\n' << "isChat: " << peer()->isChat() << '\n' << "isChannel: " << peer()->isChannel() << '\n' << "isSelf: " << peer()->isSelf() << '\n';
 	std::cout << "size username: " << peer()->usernames().size() << '\n';
-	std::cout << "count members: " << peer()->asChat()->participants.size() << '\n';
-	for (const auto& name : peer()->usernames()) {
-		std::cout <<"username: " << name.toStdString() << '\n';
-	}
-	std::cout << "my username: " << peer()->username().toStdString() << '\n';
+	// std::cout << "count members: " << peer()->asChat()->participants.size() << '\n';
+	// for (const auto& name : peer()->usernames()) {
+	// 	std::cout <<"username: " << name.toStdString() << '\n';
+	// }
+	// std::cout << "my username: " << peer()->username().toStdString() << '\n';
 	message.textWithTags.text = encrypt_the_message(message.textWithTags.text, peer()->id.value);
 	const auto ignoreSlowmodeCountdown = (options.scheduled != 0);
 	if (showSendMessageError(

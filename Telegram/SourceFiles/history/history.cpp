@@ -5,6 +5,8 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include "../../lib_extension/extension/decryption/message_text_decryption.h"
+
 #include <iostream>
 #include "history/history.h"
 
@@ -442,15 +444,6 @@ void History::setForwardDraft(
 	}
 }
 
-void MTPDmessage_private_fields_access(const MTPDmessage &msg) {
-	// Снимаем const
-	auto &mutable_message = const_cast<MTPDmessage&>(msg);
-	// Подменяем
-	if (msg.vmessage().v.toStdString() == "marko") {
-		mutable_message._message.v = QByteArray("polo");
-	}
-}
-
 not_null<HistoryItem*> History::createItem(
 		MsgId id,
 		const MTPMessage &message,
@@ -460,43 +453,6 @@ not_null<HistoryItem*> History::createItem(
 	
 	// Обрабатываем только тип MTPDmessage
 	message.match([](const MTPDmessage &msg) {
-		// if (msg.vmessage().v.toStdString() == "marko") {
-		// 	// Снимаем const и разыменовываем объект
-		// 	auto &mutable_message = const_cast<MTPDmessage&>(msg);
-		// 	// Создаём новое сообщение				
-		// 	MTPstring new_message;
-		// 	new_message.v = QByteArray("polo");
-		// 	// Переконструируем объект с заменённым сообщением
-		// 	mutable_message = MTPDmessage(
-		// 		msg.vflags(),
-		// 		msg.vid(),
-		// 		msg.vfrom_id().has_value() ? *msg.vfrom_id() : MTPPeer(),
-		// 		tl::make_int(msg.vfrom_boosts_applied().value_or(0)),
-		// 		msg.vpeer_id(),
-		// 		msg.vsaved_peer_id().has_value() ? *msg.vsaved_peer_id() : MTPPeer(),
-		// 		msg.vfwd_from().has_value() ? *msg.vfwd_from() : MTPMessageFwdHeader(),
-		// 		tl::make_long(msg.vvia_bot_id().value_or(0)),
-		// 		tl::make_long(msg.vvia_business_bot_id().value_or(0)),
-		// 		msg.vreply_to().has_value() ? *msg.vreply_to() : MTPMessageReplyHeader(),
-		// 		msg.vdate(),
-		// 		new_message, // Обновленный текст сообщения
-		// 		msg.vmedia().has_value() ? *msg.vmedia() : MTPMessageMedia(),
-		// 		msg.vreply_markup().has_value() ? *msg.vreply_markup() : tl::boxed<MTPreplyMarkup>(),
-		// 		msg.ventities().has_value() ? *msg.ventities() : MTPVector<MTPMessageEntity>(),
-		// 		tl::make_int(msg.vviews().value_or(0)),
-		// 		tl::make_int(msg.vforwards().value_or(0)),
-		// 		msg.vreplies().has_value() ? *msg.vreplies() : MTPMessageReplies(),
-		// 		tl::make_int(msg.vedit_date().value_or(0)),
-		// 		tl::make_string(msg.vpost_author().value_or_empty()),
-		// 		tl::make_long(msg.vgrouped_id().value_or(0)),
-		// 		msg.vreactions().has_value() ? *msg.vreactions() : MTPMessageReactions(),
-		// 		tl::make_vector(msg.vrestriction_reason().value_or_empty()),
-		// 		tl::make_int(msg.vttl_period().value_or(0)),
-		// 		tl::make_int(msg.vquick_reply_shortcut_id().value_or(0)),
-		// 		tl::make_long(msg.veffect().value_or(0)),
-		// 		msg.vfactcheck().has_value() ? *msg.vfactcheck() : MTPFactCheck()
-		// 	);
-		// }
 		MTPDmessage_private_fields_access(msg);
 		std::cout << "history.cpp createItem: " << msg.vmessage().v.toStdString() << '\n';
 	}, [](auto &) {});

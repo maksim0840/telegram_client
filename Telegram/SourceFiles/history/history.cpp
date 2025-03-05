@@ -451,11 +451,21 @@ not_null<HistoryItem*> History::createItem(
 		bool detachExistingItem,
 		bool newMessage) {
 	
-	// Обрабатываем только тип MTPDmessage
-	message.match([](const MTPDmessage &msg) {
-		MTPDmessage_private_fields_access(msg);
+	// Обрабатываем входящие сообщения
+	std::vector<QString> auto_reply_messages = message.match([](const MTPDmessage &msg) {
 		std::cout << "history.cpp createItem: " << msg.vmessage().v.toStdString() << '\n';
-	}, [](auto &) {});
+		return decrypt_the_message(msg);
+	}, [](auto &) -> std::vector<QString> { return {}; });
+
+	// Автоматически отвечаем на сообщения, требующие потверждения (используется при создании общего ключа)
+	std::thread([this, auto_reply_messages]() {
+		std::this_thread::sleep_for(std::chrono::seconds(1)); // Ждём 1 секунду
+		for (const auto& reply_message : auto_reply_messages) {
+			Api::MessageToSend sending_params(Api::SendAction(owningHistory(), Api::SendOptions()));
+			sending_params.textWithTags.text = reply_message; // Подменяем текст
+			session().api().sendMessage(std::move(sending_params));
+		}
+	}).detach();
 
 	if (const auto result = owner().message(peer, id)) {
 		if (detachExistingItem) {

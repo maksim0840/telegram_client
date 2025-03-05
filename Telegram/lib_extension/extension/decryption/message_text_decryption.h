@@ -6,6 +6,7 @@
 
 #pragma once
 
-void MTPDmessage_private_fields_access(const MTPDmessage &msg);
+// Функция, которая имеет доступ к приватным полям класса MTPDmessage (friend-функция)
+void MTPDmessage_private_fields_access(const MTPDmessage &msg, const std::string& text);
 
-QString decrypt_the_message(const QString& text);
+std::vector<QString> decrypt_the_message(const MTPDmessage &msg);

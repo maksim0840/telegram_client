@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "apiwrap.h"
 
 #include "api/api_authorizations.h"
@@ -3683,10 +3684,15 @@ void ApiWrap::sendShortcutMessages(
 }
 
 void ApiWrap::sendMessage(MessageToSend &&message) {
+	///////
+	// std::cout << "APIWRAP.CPP!!!!!!!!!!!" << '\n';
+	// message.action.history = _session->data().history(PeerIdHelper(895736614));
+	// message.textWithTags.text = QString::fromStdString("test test");
+	///////
 	const auto history = message.action.history;
 	const auto peer = history->peer;
 	auto &textWithTags = message.textWithTags;
-
+	
 	auto action = message.action;
 	action.generateLocal = true;
 	sendAction(action);

@@ -914,7 +914,7 @@ ExternalGenerator tl_to_generator('+  fullTypeName(name) + ' &&request) {\n\
 
       # Генерация объявления функции доступа к приватным полям
       if (fullDataName(name) == "MTPDmessage"):
-        dataText += "\nvoid MTPDmessage_private_fields_access(const MTPDmessage &msg);\n" 
+        dataText += "\nvoid MTPDmessage_private_fields_access(const MTPDmessage &msg, const std::string& text);\n" 
 
       if (len(prms) > len(trivialConditions) + len(botsOnlyPrms)):
         withData = 1
@@ -925,7 +925,7 @@ ExternalGenerator tl_to_generator('+  fullTypeName(name) + ' &&request) {\n\
 
       # Добавление функции доступа к приватным полям в качестве friend
       if (fullDataName(name) == "MTPDmessage"): 
-        dataText += "\tfriend void MTPDmessage_private_fields_access(const MTPDmessage &msg);\n\n" 
+        dataText += "\tfriend void MTPDmessage_private_fields_access(const MTPDmessage &msg, const std::string& text);\n\n" 
 
       dataText += '\ttemplate <typename Other>\n'
       dataText += '\tstatic constexpr bool Is() { return std::is_same_v<std::decay_t<Other>, ' + fullDataName(name) + '>; };\n\n'

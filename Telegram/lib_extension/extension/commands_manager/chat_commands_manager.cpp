@@ -40,7 +40,7 @@ std::string ChatCommandsManager::finish_aes() {
 }
 
 std::string ChatCommandsManager::stop_encryption() {
-    db_keys.disable_other_keys(chat_id_, DbTablesDefs::RSA);
-    db_keys.disable_other_keys(chat_id_, DbTablesDefs::AES);
+    db_keys.disable_other_keys(chat_id_, KeysTablesDefs::RSA);
+    db_keys.disable_other_keys(chat_id_, KeysTablesDefs::AES);
     return "[extension]/chat_key_has_been_removed.";
 }

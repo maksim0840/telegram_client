@@ -7,6 +7,8 @@ nice_target_sources(extension_local_storage ${src_loc}
 PRIVATE
     extension/local_storage/local_storage.cpp
     extension/local_storage/local_storage.h
+    extension/local_storage/keys_db.cpp
+    extension/local_storage/keys_db.h
 )
 
 target_include_directories(extension_local_storage

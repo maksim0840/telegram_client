@@ -2,6 +2,8 @@
 #include <iostream>
 #include <QtGlobal>
 #include <cctype>
+#include <algorithm>
+#include "../local_storage/keys_db.h"
 
 #pragma once
 

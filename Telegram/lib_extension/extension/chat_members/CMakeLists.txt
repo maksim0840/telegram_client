@@ -18,4 +18,5 @@ target_link_libraries(extension_chat_members
 PUBLIC
     desktop-app::external_qt_static_plugins
     desktop-app::external_qt
+    extension_local_storage
 )

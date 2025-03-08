@@ -1,18 +1,5 @@
 #include "message_text_encryption.h"
 
-int extract_num(const std::string& str, const int start, const int end) {
-    if (start < 0 || start > end) {
-        throw std::invalid_argument("Ошибка: Число не найдено");
-    }
-    std::string sub_str = str.substr(start, end - start + 1);
-    // for (const char c : sub_str) {
-    //     if (!std::isdigit(c)) {
-    //         throw std::invalid_argument("Ошибка: Число содержит недопустимые символы.");
-    //     }
-    // }
-    return std::stoi(sub_str);
-}
-
 // std::string get_command_result(const std::string& text_str, const std::string& chat_id_str) {
 //     ChatCommandsManager commands_manager(chat_id_str);
 

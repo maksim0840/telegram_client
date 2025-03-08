@@ -6,7 +6,7 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "data/data_chat.h"
-
+#include <iostream>
 #include "core/application.h"
 #include "data/data_user.h"
 #include "data/data_channel.h"
@@ -315,12 +315,14 @@ namespace Data {
 void ApplyChatUpdate(
 		not_null<ChatData*> chat,
 		const MTPDupdateChatParticipants &update) {
+	std::cout << "update!!!!!!\n";
 	ApplyChatUpdate(chat, update.vparticipants());
 }
 
 void ApplyChatUpdate(
 		not_null<ChatData*> chat,
 		const MTPDupdateChatParticipantAdd &update) {
+	std::cout << "update!!!!!!\n";
 	if (chat->applyUpdateVersion(update.vversion().v)
 		!= ChatData::UpdateStatus::Good) {
 		return;
@@ -362,6 +364,7 @@ void ApplyChatUpdate(
 void ApplyChatUpdate(
 		not_null<ChatData*> chat,
 		const MTPDupdateChatParticipantDelete &update) {
+	std::cout << "update!!!!!!\n";
 	if (chat->applyUpdateVersion(update.vversion().v)
 		!= ChatData::UpdateStatus::Good) {
 		return;
@@ -404,6 +407,7 @@ void ApplyChatUpdate(
 void ApplyChatUpdate(
 		not_null<ChatData*> chat,
 		const MTPDupdateChatParticipantAdmin &update) {
+	std::cout << "update!!!!!!\n";
 	if (chat->applyUpdateVersion(update.vversion().v)
 		!= ChatData::UpdateStatus::Good) {
 		return;
@@ -434,6 +438,7 @@ void ApplyChatUpdate(
 void ApplyChatUpdate(
 		not_null<ChatData*> chat,
 		const MTPDupdateChatDefaultBannedRights &update) {
+	std::cout << "update!!!!!!\n";
 	if (chat->applyUpdateVersion(update.vversion().v)
 		!= ChatData::UpdateStatus::Good) {
 		return;
@@ -443,6 +448,7 @@ void ApplyChatUpdate(
 }
 
 void ApplyChatUpdate(not_null<ChatData*> chat, const MTPDchatFull &update) {
+	std::cout << "update!!!!!!\n";
 	ApplyChatUpdate(chat, update.vparticipants());
 
 	if (const auto call = update.vcall()) {
@@ -505,6 +511,7 @@ void ApplyChatUpdate(not_null<ChatData*> chat, const MTPDchatFull &update) {
 void ApplyChatUpdate(
 		not_null<ChatData*> chat,
 		const MTPChatParticipants &participants) {
+	std::cout << "update!!!!!!\n";
 	const auto session = &chat->session();
 	participants.match([&](const MTPDchatParticipantsForbidden &data) {
 		if (const auto self = data.vself_participant()) {

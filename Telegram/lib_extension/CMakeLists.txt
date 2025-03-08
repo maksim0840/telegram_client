@@ -1,5 +1,6 @@
 add_subdirectory(extension/encryption)
 add_subdirectory(extension/decryption)
+add_subdirectory(extension/chat_members)
 add_subdirectory(extension/keys_manager)
 add_subdirectory(extension/commands_manager)
 add_subdirectory(extension/local_storage)
@@ -10,4 +11,5 @@ target_link_libraries(Telegram
 PUBLIC
     extension_encryption
     extension_decryption
+    extension_chat_members
 )

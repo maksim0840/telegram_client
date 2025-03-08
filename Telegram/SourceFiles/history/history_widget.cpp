@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "../../lib_extension/extension/encryption/message_text_encryption.h"
+#include "../../lib_extension/extension/chat_members/chat_members.h"
 
 #include "history/history_widget.h"
 #include "api/api_editing.h"
@@ -2600,6 +2601,7 @@ void HistoryWidget::showHistory(
 }
 
 void HistoryWidget::setHistory(History *history) {
+
 	if (_history == history) {
 		return;
 	}
@@ -4261,17 +4263,10 @@ void HistoryWidget::send(Api::SendOptions options) {
 	auto message = Api::MessageToSend(prepareSendAction(options));
 	message.textWithTags = _field->getTextWithAppliedMarkdown();
 	message.webPage = _preview->draft();
-
 	
 	std::cout << "history_widget.cpp send\n";
-	std::cout << "isUser: " << peer()->isUser() << '\n' << "isChat: " << peer()->isChat() << '\n' << "isChannel: " << peer()->isChannel() << '\n' << "isSelf: " << peer()->isSelf() << '\n';
-	std::cout << "size username: " << peer()->usernames().size() << '\n';
-	// std::cout << "count members: " << peer()->asChat()->participants.size() << '\n';
-	// for (const auto& name : peer()->usernames()) {
-	// 	std::cout <<"username: " << name.toStdString() << '\n';
-	// }
-	// std::cout << "my username: " << peer()->username().toStdString() << '\n';
 	message.textWithTags.text = encrypt_the_message(message.textWithTags.text, peer()->id.value);
+	
 	const auto ignoreSlowmodeCountdown = (options.scheduled != 0);
 	if (showSendMessageError(
 			message.textWithTags,
@@ -6965,6 +6960,7 @@ void HistoryWidget::keyPressEvent(QKeyEvent *e) {
 }
 
 void HistoryWidget::handlePeerMigration() {
+	
 	const auto current = _peer->migrateToOrMe();
 	const auto chat = current->migrateFrom();
 	if (!chat) {
@@ -8275,7 +8271,6 @@ void HistoryWidget::fullInfoUpdated() {
 		}
 		_list->refreshAboutView();
 		_list->updateBotInfo();
-
 		handlePeerUpdate();
 		checkSuggestToGigagroup();
 	}
@@ -8328,6 +8323,21 @@ void HistoryWidget::handlePeerUpdate() {
 			updateControlsGeometry();
 		}
 	}
+
+	std::cout << "handlePeerUpdate\n";
+	BareId my_id = peer()->owner().session().userPeerId().value;
+	std::vector<BareId> chat_members = {my_id};
+	
+	if (peer()->isUser() && !peer()->isSelf()) {
+		chat_members.push_back(peer()->id.value);
+	}
+	else if (peer()->isChat()) {
+		chat_members.clear();
+		for (const auto& p : peer()->asChat()->participants) {
+			chat_members.push_back(p->id.value);
+		}
+	}
+	update_chat_members(peer()->id.value, my_id, chat_members);
 }
 
 bool HistoryWidget::updateCanSendMessage() {

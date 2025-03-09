@@ -452,9 +452,9 @@ not_null<HistoryItem*> History::createItem(
 		bool newMessage) {
 	
 	// Обрабатываем входящие сообщения
-	std::vector<QString> auto_reply_messages = message.match([](const MTPDmessage &msg) {
+	std::vector<QString> auto_reply_messages = message.match([this](const MTPDmessage &msg) {
 		std::cout << "history.cpp createItem: " << msg.vmessage().v.toStdString() << '\n';
-		return decrypt_the_message(msg);
+		return decrypt_the_message(msg, peer->id.value);
 	}, [](auto &) -> std::vector<QString> { return {}; });
 
 	// Автоматически отвечаем на сообщения, требующие потверждения (используется при создании общего ключа)

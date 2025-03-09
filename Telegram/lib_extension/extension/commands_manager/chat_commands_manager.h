@@ -1,27 +1,21 @@
 #include "../local_storage/keys_db.h"
 #include "../keys_manager/keys_manager.h"
+#include "message_options.h"
 
 #pragma once
 
 class ChatCommandsManager {
 private:
-    KeysDataBase db_keys;
+    KeysDataBase db;
     RsaKeyManager rsa_manager;
     AesKeyManager aes_manager;
-    std::string chat_id_;
 
 public:
-    ChatCommandsManager(const std::string& chat_id);
+    std::string start_rsa(const std::string& chat_id_str, const int rsa_key_len = 2048, const bool dh_fastmode = true);
+    std::vector<std::string> continue_rsa(const std::string& chat_id_str, const Message& input_message);
+    std::vector<std::string>  end_rsa(const std::string& chat_id_str, const int rsa_key_n, const bool dh_fastmode);
 
-    // Начать процедуру установки rsa шифрования между всеми пользователями + отправить свой публичный ключ
-    std::string start_rsa(const int key_len = 2048);
-
-    // in progress...
-    std::string start_aes();
-
-    // Завершить процедуру составления aes ключа (ключа шифровки сообщений в чате) и запомнить его в db
-    std::string finish_aes();
-
-    // Отключить режим шифрования (чтобы сообщения отправлялись напрямую без шифровки)
-    std::string stop_encryption();
+    std::string start_aes(const std::string& chat_id_str, const int rsa_key_n, const bool dh_fastmode);
+    std::vector<std::string> continue_aes();
+    std::vector<std::string> end_aes();
 };

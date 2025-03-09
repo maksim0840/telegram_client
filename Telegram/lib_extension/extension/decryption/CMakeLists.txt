@@ -19,4 +19,5 @@ PUBLIC
     desktop-app::external_qt_static_plugins
     desktop-app::external_qt
     tdesktop::td_scheme # доступ к объектам автогенерирующегося файла scheme.h
+    extension_commands_manager
 )

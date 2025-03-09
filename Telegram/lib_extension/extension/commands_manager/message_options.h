@@ -14,9 +14,11 @@ struct Message {
     bool aes_init = false;
     bool aes_form = false;
     bool aes_use = false;
+    bool dh_fastmode = true;
     int rsa_key_n = 0;
     int aes_key_n = 0;
     int last_peer_n = 0;
+    int rsa_key_len = 0;
 
     // Сообщение
     std::string text;

@@ -91,19 +91,31 @@ void KeysDataBase::set_sent_flag(const std::string& chat_id, const int key_n, co
 }
 
 void KeysDataBase::add_aes_key(const AesParamsFiller& data) {
-    const std::string sql_request = "INSERT INTO aes (chat_id, session_key, date, messages, status, initiator) VALUES (?, ?, ?, ?, ?, ?);";
+    const std::string sql_request = "INSERT INTO aes (chat_id, key_n, session_key, p, g, public_key, private_key, date, messages, status, sent_in_chat, sent_members) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     std::string date = KeysDataBaseHelper::get_system_time();
+
+    std::optional<int> members_count = get_active_param_int(data.chat_id, KeysTablesDefs::CHATS, ChatsColumnsDefs::MEMBERS_COUNT);
+    if (!members_count) { throw std::runtime_error("Ошибка получения параметра"); }
+
+    std::vector<std::string> sent_in_chat_vec(*members_count, "");
+    std::string sent_in_chat = KeysDataBaseHelper::vector_to_string(sent_in_chat_vec);
 
     disable_other_keys(data.chat_id, KeysTablesDefs::AES); // сбросить флаги "используется" у всех aes ключей этого чата
 
     Statement stmt(db, sql_request);
 
     stmt.bind_text(1, data.chat_id);
-    stmt.bind_text(2, data.session_key);
-    stmt.bind_text(3, date);
-    stmt.bind_int(4, 0); // messages = 0   
-    stmt.bind_int(5, 1); // status = 1
-    stmt.bind_int(6, data.initiator);
+    stmt.bind_int(2, data.key_n);
+    stmt.bind_text(3, data.session_key);
+    stmt.bind_text(4, data.p);
+    stmt.bind_text(5, data.g);
+    stmt.bind_text(6, data.public_key);
+    stmt.bind_text(7, data.private_key);
+    stmt.bind_text(8, date);
+    stmt.bind_int(9, 0); // messages = 0   
+    stmt.bind_int(10, data.status);
+    stmt.bind_text(11, sent_in_chat);
+    stmt.bind_int(12, 1); // sent_members = 1
 
     stmt.execute();
 }
@@ -156,7 +168,7 @@ void KeysDataBase::add_chat_params(const ChatsParamsFiller& data) {
     stmt.execute();
 }
 
-void KeysDataBase::add_rsa_member_key(const std::string& chat_id, const std::string& key, const int pos) {
+void KeysDataBase::add_rsa_member_key(const std::string& chat_id, const int key_n, const std::string& key, const int pos) {
     // Извлекаем существующие списоки параметров
     std::optional<std::string> members_public_keys = get_active_param_text(chat_id, KeysTablesDefs::RSA, RsaColumnsDefs::MEMBERS_PUBLIC_KEYS, 0);
     if (!members_public_keys) { throw std::runtime_error("Ошибка получения параметра"); }
@@ -167,10 +179,30 @@ void KeysDataBase::add_rsa_member_key(const std::string& chat_id, const std::str
     members_public_keys = KeysDataBaseHelper::vector_to_string(members_public_keys_vec);
 
     // Записываем изменённые значения
-    const std::string sql_request = "UPDATE rsa SET sent_members = sent_members + 1, members_public_keys = ? WHERE chat_id = ? AND status = 0;";
+    const std::string sql_request = "UPDATE rsa SET sent_members = sent_members + 1, members_public_keys = ? WHERE chat_id = ? AND key_n = ? AND status = 0;";
     Statement stmt(db, sql_request);
     stmt.bind_text(1, *members_public_keys);
     stmt.bind_text(2, chat_id);
+    stmt.bind_int(3, key_n);
+    stmt.execute();
+}
+
+void KeysDataBase::add_aes_sent_in_chat(const std::string& chat_id, const int key_n, const int pos) {
+    // Извлекаем существующие списоки параметров
+    std::optional<std::string> sent_in_chat = get_active_param_text(chat_id, KeysTablesDefs::AES, RsaColumnsDefs::SENT_IN_CHAT, 0);
+    if (!sent_in_chat) { throw std::runtime_error("Ошибка получения параметра"); }
+
+    // Дополняем извлеченные значения новым
+    std::vector<std::string> sent_in_chat_vec = KeysDataBaseHelper::string_to_vector(*sent_in_chat);
+    sent_in_chat_vec[pos] = "1";
+    sent_in_chat = KeysDataBaseHelper::vector_to_string(sent_in_chat_vec);
+
+    // Записываем изменённые значения
+    const std::string sql_request = "UPDATE aes SET sent_members = sent_members + 1, sent_in_chat = ? WHERE chat_id = ? AND key_n = ? AND status = 0;";
+    Statement stmt(db, sql_request);
+    stmt.bind_text(1, *sent_in_chat);
+    stmt.bind_text(2, chat_id);
+    stmt.bind_int(3, key_n);
     stmt.execute();
 }
 

@@ -28,18 +28,24 @@ const std::string create_aes_table_request = R"(
     CREATE TABLE IF NOT EXISTS aes (
         node_id INTEGER PRIMARY KEY AUTOINCREMENT,
         chat_id TEXT DEFAULT "",
-        session_key  TEXT DEFAULT "",
+        key_n INTEGER DEFAULT 0,
+        session_key TEXT DEFAULT "",
+        p TEXT DEFAULT "",
+        g TEXT DEFAULT "",
+        private_key TEXT DEFAULT "",
+        public_key TEXT DEFAULT "",
         date TEXT DEFAULT "",
         messages INTEGER DEFAULT 0,
         status INTEGER DEFAULT 0,
-        initiator INTEGER DEFAULT 0
+        sent_in_chat TEXT DEFAULT "",
+        sent_members INTEGER DEFAULT 0
     );
 )";
 const std::string create_rsa_table_request = R"(
     CREATE TABLE IF NOT EXISTS rsa (
         node_id INTEGER PRIMARY KEY AUTOINCREMENT,
         chat_id TEXT DEFAULT "",
-        key_n INTEGER,
+        key_n INTEGER DEFAULT 0,
         key_len INTEGER DEFAULT 2048,
         sent_members INTEGER DEFAULT 0,
         private_key  TEXT DEFAULT "",
@@ -64,13 +70,19 @@ const std::string create_chats_table_request = R"(
 
 // Структуры для задания параметров (значения столбцов) в таблице rsa и aes
 struct AesParamsFiller {
-    int node_id = 0;               // id записи в таблице
-    std::string chat_id = "";      // id чата
-    std::string session_key = "";  // общий ключ шифровки и дешифровки сообщений в чате
-    std::string date = "";         // дата создания session_key
-    int messages = 0;              // количество сообщений, которые были написаны этим ключом
-    int status = 0;                // статус ключа: на формировании(0) / устарел(-1) / используется(1)
-    int initiator = 0;             // флаг, являетесь ли вы инициатором создания ключа: не являетесь(0) / ялвяетесь (1)
+    int node_id = 0;                // id записи в таблице
+    std::string chat_id = "";       // id чата
+    int key_n = 0;                  // номер ключа
+    std::string session_key = "";   // общий ключ шифровки и дешифровки сообщений в чате
+    std::string p = "";             // свой параметр p (участвует в создании ключа)
+    std::string g = "";             // свой параметр р (участвует в создании ключа)
+    std::string public_key = "";    // свой параметр public_key (участвует в создании ключа)
+    std::string private_key = "";   // свой параметр private_key (участвует в создании ключа)
+    std::string date = "";          // дата создания session_key
+    int messages = 0;               // количество сообщений, которые были написаны этим ключом
+    int status = 0;                 // статус ключа: на формировании(0) / устарел(-1) / используется(1)
+    std::string sent_in_chat = "";  // склеенные флаги отправки в чат сообщения с целью формирования ключа для i-ого собеседника
+    int sent_members = 0;           // количество пользователей, которым было отправлено сообьщение о формировании aes ключа
 };
 struct RsaParamsFiller {
     int node_id = 0;                                    // id записи в таблице
@@ -99,11 +111,17 @@ struct ChatsParamsFiller {
 enum class AesColumnsDefs : int {
     NODE_ID,
     CHAT_ID,
+    KEY_N,
     SESSION_KEY,
+    P,
+    G,
+    PUBLIC_KEY,
+    PRIVATE_KEY,
     DATE,
     MESSAGES,
     STATUS,
-    INITIATOR
+    SENT_IN_CHAT,
+    SENT_MEMBERS
 };
 enum class RsaColumnsDefs : int {
     NODE_ID,
@@ -214,8 +232,11 @@ public:
     void add_aes_key(const AesParamsFiller& data);
     void add_rsa_key(const RsaParamsFiller& data, const std::string& my_public_key);
 
-    // Добавление ключей пользователей чата (возвращает true - если все собеседники обменялись ключами, false - иначе)
-    void add_rsa_member_key(const std::string& chat_id, const std::string& key, const int pos);
+    // Добавление ключей пользователей чата
+    void add_rsa_member_key(const std::string& chat_id, const int key_n, const std::string& key, const int pos);
+
+    // Добавление флага об отправке сообщения в чате i-ому пользователю
+    void add_aes_sent_in_chat(const std::string& chat_id, const int key_n, const int pos);
 
     // Добавляем информацию о чате
     void add_chat_params(const ChatsParamsFiller& data);

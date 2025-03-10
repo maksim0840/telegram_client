@@ -34,12 +34,12 @@ std::vector<QString> decrypt_the_message(const MTPDmessage &msg, const quint64 c
 
 	if (input_message.rsa_init && input_message.rsa_form && input_message.rsa_use) { // признак окончания ввода rsa ключа
 		commands.continue_rsa(chat_id_str, input_message);
-		res = commands.end_rsa(chat_id_str, input_message.rsa_key_n);
+		res = commands.end_rsa(chat_id_str, input_message.rsa_key_n, input_message.dh_fastmode);
 	}
 	else if (input_message.rsa_init || input_message.rsa_form) { // обрабатываем сообщение о создании / продолжении создания rsa ключа
-		try {
+		//try {
 			res = commands.continue_rsa(chat_id_str, input_message);
-		} catch (const std::exception& e) {}
+		//} catch (const std::exception& e) {}
 	}
 
 	

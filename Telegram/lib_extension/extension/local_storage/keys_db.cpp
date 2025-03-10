@@ -206,6 +206,15 @@ void KeysDataBase::add_aes_sent_in_chat(const std::string& chat_id, const int ke
     stmt.execute();
 }
 
+void KeysDataBase::add_aes_session_key(const std::string& chat_id, const int key_n, const std::string& session_key) {
+    const std::string sql_request = "UPDATE aes SET session_key = ? WHERE chat_id = ? AND key_n = ? AND status = 0;";
+    Statement stmt(db, sql_request);
+    stmt.bind_text(1, session_key);
+    stmt.bind_text(2, chat_id);
+    stmt.bind_int(3, key_n);
+    stmt.execute();
+}
+
 void KeysDataBase::increase_messages_counter(const std::string& chat_id) {
     // Увеличиваем количество сообщений в таблице aes
     const std::string sql_request_aes = "UPDATE aes SET messages = messages + 1 WHERE chat_id = ? AND status = 1;";

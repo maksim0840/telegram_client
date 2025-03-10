@@ -41,6 +41,12 @@ std::vector<QString> decrypt_the_message(const MTPDmessage &msg, const quint64 c
 			res = commands.continue_rsa(chat_id_str, input_message);
 		//} catch (const std::exception& e) {}
 	}
+	else if (input_message.aes_init && input_message.aes_form && input_message.aes_use) {
+
+	}
+	else if (input_message.aes_init || input_message.aes_form) {
+		res = commands.continue_aes(chat_id_str, input_message);
+	}
 
 	
 	for (const auto& r : res) {

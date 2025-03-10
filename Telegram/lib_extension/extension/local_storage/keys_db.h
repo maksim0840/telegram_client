@@ -232,11 +232,10 @@ public:
     void add_aes_key(const AesParamsFiller& data);
     void add_rsa_key(const RsaParamsFiller& data, const std::string& my_public_key);
 
-    // Добавление ключей пользователей чата
+    // Добавление параметров после создания записи
     void add_rsa_member_key(const std::string& chat_id, const int key_n, const std::string& key, const int pos);
-
-    // Добавление флага об отправке сообщения в чате i-ому пользователю
     void add_aes_sent_in_chat(const std::string& chat_id, const int key_n, const int pos);
+    void add_aes_session_key(const std::string& chat_id, const int key_n, const std::string& session_key);
 
     // Добавляем информацию о чате
     void add_chat_params(const ChatsParamsFiller& data);

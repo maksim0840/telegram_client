@@ -16,6 +16,6 @@ public:
     std::vector<std::string> end_rsa(const std::string& chat_id_str, const int rsa_key_n, const bool dh_fastmode);
 
     std::vector<std::string> start_aes(const std::string& chat_id_str, const int rsa_key_n, const bool dh_fastmode);
-    std::vector<std::string> continue_aes();
+    std::vector<std::string> continue_aes(const std::string& chat_id_str, const Message& input_message);
     std::vector<std::string> end_aes();
 };

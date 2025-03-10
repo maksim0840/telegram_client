@@ -91,8 +91,12 @@ std::vector<std::string> ChatCommandsManager::continue_rsa(const std::string& ch
         if (*sent_members == members_public_keys_vec.size()) {
             output_message.rsa_init = true;
             output_message.rsa_use = true;
-            end_rsa(chat_id_str, input_message.rsa_key_n, input_message.dh_fastmode);
+            output.push_back(output_message.get_text_with_options());
+            std::vector<std::string> end_rsa_output = end_rsa(chat_id_str, input_message.rsa_key_n, input_message.dh_fastmode);
+            output.insert(output.end(), end_rsa_output.begin(), end_rsa_output.end());
+            return output;
         }
+
         std::cout << 11 << '\n';
         output.push_back(output_message.get_text_with_options());
     }
@@ -125,14 +129,18 @@ std::vector<std::string> ChatCommandsManager::end_rsa(const std::string& chat_id
 
 std::vector<std::string> ChatCommandsManager::start_aes(const std::string& chat_id_str, const int rsa_key_n, const bool dh_fastmode) {
     std::vector<std::string> output;
+
     std::cout << 15 << '\n';
+
     std::optional<int> my_id_pos = db.get_active_param_int(chat_id_str, KeysTablesDefs::CHATS, ChatsColumnsDefs::MY_ID_POS);
     std::optional<int> members_count = db.get_active_param_int(chat_id_str, KeysTablesDefs::CHATS, ChatsColumnsDefs::MEMBERS_COUNT);
     std::optional<int> aes_key_n = db.get_last_key_n(chat_id_str, KeysTablesDefs::AES);
     if (!my_id_pos) { throw std::runtime_error("Ошибка получения параметра"); }
     if (!members_count) { throw std::runtime_error("Ошибка получения параметра"); } 
     aes_key_n = (aes_key_n) ? (*aes_key_n + 1) : 1;
+
     std::cout << 16 << '\n';
+
     if (members_count == 1) {
         // Создать ключ для одного пользователя
         std::string aes_key = aes_manager.create_key_solo();
@@ -150,9 +158,10 @@ std::vector<std::string> ChatCommandsManager::start_aes(const std::string& chat_
         return end_aes();
     }
     std::cout << 17 << '\n';
+
     // Создаём параметры шифрования для генерации ключа между несколькими собеседниками
     DHParamsStr dh_params = aes_manager.get_dh_params(dh_fastmode);
-    std::cout << 1717 << '\n';
+
     // Добавить информацию о параметрах в базу данных
     AesParamsFiller aes_params;
     aes_params.chat_id = chat_id_str;
@@ -162,27 +171,155 @@ std::vector<std::string> ChatCommandsManager::start_aes(const std::string& chat_
     aes_params.public_key = dh_params.public_key;
     aes_params.private_key = dh_params.private_key;
     db.add_aes_key(aes_params);
-    std::cout << 171717 << '\n';
+
     std::optional<int> rsa_key_len = db.get_active_param_int(chat_id_str, rsa_key_n, KeysTablesDefs::RSA, RsaColumnsDefs::KEY_LEN);
     if (!rsa_key_len) { return output; }
     std::cout << 18 << '\n';
     std::vector<std::string> shared_params = {dh_params.p, dh_params.g};
 
-    // Отправить сообщение
-    Message output_message;
-    output_message.rsa_use = true;
-    output_message.aes_init = true;
-    output_message.aes_form = true;
-    output_message.dh_fastmode = dh_fastmode;
-    output_message.rsa_key_n = rsa_key_n;
-    output_message.aes_key_n = *aes_key_n;
-    output_message.last_peer_n = (*my_id_pos - 1) % *members_count;
-    output_message.rsa_key_len = *rsa_key_len;
-    output_message.text = KeysDataBaseHelper::vector_to_string(shared_params);
-    std::cout << 19 << '\n';
-    output.push_back(output_message.get_text_with_options());
+    // Каждому собеседнику, кроме себя отправить параметры p и g
+    for (int i = 0; i < *members_count; ++i) {
+        if (i == *my_id_pos) {
+            continue;
+        }
+
+        // Отправить сообщение
+        Message output_message;
+        output_message.rsa_use = true;
+        output_message.aes_init = true;
+        output_message.aes_form = true;
+        output_message.dh_fastmode = dh_fastmode;
+        output_message.rsa_key_n = rsa_key_n;
+        output_message.aes_key_n = *aes_key_n;
+        output_message.last_peer_n = i;
+        output_message.rsa_key_len = *rsa_key_len;
+        output_message.text = KeysDataBaseHelper::vector_to_string(shared_params);
+
+        std::cout << 19 << '\n';
+        output.push_back(output_message.get_text_with_options());
+    }
+
+    // Если мы первый в списке пользователей, то начинаем формировать ключ
+    if (*my_id_pos == 0) {
+        Message output_message;
+        output_message.rsa_use = true;
+        output_message.aes_form = true;
+        output_message.dh_fastmode = dh_fastmode;
+        output_message.rsa_key_n = rsa_key_n;
+        output_message.aes_key_n = *aes_key_n;
+        output_message.last_peer_n = (*my_id_pos - 1) % *members_count;
+        output_message.rsa_key_len = *rsa_key_len;
+        output_message.text = KeysDataBaseHelper::vector_to_string(shared_params);
+
+        std::cout << 20 << '\n';
+        output.push_back(output_message.get_text_with_options());
+    }
+
     return output;
 }
+
+
+std::vector<std::string> ChatCommandsManager::continue_aes(const std::string& chat_id_str, const Message& input_message) {
+    std::vector<std::string> output;
+
+    std::optional<int> my_id_pos = db.get_active_param_int(chat_id_str, KeysTablesDefs::CHATS, ChatsColumnsDefs::MY_ID_POS);
+    std::optional<int> members_count = db.get_active_param_int(chat_id_str, KeysTablesDefs::CHATS, ChatsColumnsDefs::MEMBERS_COUNT);
+    std::optional<std::string> sent_in_chat = db.get_active_param_text(chat_id_str, input_message.aes_key_n, KeysTablesDefs::AES, AesColumnsDefs::SENT_IN_CHAT, 0);
+    if (!my_id_pos) { throw std::runtime_error("Ошибка получения параметра"); }
+    if (!members_count) { throw std::runtime_error("Ошибка получения параметра"); }
+
+
+    // Признак необходимости принять параметры p и g
+    if (!sent_in_chat && input_message.aes_init && input_message.aes_form) {
+        // Получаем {public_key, private_key}
+        std::vector<std::string> shared_params = KeysDataBaseHelper::string_to_vector(input_message.text); 
+
+        // Генерируем свои параметры на основе полученных
+        DHParamsStr dh_params = aes_manager.get_dh_params_secondly(shared_params[0], shared_params[1]);
+
+        // Добавить информацию о своих ключах в базу данных
+        AesParamsFiller aes_params;
+        aes_params.chat_id = chat_id_str;
+        aes_params.key_n = input_message.aes_key_n;
+        aes_params.p = dh_params.p;
+        aes_params.g = dh_params.g;
+        aes_params.public_key = dh_params.public_key;
+        aes_params.private_key = dh_params.private_key;
+        db.add_aes_key(aes_params);
+
+        // Если мы первый в списке пользователей, то начинаем формировать ключ
+        if (*my_id_pos == 0) {
+            Message output_message;
+            output_message.rsa_use = true;
+            output_message.aes_form = true;
+            output_message.dh_fastmode = input_message.dh_fastmode;
+            output_message.rsa_key_n = input_message.rsa_key_n;
+            output_message.aes_key_n = input_message.aes_key_n;
+            output_message.last_peer_n = (*my_id_pos - 1) % *members_count;
+            output_message.rsa_key_len = input_message.rsa_key_len;
+            output_message.text = KeysDataBaseHelper::vector_to_string(shared_params);
+    
+            output.push_back(output_message.get_text_with_options());
+            return output;
+        }
+    }
+    else if (!sent_in_chat) { throw std::runtime_error("Ошибка получения параметра"); }
+
+    // Если сообщение уже было отправленно, то игнорируем вызов
+    std::vector<std::string> sent_in_chat_vec = KeysDataBaseHelper::string_to_vector(*sent_in_chat);
+    if (sent_in_chat_vec[*my_id_pos] != "") {
+        return output;
+    }
+
+    // Получаем параметры dh
+    std::optional<std::string> p = db.get_active_param_text(chat_id_str, input_message.aes_key_n, KeysTablesDefs::AES, AesColumnsDefs::P, 0);
+    std::optional<std::string> g = db.get_active_param_text(chat_id_str, input_message.aes_key_n, KeysTablesDefs::AES, AesColumnsDefs::G, 0);
+    std::optional<std::string> public_key = db.get_active_param_text(chat_id_str, input_message.aes_key_n, KeysTablesDefs::AES, AesColumnsDefs::PUBLIC_KEY, 0);
+    std::optional<std::string> private_key = db.get_active_param_text(chat_id_str, input_message.aes_key_n, KeysTablesDefs::AES, AesColumnsDefs::PRIVATE_KEY, 0);
+    if (!p) { throw std::runtime_error("Ошибка получения параметра"); }
+    if (!g) { throw std::runtime_error("Ошибка получения параметра"); }
+    if (!public_key) { throw std::runtime_error("Ошибка получения параметра"); }
+    if (!private_key) { throw std::runtime_error("Ошибка получения параметра"); }
+    DHParamsStr dh_params;
+    dh_params.p = *p;
+    dh_params.g = *g;
+    dh_params.public_key = *public_key;
+    dh_params.private_key = *private_key;
+
+    // Получаем итоговый результат вычисления shared_key
+    if (input_message.last_peer_n == *my_id_pos) {
+
+        // Возводим передаваемый ключ в свою степень
+        std::string session_key = aes_manager.сreate_key_multi(dh_params, input_message.text, true);
+
+        // Добавляем ключ в базу
+        db.add_aes_session_key(chat_id_str, input_message.aes_key_n, session_key);
+        
+        // Если мы создали ключ для самого первого пользователя => ключи создали для всех
+        if (*my_id_pos == 0) {
+            return end_aes();
+        }
+
+        // Отправляем следующий запрос на формирование ключей дальше по цепочке
+        Message output_message = input_message;
+        output_message.last_peer_n = (*my_id_pos - 1) % *members_count;
+        output_message.text = dh_params.public_key;
+        output.push_back(output_message.get_text_with_options());
+        return output;
+    }
+
+    
+
+
+    // Домнажаем на свои параметры и передаём ключ дальше
+    std::string session_key_continuation = aes_manager.сreate_key_multi(dh_params, input_message.text, false);
+    Message output_message = input_message;
+    output_message.text = session_key_continuation;
+    output.push_back(output_message.get_text_with_options());
+    return output;
+
+
+}   
 
 
 std::vector<std::string> ChatCommandsManager::end_aes() {

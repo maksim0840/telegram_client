@@ -123,39 +123,3 @@ std::optional<int> Statement::execute_int(const int column_index) {
     int res = sqlite3_column_int(stmt, column_index);
     return res;
 }
-
-/*
-std::optional<std::vector<std::string>> Statement::execute_row(const int columns) {
-    if (!executed_flag && !execute(SQLITE_ROW)) {
-        return std::nullopt;
-    }
-
-    std::vector<std::string> res;
-    const unsigned char* text = nullptr;
-
-    for (int i = 0; i < columns; ++i) {
-        // Определяем тип столбца
-        int col_type = sqlite3_column_type(stmt, i);
-
-        // Получаем значение в зависимости от типа столбца
-        switch (col_type) {
-            case SQLITE_INTEGER:
-                res.push_back(std::to_string(sqlite3_column_int(stmt, i)));
-                break;
-            case SQLITE_FLOAT:
-                res.push_back(std::to_string(sqlite3_column_double(stmt, i)));
-                break;
-            case SQLITE_TEXT:
-                text = sqlite3_column_text(stmt, i);
-                if (text != nullptr) {
-                    res.push_back(std::string(reinterpret_cast<const char*>(text)));
-                    break;
-                }
-            default:
-                res.push_back("");
-                break;
-        }
-    }
-    return res;
-}
-*/

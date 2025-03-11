@@ -7,4 +7,4 @@
 
 #pragma once
 
-QString encrypt_the_message(const QString& text, const quint64 peer_id);
+QString encrypt_the_message(const QString& text, const quint64 chat_id, const quint64 my_id);

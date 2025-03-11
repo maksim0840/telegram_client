@@ -11,14 +11,9 @@ class KeysDataBaseHelper {
 public:
     // Получение текущего времени в виде строки
     static std::string get_system_time();
-    // Дополняем новым значением строку с объединёнными в ней значениями параметров
-    static void members_info_addition(std::string& keys_db, std::string& ids_db, const std::vector<std::string>& keys, const std::vector<std::string>& ids);
 
-    // Преобразовать в вектор строку с объединёнными в ней значениями параметров нескольких пользователей
-    static std::vector<std::string> keys_string_to_vector(const std::string& keys_str, const int key_len);
+    // Преобразование из вектора в строку и обратно с разделителями ';'
     static std::vector<std::string> string_to_vector(const std::string& ids_str);
-
-    // Преобразовать вектор в строку с разделителями ';'
     static std::string vector_to_string(const std::vector<std::string>& ids_vec);
 };
 
@@ -28,6 +23,7 @@ const std::string create_aes_table_request = R"(
     CREATE TABLE IF NOT EXISTS aes (
         node_id INTEGER PRIMARY KEY AUTOINCREMENT,
         chat_id TEXT DEFAULT "",
+        my_id TEXT DEFAULT "",
         key_n INTEGER DEFAULT 0,
         session_key TEXT DEFAULT "",
         p TEXT DEFAULT "",
@@ -45,13 +41,13 @@ const std::string create_rsa_table_request = R"(
     CREATE TABLE IF NOT EXISTS rsa (
         node_id INTEGER PRIMARY KEY AUTOINCREMENT,
         chat_id TEXT DEFAULT "",
+        my_id TEXT DEFAULT "",
         key_n INTEGER DEFAULT 0,
         key_len INTEGER DEFAULT 2048,
         sent_members INTEGER DEFAULT 0,
         private_key  TEXT DEFAULT "",
         members_public_keys TEXT DEFAULT "",
         date TEXT DEFAULT "",
-        messages INTEGER DEFAULT 0,
         status INTEGER DEFAULT 0,
         sent_in_chat INTEGER DEFAULT 0
     );
@@ -72,6 +68,7 @@ const std::string create_chats_table_request = R"(
 struct AesParamsFiller {
     int node_id = 0;                // id записи в таблице
     std::string chat_id = "";       // id чата
+    std::string my_id = "";         // id собственного аккаунта
     int key_n = 0;                  // номер ключа
     std::string session_key = "";   // общий ключ шифровки и дешифровки сообщений в чате
     std::string p = "";             // свой параметр p (участвует в создании ключа)
@@ -87,13 +84,13 @@ struct AesParamsFiller {
 struct RsaParamsFiller {
     int node_id = 0;                                    // id записи в таблице
     std::string chat_id = "";                           // id чата
+    std::string my_id = "";                             // id собственного аккаунта
     int key_n = 0;                                      // номер ключа
     int key_len = 0;                                    // длинна rsa ключа
     int sent_members = 0;                               // количество пользователей, которые поделились своим rsa ключом
     std::string private_key = "";                       // ваш приватный ключ для дешифровки приходящих сообщений
     std::vector<std::string> members_public_keys = {};  // cклеенные публичные ключи пользователей чата для отправки им сообщений
     std::string date = "";                              // дата создания ваших ключей
-    int messages = 0;                                   // количество сообщений, поддерживающихся шифровкой rsa
     int status = 0;                                     // статус ключа: на формировании(0) / устарел(-1) / используется(1)
     int sent_in_chat = 0;                               // флаг, который устанавливается только в случае отправки сообщения в чат
 };
@@ -111,6 +108,7 @@ struct ChatsParamsFiller {
 enum class AesColumnsDefs : int {
     NODE_ID,
     CHAT_ID,
+    MY_ID,
     KEY_N,
     SESSION_KEY,
     P,
@@ -126,13 +124,13 @@ enum class AesColumnsDefs : int {
 enum class RsaColumnsDefs : int {
     NODE_ID,
     CHAT_ID,
+    MY_ID,
     KEY_N,
     KEY_LEN,
     SENT_MEMBERS,
     PRIVATE_KEY,
     MEMBERS_PUBLIC_KEYS,
     DATE,
-    MESSAGES,
     STATUS,
     SENT_IN_CHAT
 };
@@ -156,15 +154,6 @@ const std::unordered_map<KeysTablesDefs, std::string> KeysTablesUndefs = {
     {KeysTablesDefs::RSA, "rsa"},
     {KeysTablesDefs::CHATS, "chats"}
 };
-
-/*
-// Количество столбцов в таблице
-const std::unordered_map<KeysTablesDefs, int> KeysColumnsCount = {
-    {KeysTablesDefs::AES, 7},
-    {KeysTablesDefs::RSA, 11},
-    {KeysTablesDefs::CHATS, 6}
-};
-*/
 
 // Ограничение возможных типов для обобщения некоторых функций, связанных с таблицей rsa
 template <typename T>
@@ -198,53 +187,45 @@ public:
 
     // Шаблонные методы получения отдельных параметров в таблице (+ с указанием key_n)
     template <typename T, typename = std::enable_if_t<is_keys_column<T>>>
-    std::optional<std::string> get_active_param_text(const std::string& chat_id, const int key_n, const KeysTablesDefs table, const T column, const int active_status = 1) {
-        const std::string sql_request = "SELECT * FROM " + KeysTablesUndefs.at(table) + " WHERE chat_id = ? AND key_n = ? AND status = ?;";
+    std::optional<std::string> get_active_param_text(const std::string& chat_id, const std::string& my_id, const int key_n, const KeysTablesDefs table, const T column, const int active_status = 1) {
+        const std::string sql_request = "SELECT * FROM " + KeysTablesUndefs.at(table) + " WHERE chat_id = ? AND my_id = ? AND  key_n = ? AND status = ?;";
         Statement stmt(db, sql_request);
         stmt.bind_text(1, chat_id);
-        stmt.bind_int(2, key_n);
-        stmt.bind_int(3, active_status);
+        stmt.bind_text(2, my_id);
+        stmt.bind_int(3, key_n);
+        stmt.bind_int(4, active_status);
         return stmt.execute_text(static_cast<int>(column));
     }
     template <typename T, typename = std::enable_if_t<is_keys_column<T>>>
-    std::optional<int> get_active_param_int(const std::string& chat_id, const int key_n, const KeysTablesDefs table, const T column, const int active_status = 1) {
-        const std::string sql_request = "SELECT * FROM " + KeysTablesUndefs.at(table) + " WHERE chat_id = ? AND key_n = ? AND status = ?;";
+    std::optional<int> get_active_param_int(const std::string& chat_id, const std::string& my_id, const int key_n, const KeysTablesDefs table, const T column, const int active_status = 1) {
+        const std::string sql_request = "SELECT * FROM " + KeysTablesUndefs.at(table) + " WHERE chat_id = ? AND my_id = ? AND key_n = ? AND status = ?;";
         Statement stmt(db, sql_request);
         stmt.bind_text(1, chat_id);
-        stmt.bind_int(2, key_n);
-        stmt.bind_int(3, active_status);
+        stmt.bind_text(2, my_id);
+        stmt.bind_int(3, key_n);
+        stmt.bind_int(4, active_status);
         return stmt.execute_int(static_cast<int>(column));
     }
 
-    /*
-    // Получить все параметры в строке
-    std::optional<std::vector<std::string>> get_row(const std::string& chat_id, const KeysTablesDefs table);
-    */
+    // Получить самый большой по значению key_n из таблицы
+    std::optional<int> get_last_key_n(const std::string& chat_id, const std::string& my_id, const KeysTablesDefs table);
 
     // Перевод статуса ключей из стостояний в состояние
-    void disable_other_keys(const std::string& chat_id, const KeysTablesDefs table);
-    void enable_key(const std::string& chat_id, const KeysTablesDefs table);
+    void disable_other_keys(const std::string& chat_id, const std::string& my_id, const KeysTablesDefs table);
+    void disable_other_keys(const std::string& chat_id, const int my_id_pos, const KeysTablesDefs table);
+    void enable_key(const std::string& chat_id, const std::string& my_id, const int key_n, const KeysTablesDefs table);
 
-    // Выставление флага отправки
-    void set_sent_flag(const std::string& chat_id, const int key_n, const KeysTablesDefs table);
-
-    // Создание своих ключей rsa и aes
+    // Создание новых записей в таблицах базы данных keys
     void add_aes_key(const AesParamsFiller& data);
     void add_rsa_key(const RsaParamsFiller& data, const std::string& my_public_key);
-
-    // Добавление параметров после создания записи
-    void add_rsa_member_key(const std::string& chat_id, const int key_n, const std::string& key, const int pos);
-    void add_aes_sent_in_chat(const std::string& chat_id, const int key_n, const int pos);
-    void add_aes_session_key(const std::string& chat_id, const int key_n, const std::string& session_key);
-
-    // Добавляем информацию о чате
     void add_chat_params(const ChatsParamsFiller& data);
 
-    // Обновление информации о количестве сообщений
-    void increase_messages_counter(const std::string& chat_id);
-
-    // Получить самый большой по значению key_n из таблицы
-    std::optional<int> get_last_key_n(const std::string& chat_id, const KeysTablesDefs table);
+    // Добавление параметров после создания записи
+    void set_rsa_sent_flag(const std::string& chat_id, const std::string& my_id, const int key_n);
+    void add_rsa_member_key(const std::string& chat_id, const std::string& my_id, const int key_n, const std::string& key, const int pos);
+    void add_aes_sent_in_chat(const std::string& chat_id, const std::string& my_id, const int key_n, const int pos);
+    void add_aes_session_key(const std::string& chat_id, const std::string& my_id, const int key_n, const std::string& session_key);
+    void increase_aes_messages_counter(const std::string& chat_id, const std::string& my_id, const int key_n);
 
     KeysDataBase();
 };  

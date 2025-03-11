@@ -61,8 +61,4 @@ public:
     std::optional<std::string> execute_text(const int column_index);
     std::optional<int> execute_int(const int column_index);
 
-    /*
-    // Выполнить запрос с получением всех значений в вектор строк
-    std::optional<std::vector<std::string>> execute_row(const int columns);
-    */
 };

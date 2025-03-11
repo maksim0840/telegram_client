@@ -4072,7 +4072,7 @@ TextWithEntities HistoryWidget::prepareTextForEditMsg() const {
 		_history,
 		session().user()).flags;
 	auto left = TextWithEntities {
-		encrypt_the_message(textWithTags.text, peer()->id.value),
+		encrypt_the_message(textWithTags.text, peer()->id.value, peer()->owner().session().userPeerId().value),
 		TextUtilities::ConvertTextTagsToEntities(textWithTags.tags) };
 	TextUtilities::PrepareForSending(left, prepareFlags);
 	return left;
@@ -4265,7 +4265,9 @@ void HistoryWidget::send(Api::SendOptions options) {
 	message.webPage = _preview->draft();
 	
 	std::cout << "history_widget.cpp send\n";
-	message.textWithTags.text = encrypt_the_message(message.textWithTags.text, peer()->id.value);
+	BareId chat_id = peer()->id.value;
+	BareId my_id = peer()->owner().session().userPeerId().value;
+	message.textWithTags.text = encrypt_the_message(message.textWithTags.text, chat_id, my_id);
 	
 	const auto ignoreSlowmodeCountdown = (options.scheduled != 0);
 	if (showSendMessageError(
@@ -8325,11 +8327,12 @@ void HistoryWidget::handlePeerUpdate() {
 	}
 
 	std::cout << "handlePeerUpdate\n";
+	BareId chat_id = peer()->id.value;
 	BareId my_id = peer()->owner().session().userPeerId().value;
 	std::vector<BareId> chat_members = {my_id};
 	
 	if (peer()->isUser() && !peer()->isSelf()) {
-		chat_members.push_back(peer()->id.value);
+		chat_members.push_back(chat_id);
 	}
 	else if (peer()->isChat()) {
 		chat_members.clear();
@@ -8337,7 +8340,7 @@ void HistoryWidget::handlePeerUpdate() {
 			chat_members.push_back(p->id.value);
 		}
 	}
-	update_chat_members(peer()->id.value, my_id, chat_members);
+	update_chat_members(chat_id, my_id, chat_members);
 }
 
 bool HistoryWidget::updateCanSendMessage() {

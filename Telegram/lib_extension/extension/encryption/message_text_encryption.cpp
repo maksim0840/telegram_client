@@ -1,17 +1,28 @@
 #include "message_text_encryption.h"
 
-QString encrypt_the_message(const QString& text, const quint64 chat_id) {
+QString encrypt_the_message(const QString& text, const quint64 chat_id, const quint64 my_id) {
     
     std::string text_str = text.toStdString(); // перехваченное сообщение
     std::string chat_id_str = std::to_string(chat_id); // id чата
+    std::string my_id_str = std::to_string(my_id);
     std::string new_text_str = text_str;
 
     
-    int rsa_key_len = 2048;
-    bool dh_fastmode = true;
-    if (text == "[/start_rsa_aes]") { // начать формирование общего ключа
+    int rsa_key_len_default = 2048;
+    bool dh_fastmode_default = true;
+    std::regex re_options(R"(\[/start_encryption-(\d+)-([01])\])");
+    std::smatch match;
+
+    // Подставляем дополнительные опции, если они есть
+    if (std::regex_match(text_str, match, re_options)) {
+        rsa_key_len_default = std::stoi(match[1].str());
+        dh_fastmode_default = std::stoi(match[2].str());
+        text_str = "[/start_encryption]";
+    }
+    // Запускаем процесс шифрования
+    if (text_str == "[/start_encryption]") { // начать формирование общего ключа
         ChatCommandsManager commands;
-        new_text_str = commands.start_rsa(chat_id_str, rsa_key_len, dh_fastmode);
+        new_text_str = commands.start_rsa(chat_id_str, my_id_str, rsa_key_len_default, dh_fastmode_default);
     }
 
     std::cout << '\n';

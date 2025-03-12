@@ -14,14 +14,11 @@ ENV LIBRARY_PATH /usr/local/lib64:/usr/local/lib:/lib64:/lib:/usr/lib64:/usr/lib
 ENV LD_LIBRARY_PATH $LIBRARY_PATH
 ENV PKG_CONFIG_PATH /usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig
 
-
-# ИЗМЕНИТЬ КОЛИЧЕСТВО ЛОГИЧЕСКИХ CPU ДЛЯ РАБОТЫ
+# ИЗМЕНИТЬ КОЛИЧЕСТВО ЛОГИЧЕСКИХ CPU И ОПЕРАТИВНОЙ ПАМЯТИ (в KB) ДЛЯ РАБОТЫ
 ARG BUILD_JOBS=6
+ARG BUILD_MEMORY=10485760
 ENV BUILD_JOBS=${BUILD_JOBS}
-# ИЗМЕНИТЬ КОЛИЧЕСТВО ОПЕРАТИВНОЙ ПАМЯТИ ДЛЯ РАБОТЫ (в KB)
-ARG BUILD_MEMORY=10485760  # 10GB = 10 * 1024 * 1024 KB
 ENV BUILD_MEMORY=${BUILD_MEMORY}
-
 
 RUN dnf -y install epel-release \
 	&& dnf config-manager --set-enabled powertools \

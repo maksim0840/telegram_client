@@ -23,7 +23,11 @@
 
 *Перед началом сборки контейнера с установкой библиотек изменить перменные BUILD_JOBS (кол-во ядер для сборки) и BUILD_MEMORY (оперативная память для сборки) в файле /tdesktop/Telegram/build/docker/centos_env, приемлемые для вышей системы
 
-*Если долго грузит / виснет контейнер на этапе билда проекта, то убрать преписку --parallel в файле, запускающем докер контейнер: /Telegram/build/docker/centos_env/build.sh
+```
+git clone --recursive https://github.com/maksim0840/telegram_client
+./telegram_client/Telegram/build/prepare/linux.sh
+./telegram_client/build.sh
+```
 
 # Ход работы:
 
@@ -87,3 +91,6 @@ Telegram/SourceFiles/history/history_widget.cpp
 Поелзные команды, но не используются (пока):
 
 peer()->asChat()->participants - id участников чата
+
+
+

@@ -1,0 +1,3 @@
+[submodule "Telegram/lib_extension/ThirdParty/SQLiteCpp"]
+	path = Telegram/lib_extension/ThirdParty/SQLiteCpp
+	url = https://github.com/SRombauts/SQLiteCpp.git

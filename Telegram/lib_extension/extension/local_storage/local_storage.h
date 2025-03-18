@@ -8,8 +8,8 @@
 #include <type_traits>
 #include <optional>
 
-// Путь указывать без последней '/' (только путь до папки)
-#define DB_DIR_PATH "/home/user/Documents/tdesktop/Telegram/lib_extension/db"
+// относительный путь до папки /Telegram/lib_extension/db"
+#define DB_DIR_PATH "../../db"
 #define DB_FILE_FORMAT ".db"
 
 #pragma once

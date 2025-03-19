@@ -3684,11 +3684,7 @@ void ApiWrap::sendShortcutMessages(
 }
 
 void ApiWrap::sendMessage(MessageToSend &&message) {
-	///////
-	// std::cout << "APIWRAP.CPP!!!!!!!!!!!" << '\n';
-	// message.action.history = _session->data().history(PeerIdHelper(895736614));
-	// message.textWithTags.text = QString::fromStdString("test test");
-	///////
+
 	const auto history = message.action.history;
 	const auto peer = history->peer;
 	auto &textWithTags = message.textWithTags;
@@ -3696,7 +3692,7 @@ void ApiWrap::sendMessage(MessageToSend &&message) {
 	auto action = message.action;
 	action.generateLocal = true;
 	sendAction(action);
-
+	
 	const auto clearCloudDraft = action.clearDraft;
 	const auto draftTopicRootId = action.replyTo.topicRootId;
 	const auto replyTo = action.replyTo.messageId

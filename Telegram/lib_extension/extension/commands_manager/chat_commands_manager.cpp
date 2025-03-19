@@ -258,6 +258,8 @@ std::vector<std::string> ChatCommandsManager::continue_aes(const std::string& ch
         aes_params.public_key = dh_params.public_key;
         aes_params.private_key = dh_params.private_key;
         db.add_aes_key(aes_params);
+
+        sent_in_chat = input_message.text;
     }
     else if (!sent_in_chat) { throw std::runtime_error("Ошибка получения параметра"); }
     std::cout << 27 << '\n';

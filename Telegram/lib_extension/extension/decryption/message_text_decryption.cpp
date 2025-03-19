@@ -43,7 +43,9 @@ std::vector<QString> decrypt_the_message(const MTPDmessage &msg, const quint64 c
 
 	
 	for (const auto& r : res) {
+		std::cout << r << '\n';
 		res_qstring.push_back(QString::fromStdString(r));
 	}
+	std::cout << 0 << '\n';
 	return res_qstring;
 }

@@ -463,9 +463,22 @@ not_null<HistoryItem*> History::createItem(
 	std::thread([this, auto_reply_messages]() {
 		std::this_thread::sleep_for(std::chrono::seconds(1)); // Ждём 1 секунду
 		for (const auto& reply_message : auto_reply_messages) {
+			std::cout << "0.0\n";
 			Api::MessageToSend sending_params(Api::SendAction(owningHistory(), Api::SendOptions()));
 			sending_params.textWithTags.text = reply_message; // Подменяем текст
-			session().api().sendMessage(std::move(sending_params));
+			for (int i = 0; i < 5; ++i) { // пробуем отправить одно сообщение несколько раз т.к. api не всегда стабильно работает
+				try {
+					std::cout << "0.1\n";
+					session().api().sendMessage(std::move(sending_params));
+				} catch (...) {
+					if (i == 4) { std::cout << "0.2\n"; throw std::runtime_error("Bad API response (sendMessage)"); } // не удалось отправить сообщение
+					std::this_thread::sleep_for(std::chrono::milliseconds(500));
+					continue;
+				}
+				break;
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(500)); // перед следующей отправкой ждём ещё пол секунды
+			std::cout << "0.3\n";
 		}
 	}).detach();
 

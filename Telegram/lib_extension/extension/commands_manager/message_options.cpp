@@ -22,7 +22,7 @@ bool Message::fill_options(const std::string& text_with_options) {
     last_peer_n = std::stoi(match[4].str());
     rsa_key_len = std::stoi(match[5].str());
 
-    text = match[5].str();
+    text = match[6].str();
     return true;
 }
 

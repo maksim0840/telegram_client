@@ -14,11 +14,10 @@ ENV LIBRARY_PATH /usr/local/lib64:/usr/local/lib:/lib64:/lib:/usr/lib64:/usr/lib
 ENV LD_LIBRARY_PATH $LIBRARY_PATH
 ENV PKG_CONFIG_PATH /usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig
 
-# ИЗМЕНИТЬ КОЛИЧЕСТВО ЛОГИЧЕСКИХ CPU И ОПЕРАТИВНОЙ ПАМЯТИ (в KB) ДЛЯ РАБОТЫ
-ARG BUILD_JOBS=6
-ARG BUILD_MEMORY=10485760
-ENV BUILD_JOBS=${BUILD_JOBS}
-ENV BUILD_MEMORY=${BUILD_MEMORY}
+ARG CPUS
+ARG MEMORY
+ENV CPUS=${CPUS}
+ENV MEMORY=${MEMORY}
 
 RUN dnf -y install epel-release \
 	&& dnf config-manager --set-enabled powertools \
@@ -36,7 +35,7 @@ SHELL [ "bash", "-c", ". /opt/rh/gcc-toolset-12/enable; exec bash -c \"$@\"", "-
 
 WORKDIR {{ LibrariesPath }}
 
-RUN python3 -m pip install meson ninja
+RUN python3 -m pip install meson ninja			
 
 ENV AR gcc-ar
 ENV RANLIB gcc-ranlib
@@ -59,7 +58,7 @@ RUN git init zlib \
 	&& git fetch --depth=1 origin 643e17b7498d12ab8d15565662880579692f769d \
 	&& git reset --hard FETCH_HEAD \
 	&& ./configure \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/zlib-cache" install \
 	&& cd .. \
 	&& rm -rf zlib
@@ -68,7 +67,7 @@ FROM builder AS xz
 RUN git clone -b v5.4.4 --depth=1 {{ GIT }}/tukaani-project/xz.git \
 	&& cd xz \
 	&& cmake -B build . -DCMAKE_BUILD_TYPE=None \
-	&& cmake --build build -j$BUILD_JOBS \
+	&& cmake --build build -j$CPUS \
 	&& DESTDIR="{{ LibrariesPath }}/xz-cache" cmake --install build \
 	&& cd .. \
 	&& rm -rf xz
@@ -88,7 +87,7 @@ RUN git clone -b v21.9 --depth=1 --recursive --shallow-submodules {{ GIT }}/prot
 		-Dprotobuf_BUILD_PROTOBUF_BINARIES=ON \
 		-Dprotobuf_BUILD_LIBPROTOC=ON \
 		-Dprotobuf_WITH_ZLIB=OFF \
-	&& ulimit -v $BUILD_MEMORY && cmake --build build --parallel $BUILD_JOBS \
+	&& ulimit -v $MEMORY && cmake --build build --parallel $CPUS \
 	&& DESTDIR="{{ LibrariesPath }}/protobuf-cache" cmake --install build \
 	&& cd .. \
 	&& rm -rf protobuf
@@ -111,7 +110,7 @@ RUN git clone -b v1.1.0 --depth=1 {{ GIT }}/google/brotli.git \
 		-DCMAKE_BUILD_TYPE=None \
 		-DBUILD_SHARED_LIBS=OFF \
 		-DBROTLI_DISABLE_TESTS=ON \
-	&& ulimit -v $BUILD_MEMORY && cmake --build build --parallel $BUILD_JOBS \
+	&& ulimit -v $MEMORY && cmake --build build --parallel $CPUS \
 	&& DESTDIR="{{ LibrariesPath }}/brotli-cache" cmake --install build \
 	&& cd .. \
 	&& rm -rf brotli
@@ -124,7 +123,7 @@ RUN git clone -b 1.0.7 --depth=1 {{ GIT }}/google/highway.git \
 		-DBUILD_TESTING=OFF \
 		-DHWY_ENABLE_CONTRIB=OFF \
 		-DHWY_ENABLE_EXAMPLES=OFF \
-	&& ulimit -v $BUILD_MEMORY && cmake --build build --parallel $BUILD_JOBS \
+	&& ulimit -v $MEMORY && cmake --build build --parallel $CPUS \
 	&& DESTDIR="{{ LibrariesPath }}/highway-cache" cmake --install build \
 	&& cd .. \
 	&& rm -rf highway
@@ -134,7 +133,7 @@ RUN git clone -b v1.4 --depth=1 {{ GIT }}/xiph/opus.git \
 	&& cd opus \
 	&& ./autogen.sh \
 	&& ./configure \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/opus-cache" install \
 	&& cd .. \
 	&& rm -rf opus
@@ -171,7 +170,7 @@ RUN git clone -b v1.0.15 --depth=1 {{ GIT }}/strukturag/libde265.git \
 		-DBUILD_SHARED_LIBS=OFF \
 		-DENABLE_DECODER=OFF \
 		-DENABLE_SDL=OFF \
-	&& ulimit -v $BUILD_MEMORY && cmake --build . --parallel $BUILD_JOBS \
+	&& ulimit -v $MEMORY && cmake --build . --parallel $CPUS \
 	&& DESTDIR="{{ LibrariesPath }}/libde265-cache" cmake --install . \
 	&& cd .. \
 	&& rm -rf libde265
@@ -191,7 +190,7 @@ RUN git init libvpx \
 		--enable-vp9 \
 		--enable-webm-io \
 		--size-limit=4096x4096 \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/libvpx-cache" install \
 	&& cd .. \
 	&& rm -rf libvpx
@@ -210,7 +209,7 @@ RUN git clone -b chrome-m116-5845 --depth=1 {{ GIT }}/webmproject/libwebp.git \
 		-DWEBP_BUILD_WEBPMUX=OFF \
 		-DWEBP_BUILD_WEBPINFO=OFF \
 		-DWEBP_BUILD_EXTRAS=OFF \
-	&& ulimit -v $BUILD_MEMORY && cmake --build build --parallel $BUILD_JOBS \
+	&& ulimit -v $MEMORY && cmake --build build --parallel $CPUS \
 	&& DESTDIR="{{ LibrariesPath }}/libwebp-cache" cmake --install build \
 	&& cd .. \
 	&& rm -rf libwebp
@@ -224,7 +223,7 @@ RUN git clone -b v1.0.4 --depth=1 {{ GIT }}/AOMediaCodec/libavif.git \
 		-DCMAKE_BUILD_TYPE=None \
 		-DBUILD_SHARED_LIBS=OFF \
 		-DAVIF_CODEC_DAV1D=ON \
-	&& ulimit -v $BUILD_MEMORY && cmake --build build --parallel $BUILD_JOBS \
+	&& ulimit -v $MEMORY && cmake --build build --parallel $CPUS \
 	&& DESTDIR="{{ LibrariesPath }}/libavif-cache" cmake --install build \
 	&& cd .. \
 	&& rm -rf libavif
@@ -248,7 +247,7 @@ RUN git clone -b v1.17.6 --depth=1 {{ GIT }}/strukturag/libheif.git \
 		-DWITH_SvtEnc_PLUGIN=OFF \
 		-DWITH_DAV1D=OFF \
 		-DWITH_EXAMPLES=OFF \
-	&& ulimit -v $BUILD_MEMORY && cmake --build build --parallel $BUILD_JOBS \
+	&& ulimit -v $MEMORY && cmake --build build --parallel $CPUS \
 	&& DESTDIR="{{ LibrariesPath }}/libheif-cache" cmake --install build \
 	&& cd .. \
 	&& rm -rf libheif
@@ -277,7 +276,7 @@ RUN git clone -b v0.10.3 --depth=1 {{ GIT }}/libjxl/libjxl.git \
 		-DJPEGXL_ENABLE_SJPEG=OFF \
 		-DJPEGXL_ENABLE_OPENEXR=OFF \
 		-DJPEGXL_ENABLE_SKCMS=OFF \
-	&& ulimit -v $BUILD_MEMORY && cmake --build build --parallel $BUILD_JOBS \
+	&& ulimit -v $MEMORY && cmake --build build --parallel $CPUS \
 	&& export DESTDIR="{{ LibrariesPath }}/libjxl-cache" \
 	&& cmake --install build \
 	&& cp build/lib/libjpegli-static.a $DESTDIR/usr/local/lib64/libjpeg.a \
@@ -289,7 +288,7 @@ FROM builder AS rnnoise
 RUN git clone -b master --depth=1 {{ GIT }}/desktop-app/rnnoise.git \
 	&& cd rnnoise \
 	&& cmake -GNinja -B build . -DCMAKE_BUILD_TYPE=None \
-	&& ulimit -v $BUILD_MEMORY && cmake --build build --parallel $BUILD_JOBS \
+	&& ulimit -v $MEMORY && cmake --build build --parallel $CPUS \
 	&& mkdir -p "{{ LibrariesPath }}/rnnoise-cache/usr/local/include" \
 	&& cp "include/rnnoise.h" "{{ LibrariesPath }}/rnnoise-cache/usr/local/include/" \
 	&& mkdir -p "{{ LibrariesPath }}/rnnoise-cache/usr/local/lib" \
@@ -301,7 +300,7 @@ FROM builder AS xcb-proto
 RUN git clone -b xcb-proto-1.16.0 --depth=1 {{ GIT_FREEDESKTOP }}/xcbproto.git \
 	&& cd xcbproto \
 	&& ./autogen.sh \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/xcb-proto-cache" install \
 	&& cd .. \
 	&& rm -rf xcbproto
@@ -312,7 +311,7 @@ COPY --link --from=xcb-proto {{ LibrariesPath }}/xcb-proto-cache /
 RUN git clone -b libxcb-1.16 --depth=1 {{ GIT_FREEDESKTOP }}/libxcb.git \
 	&& cd libxcb \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/xcb-cache" install \
 	&& cd .. \
 	&& rm -rf libxcb
@@ -322,7 +321,7 @@ RUN git clone -b xcb-util-wm-0.4.2 --depth=1 {{ GIT_FREEDESKTOP }}/libxcb-wm.git
 	&& cd libxcb-wm \
 	&& {{ GIT_UPDATE_M4 }} \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/xcb-wm-cache" install \
 	&& cd .. \
 	&& rm -rf libxcb-wm
@@ -332,7 +331,7 @@ RUN git clone -b xcb-util-0.4.1 --depth=1 {{ GIT_FREEDESKTOP }}/libxcb-util.git 
 	&& cd libxcb-util \
 	&& {{ GIT_UPDATE_M4 }} \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/xcb-util-cache" install \
 	&& cd .. \
 	&& rm -rf libxcb-util
@@ -344,7 +343,7 @@ RUN git clone -b xcb-util-image-0.4.1 --depth=1 {{ GIT_FREEDESKTOP }}/libxcb-ima
 	&& cd libxcb-image \
 	&& {{ GIT_UPDATE_M4 }} \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/xcb-image-cache" install \
 	&& cd .. \
 	&& rm -rf libxcb-image
@@ -354,7 +353,7 @@ RUN git clone -b xcb-util-keysyms-0.4.1 --depth=1 {{ GIT_FREEDESKTOP }}/libxcb-k
 	&& cd libxcb-keysyms \
 	&& {{ GIT_UPDATE_M4 }} \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/xcb-keysyms-cache" install \
 	&& cd .. \
 	&& rm -rf libxcb-keysyms
@@ -364,7 +363,7 @@ RUN git clone -b xcb-util-renderutil-0.3.10 --depth=1 {{ GIT_FREEDESKTOP }}/libx
 	&& cd libxcb-render-util \
 	&& {{ GIT_UPDATE_M4 }} \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/xcb-render-util-cache" install \
 	&& cd .. \
 	&& rm -rf libxcb-render-util
@@ -378,7 +377,7 @@ RUN git clone -b xcb-util-cursor-0.1.4 --depth=1 {{ GIT_FREEDESKTOP }}/libxcb-cu
 	&& cd libxcb-cursor \
 	&& {{ GIT_UPDATE_M4 }} \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/xcb-cursor-cache" install \
 	&& cd .. \
 	&& rm -rf libxcb-cursor
@@ -387,7 +386,7 @@ FROM builder AS libXext
 RUN git clone -b libXext-1.3.5 --depth=1 {{ GIT_FREEDESKTOP }}/libxext.git \
 	&& cd libxext \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/libXext-cache" install \
 	&& cd .. \
 	&& rm -rf libxext
@@ -396,7 +395,7 @@ FROM builder AS libXtst
 RUN git clone -b libXtst-1.2.4 --depth=1 {{ GIT_FREEDESKTOP }}/libxtst.git \
 	&& cd libxtst \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/libXtst-cache" install \
 	&& cd .. \
 	&& rm -rf libxtst
@@ -405,7 +404,7 @@ FROM builder AS libXfixes
 RUN git clone -b libXfixes-5.0.3 --depth=1 {{ GIT_FREEDESKTOP }}/libxfixes.git \
 	&& cd libxfixes \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/libXfixes-cache" install \
 	&& cd .. \
 	&& rm -rf libxfixes
@@ -416,7 +415,7 @@ COPY --link --from=libXext {{ LibrariesPath }}/libXext-cache /
 RUN git clone -b libXv-1.0.12 --depth=1 {{ GIT_FREEDESKTOP }}/libxv.git \
 	&& cd libxv \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/libXv-cache" install \
 	&& cd .. \
 	&& rm -rf libxv
@@ -425,7 +424,7 @@ FROM builder AS libXrandr
 RUN git clone -b libXrandr-1.5.3 --depth=1 {{ GIT_FREEDESKTOP }}/libxrandr.git \
 	&& cd libxrandr \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/libXrandr-cache" install \
 	&& cd .. \
 	&& rm -rf libxrandr
@@ -434,7 +433,7 @@ FROM builder AS libXrender
 RUN git clone -b libXrender-0.9.11 --depth=1 {{ GIT_FREEDESKTOP }}/libxrender.git \
 	&& cd libxrender \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/libXrender-cache" install \
 	&& cd .. \
 	&& rm -rf libxrender
@@ -443,7 +442,7 @@ FROM builder AS libXdamage
 RUN git clone -b libXdamage-1.1.6 --depth=1 {{ GIT_FREEDESKTOP }}/libxdamage.git \
 	&& cd libxdamage \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/libXdamage-cache" install \
 	&& cd .. \
 	&& rm -rf libxdamage
@@ -452,7 +451,7 @@ FROM builder AS libXcomposite
 RUN git clone -b libXcomposite-0.4.6 --depth=1 {{ GIT_FREEDESKTOP }}/libxcomposite.git \
 	&& cd libxcomposite \
 	&& ./autogen.sh --enable-static \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/libXcomposite-cache" install \
 	&& cd .. \
 	&& rm -rf libxcomposite
@@ -623,7 +622,7 @@ RUN git clone -b n6.1.1 --depth=1 {{ GIT }}/FFmpeg/FFmpeg.git \
 		--enable-muxer=mp4 \
 		--enable-muxer=ogg \
 		--enable-muxer=opus \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/ffmpeg-cache" install \
 	&& cd .. \
 	&& rm -rf ffmpeg
@@ -653,7 +652,7 @@ RUN git clone -b 1.23.1 --depth=1 {{ GIT }}/kcat/openal-soft.git \
 		-DALSOFT_EXAMPLES=OFF \
 		-DALSOFT_UTILS=OFF \
 		-DALSOFT_INSTALL_CONFIG=OFF \
-	&& ulimit -v $BUILD_MEMORY && cmake --build build --parallel $BUILD_JOBS \
+	&& ulimit -v $MEMORY && cmake --build build --parallel $CPUS \
 	&& DESTDIR="{{ LibrariesPath }}/openal-cache" cmake --install build \
 	&& cd .. \
 	&& rm -rf openal-soft
@@ -665,7 +664,7 @@ RUN git clone -b openssl-3.2.1 --depth=1 {{ GIT }}/openssl/openssl.git \
 		--openssldir=/etc/ssl \
 		no-tests \
 		no-dso \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/openssl-cache" install_sw \
 	&& cd .. \
 	&& rm -rf openssl
@@ -748,7 +747,7 @@ RUN git clone -b {{ QT_TAG }} --depth=1 {{ GIT }}/qt/qt5.git \
 		-DFEATURE_xcb_sm=OFF \
 		-DINPUT_dbus=runtime \
 		-DINPUT_openssl=linked \
-	&& ulimit -v $BUILD_MEMORY && cmake --build build --parallel $BUILD_JOBS \
+	&& ulimit -v $MEMORY && cmake --build build --parallel $CPUS \
 	&& DESTDIR="{{ LibrariesPath }}/qt-cache" cmake --install build \
 	&& cd .. \
 	&& rm -rf qt5
@@ -758,7 +757,7 @@ RUN git clone -b v2023.06.01 --depth=1 https://chromium.googlesource.com/breakpa
 	&& cd breakpad \
 	&& git clone -b v2022.10.12 --depth=1 https://chromium.googlesource.com/linux-syscall-support.git src/third_party/lss \
 	&& env -u CFLAGS -u CXXFLAGS ./configure \
-	&& make -j$BUILD_JOBS \
+	&& make -j$CPUS \
 	&& make DESTDIR="{{ LibrariesPath }}/breakpad-cache" install \
 	&& cd .. \
 	&& rm -rf breakpad
@@ -797,13 +796,13 @@ RUN git init tg_owt \
 WORKDIR tg_owt
 
 FROM webrtc AS webrtc_release
-RUN ulimit -v $BUILD_MEMORY && cmake --build out --config Release --parallel $BUILD_JOBS \
+RUN ulimit -v $MEMORY && cmake --build out --config Release --parallel $CPUS \
 	&& find out -mindepth 1 -maxdepth 1 ! -name Release -exec rm -rf {} \;
 
 {%- if DEBUG %}
 
 FROM webrtc AS webrtc_debug
-RUN ulimit -v $BUILD_MEMORY && cmake --build out --config Debug --parallel $BUILD_JOBS \
+RUN ulimit -v $MEMORY && cmake --build out --config Debug --parallel $CPUS \
 	&& find out -mindepth 1 -maxdepth 1 ! -name Debug -exec rm -rf {} \;
 {%- endif %}
 
@@ -814,7 +813,7 @@ RUN git clone -b v2.9.0 --depth=1 {{ GIT }}/ada-url/ada.git \
 		-D CMAKE_BUILD_TYPE=None \
         -D ADA_TESTING=OFF \
         -D ADA_TOOLS=OFF \
-	&& ulimit -v $BUILD_MEMORY && cmake --build build --parallel $BUILD_JOBS \
+	&& ulimit -v $MEMORY && cmake --build build --parallel $CPUS \
 	&& DESTDIR="{{ LibrariesPath }}/ada-cache" cmake --install build \
 	&& cd .. \
 	&& rm -rf ada

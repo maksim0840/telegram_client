@@ -1,3 +1,14 @@
+
+# Проверяем передачу пути до папки с базами данных (определяется в run.sh)
+if(NOT DEFINED DB_PATH)
+    set(DB_PATH "default/path/to/db" CACHE INTERNAL "Database path")  # Значение по умолчанию
+endif()
+set(DB_PATH ${DB_PATH} CACHE INTERNAL "Database path")
+
+# Делаем параметр доступным
+add_definitions(-DDB_PATH="${DB_PATH}")
+
+
 add_library(extension_local_storage STATIC)
 init_target(extension_local_storage "(extension)")
 
@@ -23,4 +34,3 @@ PUBLIC
     pthread
     dl
 )
-

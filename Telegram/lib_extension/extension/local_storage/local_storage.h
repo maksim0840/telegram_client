@@ -8,8 +8,11 @@
 #include <type_traits>
 #include <optional>
 
-// относительный путь до папки /Telegram/lib_extension/db"
-#define DB_DIR_PATH "../../db"
+// DB_PATH определяется в файле запуска docker-контейнера в файле run.sh
+#ifndef DB_PATH
+#define DB_PATH "default/path/to/db"
+#endif
+
 #define DB_FILE_FORMAT ".db"
 
 #pragma once

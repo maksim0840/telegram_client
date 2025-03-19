@@ -7,7 +7,7 @@ std::string DataBase::get_name() {
 }
 
 std::string DataBase::get_filepath() {
-    return std::string(DB_DIR_PATH) + "/" + name_ + DB_FILE_FORMAT;
+    return std::string(DB_PATH) + "/" + name_ + DB_FILE_FORMAT;
 }
 
 void DataBase::open_db_file(const std::string& filepath) {

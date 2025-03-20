@@ -111,7 +111,7 @@ void KeysDataBase::add_aes_key(const AesParamsFiller& data) {
 
     stmt.execute();
 }
-#include <iostream>
+
 void KeysDataBase::add_rsa_key(const RsaParamsFiller& data, const std::string& my_public_key) {
     const std::string sql_request = "INSERT INTO rsa (chat_id, my_id, key_n, key_len, sent_members, private_key, members_public_keys, date, status, sent_in_chat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     std::string date = KeysDataBaseHelper::get_system_time();

@@ -40,16 +40,16 @@ std::vector<QString> decrypt_the_message(const MTPDmessage &msg, const quint64 c
 	else if (input_message.aes_init || input_message.aes_form) {
 		res = commands.continue_aes(chat_id_str, my_id_str, input_message);
 	}
-	else {
-		KeysDataBase db;
-		std::optional<std::string> session_key = db.get_active_param_text(chat_id_str, KeysTablesDefs::AES, AesColumnsDefs::SESSION_KEY);
-		if (!session_key) { return res_qstring; }
+	// else {
+	// 	KeysDataBase db;
+	// 	std::optional<std::string> session_key = db.get_active_param_text(chat_id_str, KeysTablesDefs::AES, AesColumnsDefs::SESSION_KEY);
+	// 	if (!session_key) { return res_qstring; }
 
-		AesKeyManager aes_manager;
-		std::cout << *session_key << '\n';
-		std::string decrypted_text = aes_manager.decrypt_message(input_message.text, *session_key);
-		MTPDmessage_private_fields_access(msg, decrypted_text);
-	}
+	// 	AesKeyManager aes_manager;
+	// 	std::cout << *session_key << '\n';
+	// 	std::string decrypted_text = aes_manager.decrypt_message(input_message.text, *session_key);
+	// 	MTPDmessage_private_fields_access(msg, decrypted_text);
+	// }
 
 	
 	for (const auto& r : res) {

@@ -46,6 +46,7 @@ std::vector<QString> decrypt_the_message(const MTPDmessage &msg, const quint64 c
 		if (!session_key) { return res_qstring; }
 
 		AesKeyManager aes_manager;
+		std::cout << *session_key << '\n';
 		std::string decrypted_text = aes_manager.decrypt_message(input_message.text, *session_key);
 		MTPDmessage_private_fields_access(msg, decrypted_text);
 	}

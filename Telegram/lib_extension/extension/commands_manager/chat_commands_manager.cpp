@@ -295,18 +295,13 @@ std::vector<std::string> ChatCommandsManager::continue_aes(const std::string& ch
 
     // Получаем итоговый результат вычисления shared_key
     if (input_message.last_peer_n == *my_id_pos) {
-
+        
         // Возводим передаваемый ключ в свою степень
         std::string session_key = aes_manager.сreate_key_multi(dh_params, input_message.text, true);
 
         // Добавляем ключ в базу
         db.add_aes_session_key(chat_id_str, my_id_str, input_message.aes_key_n, session_key);
         std::cout << 29 << '\n';
-        
-        // Если мы создали ключ для самого первого пользователя => ключи создали для всех
-        if (*my_id_pos == 0) {
-            return end_aes(chat_id_str, my_id_str, input_message.aes_key_n, input_message.dh_fastmode);
-        }
 
         // Отправляем следующий запрос на формирование ключей дальше по цепочке
         Message output_message = input_message;
@@ -318,6 +313,11 @@ std::vector<std::string> ChatCommandsManager::continue_aes(const std::string& ch
         // Запоминаем, что ключ для конкретного пользователя был отправлен
         db.add_aes_sent_in_chat(chat_id_str, my_id_str, output_message.aes_key_n, output_message.last_peer_n);
 
+        // Если мы создали ключ для самого первого пользователя => ключи создали для всех
+        if (*my_id_pos == 0) {
+            return end_aes(chat_id_str, my_id_str, input_message.aes_key_n, input_message.dh_fastmode);
+        }
+        // Иначе, продолжаем цепочку
         return output;
     }
 

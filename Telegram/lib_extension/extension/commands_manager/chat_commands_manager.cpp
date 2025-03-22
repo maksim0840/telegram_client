@@ -32,6 +32,13 @@ std::string ChatCommandsManager::start_rsa(const std::string& chat_id_str, const
     message.rsa_key_len = rsa_key_len;
     message.text = public_key;
     std::cout << 4 << '\n';
+    
+    std::optional<int> members_count = db.get_active_param_int(chat_id_str, KeysTablesDefs::CHATS, ChatsColumnsDefs::MEMBERS_COUNT);
+    if (!members_count) { throw std::runtime_error("Ошибка получения параметра"); } 
+    if (*members_count == 1) {
+        return start_aes(chat_id_str, my_id_str, message.rsa_key_n, message.dh_fastmode)[0];
+    }
+
     return message.get_text_with_options();
 }
 

@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "mtproto/connection_tcp.h"
 
 #include "mtproto/details/mtproto_abstract_socket.h"
@@ -441,6 +442,8 @@ void TcpConnection::sendData(mtpBuffer &&buffer) {
 		.arg(bytes.size()));
 	aesCtrEncrypt(bytes, _sendKey, &_sendState);
 	_socket->write(connectionStartPrefix, bytes);
+
+	//std::cout << "CONNECTION_TCP SEND_DATA\n";
 }
 
 bytes::const_span TcpConnection::prepareConnectionStartPrefix(

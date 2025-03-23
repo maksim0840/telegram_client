@@ -5,6 +5,7 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
 #include "mtproto/session_private.h"
 
 #include "mtproto/details/mtproto_bound_key_creator.h"
@@ -757,9 +758,12 @@ void SessionPrivate::tryToSend() {
 			: bindDcKeyRequest
 			? bindDcKeyRequest
 			: sendingRange.begin()->second;
+		std::cout << '\n';
 		if (totalSending == 1 && !first->forceSendInContainer) {
+			std::cout << "first" << '\n';
 			toSendRequest = first;
 			if (sendAll) {
+				std::cout << "sendAll" << '\n';
 				toSend.erase(sendingFrom, sendingTill);
 				locker1.unlock();
 			}
@@ -769,13 +773,16 @@ void SessionPrivate::tryToSend() {
 				base::unixtime::mtproto_msg_id(),
 				forceNewMsgId && !bindDcKeyRequest);
 			if (bindDcKeyRequest) {
+				std::cout << "bindDcKeyRequest" << '\n';
 				_bindMsgId = msgId;
 				_bindMessageSent = crl::now();
 				needAnyResponse = true;
 			} else if (pingRequest) {
+				std::cout << "pingRequest" << '\n';
 				_pingMsgId = msgId;
 				needAnyResponse = true;
 			} else if (stateRequest || resendRequest) {
+				std::cout << "stateRequest || resendRequest" << '\n';
 				_stateAndResendRequests.emplace(
 					msgId,
 					stateRequest ? stateRequest : resendRequest);
@@ -783,6 +790,7 @@ void SessionPrivate::tryToSend() {
 			}
 
 			if (toSendRequest->requestId) {
+				std::cout << "toSendRequest->requestId" << '\n';
 				if (toSendRequest.needAck()) {
 					toSendRequest->lastSentTime = crl::now();
 
@@ -821,6 +829,7 @@ void SessionPrivate::tryToSend() {
 				}
 			}
 		} else { // send in container
+			std::cout << "second" << '\n';
 			bool willNeedInit = false;
 			uint32 containerSize = 1 + 1; // cons + vector size
 			if (pingRequest) containerSize += pingRequest.messageSize();
@@ -838,6 +847,7 @@ void SessionPrivate::tryToSend() {
 			}
 			mtpBuffer initSerialized;
 			if (willNeedInit) {
+				std::cout << "willNeedInit" << '\n';
 				initSerialized.reserve(initSizeInInts);
 				initSerialized.push_back(mtpc_invokeWithLayer);
 				initSerialized.push_back(kCurrentLayer);
@@ -863,6 +873,7 @@ void SessionPrivate::tryToSend() {
 			sentIdsWrap.messages.reserve(totalSending);
 
 			if (bindDcKeyRequest) {
+				std::cout << "bindDcKeyRequest" << '\n';
 				_bindMsgId = placeToContainer(
 					toSendRequest,
 					bigMsgId,
@@ -873,6 +884,7 @@ void SessionPrivate::tryToSend() {
 				needAnyResponse = true;
 			}
 			if (pingRequest) {
+				std::cout << "pingRequest" << '\n';
 				_pingMsgId = placeToContainer(
 					toSendRequest,
 					bigMsgId,
@@ -930,6 +942,7 @@ void SessionPrivate::tryToSend() {
 			toSend.erase(sendingFrom, sendingTill);
 
 			if (stateRequest) {
+				std::cout << "stateRequest" << '\n';
 				const auto msgId = placeToContainer(
 					toSendRequest,
 					bigMsgId,
@@ -939,6 +952,7 @@ void SessionPrivate::tryToSend() {
 				needAnyResponse = true;
 			}
 			if (resendRequest) {
+				std::cout << "resendRequest" << '\n';
 				const auto msgId = placeToContainer(
 					toSendRequest,
 					bigMsgId,
@@ -948,6 +962,7 @@ void SessionPrivate::tryToSend() {
 				needAnyResponse = true;
 			}
 			if (ackRequest) {
+				std::cout << "ackRequest" << '\n';
 				placeToContainer(
 					toSendRequest,
 					bigMsgId,
@@ -955,6 +970,7 @@ void SessionPrivate::tryToSend() {
 					ackRequest);
 			}
 			if (httpWaitRequest) {
+				std::cout << "httpWaitRequest" << '\n';
 				placeToContainer(
 					toSendRequest,
 					bigMsgId,
@@ -973,6 +989,7 @@ void SessionPrivate::tryToSend() {
 			}
 		}
 	}
+	std::cout << "sendSecureRequest" << "\n\n";
 	sendSecureRequest(std::move(toSendRequest), needAnyResponse);
 	if (someSkipped) {
 		InvokeQueued(this, [=] {
@@ -1442,10 +1459,12 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 		uint64 msgId,
 		OuterInfo info) {
 	Expects(from < end);
-
+	
+	std::cout << "\n" << "handleOneReceived" << "\n";
 	switch (mtpTypeId(*from)) {
 
 	case mtpc_gzip_packed: {
+		std::cout << "mtpc_gzip_packed" << '\n';
 		DEBUG_LOG(("Message Info: gzip container"));
 		mtpBuffer response = ungzip(++from, end);
 		if (response.empty()) {
@@ -1455,6 +1474,7 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	}
 
 	case mtpc_msg_container: {
+		std::cout << "mtpc_msg_container" << '\n';
 		if (++from >= end) {
 			return HandleResult::ParseError;
 		}
@@ -1520,6 +1540,7 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	} return HandleResult::Success;
 
 	case mtpc_msgs_ack: {
+		std::cout << "mtpc_msgs_ack" << '\n';
 		MTPMsgsAck msg;
 		if (!msg.read(from, end)) {
 			return HandleResult::ParseError;
@@ -1542,6 +1563,7 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	} return HandleResult::Success;
 
 	case mtpc_bad_msg_notification: {
+		std::cout << "mtpc_bad_msg_notification" << '\n';
 		MTPBadMsgNotification msg;
 		if (!msg.read(from, end)) {
 			return HandleResult::ParseError;
@@ -1648,6 +1670,7 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	} return HandleResult::Success;
 
 	case mtpc_bad_server_salt: {
+		std::cout << "mtpc_bad_server_salt" << '\n';
 		MTPBadMsgNotification msg;
 		if (!msg.read(from, end)) {
 			return HandleResult::ParseError;
@@ -1682,6 +1705,7 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	} return HandleResult::Success;
 
 	case mtpc_msgs_state_info: {
+		std::cout << "mtpc_msgs_state_info" << '\n';
 		MTPMsgsStateInfo msg;
 		if (!msg.read(from, end)) {
 			return HandleResult::ParseError;
@@ -1734,6 +1758,7 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	} return HandleResult::Success;
 
 	case mtpc_msgs_all_info: {
+		std::cout << "mtpc_msgs_all_info" << '\n';
 		if (info.badTime) {
 			DEBUG_LOG(("Message Info: skipping with bad time..."));
 			return HandleResult::Ignored;
@@ -1756,6 +1781,7 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	} return HandleResult::Success;
 
 	case mtpc_msg_detailed_info: {
+		std::cout << "mtpc_msg_detailed_info" << '\n';
 		MTPMsgDetailedInfo msg;
 		if (!msg.read(from, end)) {
 			return HandleResult::ParseError;
@@ -1785,6 +1811,7 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	} return HandleResult::Success;
 
 	case mtpc_msg_new_detailed_info: {
+		std::cout << "mtpc_msg_new_detailed_info" << '\n';
 		if (info.badTime) {
 			DEBUG_LOG(("Message Info: skipping msg_new_detailed_info with bad time..."));
 			return HandleResult::Ignored;
@@ -1807,6 +1834,7 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	} return HandleResult::Success;
 
 	case mtpc_rpc_result: {
+		std::cout << "mtpc_rpc_result" << '\n';
 		if (from + 3 > end) {
 			return HandleResult::ParseError;
 		}
@@ -1873,6 +1901,7 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	} return HandleResult::Success;
 
 	case mtpc_new_session_created: {
+		std::cout << "mtpc_new_session_created" << '\n';
 		const mtpPrime *start = from;
 		MTPNewSession msg;
 		if (!msg.read(from, end)) {
@@ -1922,6 +1951,7 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	} return HandleResult::Success;
 
 	case mtpc_pong: {
+		std::cout << "mtpc_pong" << '\n';
 		MTPPong msg;
 		if (!msg.read(from, end)) {
 			return HandleResult::ParseError;

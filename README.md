@@ -63,6 +63,8 @@ Telegram/SourceFiles/history/history_widget.cpp
 
 19) перед каждым сообщением (которое обрабатывается расширением) будет стоять флаги в формате [/000000-...-...-...]
 
+20) добавил кнопки начала шифровки и его конца (были изменены файлы Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp/.h)
+
 Стоит изучить:
 
 *data_shortcut_messages - возможная быстрая панель сообщений

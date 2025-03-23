@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #pragma once
 
+#include <iostream>
 #include "ui/rp_widget.h"
 #include "ui/unread_badge.h"
 #include "ui/effects/animations.h"
@@ -139,7 +140,9 @@ private:
 	void slideAnimationCallback();
 	void updateInfoToggleActive();
 	void setupDragOnBackButton();
-
+	
+	void start_encryption(); // реакция на клик
+	void stop_encryption(); // реакция на клик
 	void call();
 	void groupCall();
 	void showPeerMenu();
@@ -226,6 +229,8 @@ private:
 	object_ptr<Ui::UnreadBadge> _unreadBadge = { nullptr };
 	object_ptr<Ui::AbstractButton> _info = { nullptr };
 
+	object_ptr<Ui::IconButton> _start_encryption; // добавляем кнопку создания ключа шифрования
+	object_ptr<Ui::IconButton> _stop_encryption; // добавляем кнопку сброса ключа шифрования
 	object_ptr<Ui::IconButton> _call;
 	object_ptr<Ui::IconButton> _groupCall;
 	object_ptr<Ui::IconButton> _search;

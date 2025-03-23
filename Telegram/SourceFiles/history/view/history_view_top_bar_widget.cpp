@@ -5,6 +5,10 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+
+#include <iostream>
+#include "../../../lib_extension/extension/buttons/top_bar_buttons.h"
+
 #include "history/view/history_view_top_bar_widget.h"
 
 #include "history/history.h"
@@ -102,6 +106,7 @@ QString SwitchToChooseFromQuery() {
 	return u"from:"_q;
 }
 
+
 TopBarWidget::TopBarWidget(
 	QWidget *parent,
 	not_null<Window::SessionController*> controller)
@@ -114,6 +119,8 @@ TopBarWidget::TopBarWidget(
 , _delete(this, tr::lng_selected_delete(), st::defaultActiveButton)
 , _back(this, st::historyTopBarBack)
 , _cancelChoose(this, st::topBarCloseChoose)
+, _start_encryption(this, getTopBarStartEncryption()) // создание кнопки для шифровки
+, _stop_encryption(this, getTopBarStopEncryption()) // создание кнопки для сброса шифровки
 , _call(this, st::topBarCall)
 , _groupCall(this, st::topBarGroupCall)
 , _search(this, st::topBarSearch)
@@ -135,6 +142,8 @@ TopBarWidget::TopBarWidget(
 	_delete->setClickedCallback([=] { _deleteSelection.fire({}); });
 	_delete->setWidthChangedCallback([=] { updateControlsGeometry(); });
 	_clear->setClickedCallback([=] { _clearSelection.fire({}); });
+	_start_encryption->setClickedCallback([=] { start_encryption(); }); // добавляем реакцию на клик
+	_stop_encryption->setClickedCallback([=] { stop_encryption(); }); // добавляем реакцию на клик
 	_call->setClickedCallback([=] { call(); });
 	_groupCall->setClickedCallback([=] { groupCall(); });
 	_menuToggle->setClickedCallback([=] { showPeerMenu(); });
@@ -267,6 +276,16 @@ void TopBarWidget::connectingAnimationCallback() {
 
 void TopBarWidget::refreshLang() {
 	InvokeQueued(this, [this] { updateControlsGeometry(); });
+}
+
+// Реакция на клик при начале шифрования
+void TopBarWidget::start_encryption() {
+	std::cout << "button start_encryption click!" << '\n';
+}
+
+// Реакция на клик при сбросе шифрования
+void TopBarWidget::stop_encryption() {
+	std::cout << "button stop_encryption click!" << '\n';
 }
 
 void TopBarWidget::call() {
@@ -1058,6 +1077,16 @@ void TopBarWidget::updateControlsGeometry() {
 		_rightTaken += _search->width() + st::topBarCallSkip;
 	}
 
+	// Добавляем кнопки в правую часть панели
+	_stop_encryption->moveToRight(_rightTaken, otherButtonsTop);
+	if (!_stop_encryption->isHidden()) {
+		_rightTaken += _stop_encryption->width() + st::topBarSkip;
+	}
+	_start_encryption->moveToRight(_rightTaken, otherButtonsTop);
+	if (!_start_encryption->isHidden()) {
+		_rightTaken += _start_encryption->width() + st::topBarSkip;
+	}
+
 	updateMembersShowArea();
 }
 
@@ -1187,6 +1216,10 @@ void TopBarWidget::updateControlsVisibility() {
 	_groupCall->setVisible(historyMode
 		&& groupCallsEnabled
 		&& !_chooseForReportReason);
+
+	// Включаем отображение
+	_stop_encryption->setVisible(!_chooseForReportReason);
+	_start_encryption->setVisible(!_chooseForReportReason);
 
 	if (_membersShowArea) {
 		_membersShowArea->setVisible(!_chooseForReportReason);

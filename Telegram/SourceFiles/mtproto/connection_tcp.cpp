@@ -312,14 +312,14 @@ void TcpConnection::socketRead() {
 		if (readCount > 0) {
 			const auto read = free.subspan(0, readCount);
 
-			std::cout << "расшифровка:" << '\n';
+			// std::cout << "расшифровка:" << '\n';
 			aesCtrEncrypt(read, _receiveKey, &_receiveState);
 			CONNECTION_LOG_INFO(u"Read %1 bytes"_q.arg(readCount));
 
-			for (std::byte b : read) {
-				std::cout << static_cast<int>(static_cast<unsigned char>(b)) << ' ';
-			}
-			std::cout << std::endl;
+			// for (std::byte b : read) {
+			// 	std::cout << static_cast<int>(static_cast<unsigned char>(b)) << ' ';
+			// }
+			// std::cout << std::endl;
 
 			_readBytes += readCount;
 			if (_leftBytes > 0) {
@@ -392,6 +392,13 @@ void TcpConnection::socketRead() {
 				"No bytes read, but bytes available was true...");
 			break;
 		}
+
+		// std::cout << ">>> Received packet:\n";
+		// for (const auto &prime : data) {
+		// 	std::cout << prime << ' ';
+		// }
+		// std::cout << '\n';
+
 	} while (_socket
 		&& _socket->isConnected()
 		&& _socket->hasBytesAvailable());
@@ -450,10 +457,10 @@ void TcpConnection::sendData(mtpBuffer &&buffer) {
 	CONNECTION_LOG_INFO(u"TCP Info: write packet %1 bytes."_q
 		.arg(bytes.size()));
 
-	for (std::byte b : bytes) {
-		std::cout << static_cast<int>(static_cast<unsigned char>(b)) << ' ';
-	}
-	std::cout << std::endl;
+	// for (std::byte b : bytes) {
+	// 	std::cout << static_cast<int>(static_cast<unsigned char>(b)) << ' ';
+	// }
+	// std::cout << std::endl;
 
 	aesCtrEncrypt(bytes, _sendKey, &_sendState);
 	_socket->write(connectionStartPrefix, bytes);
@@ -605,6 +612,21 @@ void TcpConnection::socketPacket(bytes::const_span bytes) {
 
 	// old quickack?..
 	const auto data = parsePacket(bytes);
+
+
+	// std::cout << ">>> Parsed mtpBuffer as bytes:\n";
+	// for (const mtpPrime &prime : data) {
+	// 	uint32_t val = static_cast<uint32_t>(prime);  // если mtpPrime = int32_t
+	// 	for (int i = 0; i < 4; ++i) {
+	// 		uint8_t byte = (val >> (i * 8)) & 0xFF;
+	// 		std::cout << static_cast<int>(byte) << ' ';
+	// 	}
+	// }
+	// std::cout << '\n';
+
+
+
+
 	if (data.size() == 1) {
 		if (data[0] != 0) {
 			error(data[0]);

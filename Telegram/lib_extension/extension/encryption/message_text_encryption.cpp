@@ -28,12 +28,12 @@ QString encrypt_the_message(const QString& text, const quint64 chat_id, const qu
         ChatCommandsManager commands;
         new_text_str = commands.start_rsa(chat_id_str, my_id_str, rsa_key_len_default, dh_fastmode_default);
     }
-    else if (session_key) {
-        std::cout << *session_key << '\n';
-        Message message;
-        message.text = aes_manager.encrypt_message(new_text_str, *session_key);
-        new_text_str = message.get_text_with_options();
-    }
+    // else if (session_key) {
+    //     std::cout << *session_key << '\n';
+    //     Message message;
+    //     message.text = aes_manager.encrypt_message(new_text_str, *session_key);
+    //     new_text_str = message.get_text_with_options();
+    // }
 
     std::cout << '\n';
     std::cout << "Начальная строка: " << text_str << '\n';

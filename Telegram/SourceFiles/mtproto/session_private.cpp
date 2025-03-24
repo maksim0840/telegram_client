@@ -6,6 +6,8 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include <iostream>
+#include "../../lib_extension/extension/encryption/message_text_encryption.h"
+
 #include "mtproto/session_private.h"
 
 #include "mtproto/details/mtproto_bound_key_creator.h"
@@ -989,7 +991,45 @@ void SessionPrivate::tryToSend() {
 			}
 		}
 	}
-	std::cout << "sendSecureRequest" << "\n\n";
+
+	std::cout << "sendSecureRequest" << "\n";
+	std::cout << "---------------------------" << "\n";
+	const auto *data = toSendRequest->constData();
+	const auto size = toSendRequest->size();
+	if (size > 6) {
+		const uint32_t constructorId = *(reinterpret_cast<const uint32_t*>(data + 4)); // после MTProto заголовка
+		std::cout << "[tryToSend] Constructor ID: 0x" << std::hex << constructorId << std::dec << '\n';
+	}
+
+	if (toSendRequest->requestId) {
+		std::cout << "TEST ENCRYPTION" << '\n';
+		// SerializedRequest copy = toSendRequest;
+
+		// Преобразуем в строку
+		std::string copy_str(reinterpret_cast<const char*>(toSendRequest->constData()), toSendRequest->size() * sizeof(mtpPrime));
+		// Шифруем
+		AesKeyManager aes_manager;
+		std::string key_test = "HYyt4p88dZFNhQ4Z+9LOUZqI/m17Arp/MZh76yMj3E4=";
+		std::string copy_str_encrypted = aes_manager.encrypt_message(copy_str, key_test);
+		// Преобразуем обратно
+		const int32_t* begin = reinterpret_cast<const int32_t*>(copy_str_encrypted.data());
+		const int32_t* end = begin + copy_str_encrypted.size() / sizeof(int32_t);
+		mtpBuffer encrypted_buffer(begin, end);
+		
+		// Подмена
+		toSendRequest->clear();
+		toSendRequest->append(encrypted_buffer);
+
+
+		// SerializedRequest toSendRequest;
+		// using mtpBuffer = QVector<mtpPrime>;
+	}
+	/*
+
+	toSendRequest->requestId
+
+	*/
+
 	sendSecureRequest(std::move(toSendRequest), needAnyResponse);
 	if (someSkipped) {
 		InvokeQueued(this, [=] {

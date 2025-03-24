@@ -423,3 +423,17 @@ std::string AesKeyManager::decrypt_message(const std::string& message, const std
     return std::string(decrypted_data.begin(), decrypted_data.end());
 }
 
+int main(void) {
+
+    AesKeyManager aes_manager;
+    std::string key = aes_manager.create_key_solo();
+    std::cout << "key: " << key << '\n';
+
+    std::string encrypted_message = aes_manager.encrypt_message("message test 123", key);
+    std::string message = aes_manager.decrypt_message(encrypted_message, key);
+
+    std::cout << "message: " << message << '\n';
+
+    return 0;
+}
+

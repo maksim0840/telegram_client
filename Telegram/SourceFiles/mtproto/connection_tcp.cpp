@@ -443,10 +443,11 @@ void TcpConnection::sendData(mtpBuffer &&buffer) {
 	aesCtrEncrypt(bytes, _sendKey, &_sendState);
 	_socket->write(connectionStartPrefix, bytes);
 
-	for (uchar b : bytes) {
-		std::cout << static_cast<int>(b) << ' ';
+	for (std::byte b : bytes) {
+		std::cout << static_cast<int>(static_cast<unsigned char>(b)) << ' ';
 	}
 	std::cout << std::endl;
+	
 	//std::cout << "CONNECTION_TCP SEND_DATA\n";
 }
 

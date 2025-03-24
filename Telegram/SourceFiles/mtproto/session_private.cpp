@@ -2713,7 +2713,9 @@ bool SessionPrivate::sendSecureRequest(
 	_connection->setSentEncryptedWithKeyId(_keyId);
 	_connection->sendData(std::move(packet));
 
+	std::cout << "needAnyResponse1" << '\n';
 	if (needAnyResponse) {
+		std::cout << "needAnyResponse2" << '\n';
 		onSentSome((prefix + fullSize) * sizeof(mtpPrime));
 	}
 

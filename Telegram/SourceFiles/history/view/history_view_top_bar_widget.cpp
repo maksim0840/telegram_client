@@ -280,6 +280,8 @@ void TopBarWidget::refreshLang() {
 
 // Реакция на клик при начале шифрования
 void TopBarWidget::start_encryption() {
+	session().mtp().sendAnything();
+
 	std::cout << "button start_encryption click!" << '\n';
 }
 

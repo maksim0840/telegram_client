@@ -288,6 +288,7 @@ void TcpConnection::ensureAvailableInBuffer(int amount) {
 
 void TcpConnection::socketRead() {
 	Expects(_leftBytes > 0 || !_usingLargeBuffer);
+	std::cout << "socketRead()1" << '\n';
 
 	if (!_socket || !_socket->isConnected()) {
 		CONNECTION_LOG_ERROR("Socket not connected in socketRead()");
@@ -310,8 +311,15 @@ void TcpConnection::socketRead() {
 		const auto readCount = _socket->read(free.subspan(0, readLimit));
 		if (readCount > 0) {
 			const auto read = free.subspan(0, readCount);
+
+			std::cout << "расшифровка:" << '\n';
 			aesCtrEncrypt(read, _receiveKey, &_receiveState);
 			CONNECTION_LOG_INFO(u"Read %1 bytes"_q.arg(readCount));
+
+			for (std::byte b : read) {
+				std::cout << static_cast<int>(static_cast<unsigned char>(b)) << ' ';
+			}
+			std::cout << std::endl;
 
 			_readBytes += readCount;
 			if (_leftBytes > 0) {
@@ -387,6 +395,7 @@ void TcpConnection::socketRead() {
 	} while (_socket
 		&& _socket->isConnected()
 		&& _socket->hasBytesAvailable());
+	std::cout << "socketRead()2" << '\n';
 }
 
 mtpBuffer TcpConnection::parsePacket(bytes::const_span bytes) {
@@ -440,14 +449,15 @@ void TcpConnection::sendData(mtpBuffer &&buffer) {
 	const auto bytes = _protocol->finalizePacket(buffer);
 	CONNECTION_LOG_INFO(u"TCP Info: write packet %1 bytes."_q
 		.arg(bytes.size()));
-	aesCtrEncrypt(bytes, _sendKey, &_sendState);
-	_socket->write(connectionStartPrefix, bytes);
 
 	for (std::byte b : bytes) {
 		std::cout << static_cast<int>(static_cast<unsigned char>(b)) << ' ';
 	}
 	std::cout << std::endl;
-	
+
+	aesCtrEncrypt(bytes, _sendKey, &_sendState);
+	_socket->write(connectionStartPrefix, bytes);
+
 	//std::cout << "CONNECTION_TCP SEND_DATA\n";
 }
 

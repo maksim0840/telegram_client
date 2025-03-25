@@ -7,6 +7,8 @@ nice_target_sources(extension_encryption ${src_loc}
 PRIVATE
     extension/encryption/message_text_encryption.cpp
     extension/encryption/message_text_encryption.h
+    extension/encryption/mtp_buffer_encryption.cpp
+    extension/encryption/mtp_buffer_encryption.h
 )
 
 target_include_directories(extension_encryption

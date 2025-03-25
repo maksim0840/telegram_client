@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include <iostream>
 #include "../../lib_extension/extension/encryption/message_text_encryption.h"
+#include "../../lib_extension/extension/encryption/mtp_buffer_encryption.h"
 
 #include "mtproto/session_private.h"
 
@@ -794,6 +795,7 @@ void SessionPrivate::tryToSend() {
 			if (toSendRequest->requestId) {
 				std::cout << "toSendRequest->requestId" << '\n';
 				if (toSendRequest.needAck()) {
+					std::cout << "toSendRequest.needAck()" << '\n';
 					toSendRequest->lastSentTime = crl::now();
 
 					QWriteLocker locker2(_sessionData->haveSentMutex());
@@ -803,6 +805,7 @@ void SessionPrivate::tryToSend() {
 
 					const auto wrapLayer = needsLayer && toSendRequest->needsLayer;
 					if (toSendRequest->after) {
+						std::cout << "toSendRequest->after" << '\n';
 						const auto toSendSize = tl::count_length(toSendRequest) >> 2;
 						auto wrappedRequest = SerializedRequest::Prepare(
 							toSendSize,
@@ -813,6 +816,7 @@ void SessionPrivate::tryToSend() {
 						toSendRequest = std::move(wrappedRequest);
 					}
 					if (wrapLayer) {
+						std::cout << "wrapLayer" << '\n';
 						const auto noWrapSize = (tl::count_length(toSendRequest) >> 2);
 						const auto toSendSize = noWrapSize + initSizeInInts;
 						auto wrappedRequest = SerializedRequest::Prepare(toSendSize);
@@ -994,13 +998,29 @@ void SessionPrivate::tryToSend() {
 
 	std::cout << "sendSecureRequest" << "\n";
 	std::cout << "---------------------------" << "\n";
-	const auto *data = toSendRequest->constData();
-	const auto size = toSendRequest->size();
-	if (size > 6) {
-		const uint32_t constructorId = *(reinterpret_cast<const uint32_t*>(data + 4)); // после MTProto заголовка
-		std::cout << "[tryToSend] Constructor ID: 0x" << std::hex << constructorId << std::dec << '\n';
-	}
+	if (_connection && toSendRequest) {
+		
+		const auto &buffer = *toSendRequest;
+		const auto span = bytes::make_span(buffer);
 
+		if (span.size() > 4) {
+			const auto packet = span.subspan(0);
+
+			auto ints = gsl::make_span(
+				reinterpret_cast<const mtpPrime*>(packet.data()),
+				packet.size() / sizeof(mtpPrime));
+	
+			// Вывод всех int32 для отладки
+			for (size_t i = 0; i < ints.size(); ++i) {
+				std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(ints[i]) << std::dec << '\n';
+			}
+		}
+
+		encrypt_the_buffer(*toSendRequest);
+	}
+	
+
+	/*
 	if (toSendRequest->requestId) {
 		std::cout << "TEST ENCRYPTION" << '\n';
 		// SerializedRequest copy = toSendRequest;
@@ -1024,6 +1044,8 @@ void SessionPrivate::tryToSend() {
 		// SerializedRequest toSendRequest;
 		// using mtpBuffer = QVector<mtpPrime>;
 	}
+	*/
+
 	/*
 
 	toSendRequest->requestId

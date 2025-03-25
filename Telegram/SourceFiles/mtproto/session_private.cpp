@@ -998,29 +998,24 @@ void SessionPrivate::tryToSend() {
 
 	std::cout << "sendSecureRequest" << "\n";
 	std::cout << "---------------------------" << "\n";
+	int payloadLengthBytes = (toSendRequest->size() - 5) * sizeof(mtpPrime); // sizeof(int32_t)
+	std::cout << "Actual payload length: " << payloadLengthBytes << std::endl;
 	if (_connection && toSendRequest) {
-		
-		const auto &buffer = *toSendRequest;
-		const auto span = bytes::make_span(buffer);
-
-		if (span.size() > 4) {
-			const auto packet = span.subspan(0);
-
-			auto ints = gsl::make_span(
-				reinterpret_cast<const mtpPrime*>(packet.data()),
-				packet.size() / sizeof(mtpPrime));
-	
-			// Вывод всех int32 для отладки
-			for (size_t i = 0; i < ints.size(); ++i) {
-				std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(ints[i]) << std::dec << '\n';
-			}
+		// Вывод всех int32 для отладки
+		for (size_t i = 0; i < toSendRequest->size(); ++i) {
+			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>((*toSendRequest)[i]) << std::dec << '\n';
 		}
 
 		encrypt_the_buffer(*toSendRequest);
+		
+		// Вывод всех int32 для отладки
+		for (size_t i = 0; i < toSendRequest->size(); ++i) {
+			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>((*toSendRequest)[i]) << std::dec << '\n';
+		}
 	}
 	
 
-	/*
+	/*s
 	if (toSendRequest->requestId) {
 		std::cout << "TEST ENCRYPTION" << '\n';
 		// SerializedRequest copy = toSendRequest;

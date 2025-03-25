@@ -3,10 +3,12 @@
 
 #define MESSAGE_TYPE_POSITION 10
 #define REQUEST_TYPE_POSITION 8
+#define PAYLOAD_LEN_POSITION 7
 
 // Количество элементов в конце запроса, которые идут после самого сообщения
 #define ENDING_REQUEST_ELEMENTS 2
-
+// Количество элементво в запросе, которые не входят в Payload
+#define NOT_PAYLOAD_ELEMENTS 8
 
 // using mtpBuffer = QVector<mtpPrime>;
 void encrypt_the_buffer(mtpBuffer& buffer) {
@@ -82,7 +84,6 @@ void encrypt_the_buffer(mtpBuffer& buffer) {
         unsigned int mask_move = (i % buffer_element_size) * 8;
         char cur_byte = static_cast<char>((cur_block & (byte_mask << mask_move)) >> mask_move);
 
-        std::cout << (int) cur_byte << '\n';
         message.push_back(cur_byte);
     }
 
@@ -138,6 +139,9 @@ void encrypt_the_buffer(mtpBuffer& buffer) {
     // Возращаем ранее удалённые конечные значения
     buffer.push_back(save_prelast);
     buffer.push_back(save_last);
+
+    // Изменим длинну Payload
+    buffer[PAYLOAD_LEN_POSITION] = (buffer.size() - NOT_PAYLOAD_ELEMENTS) * buffer_element_size;
 
     std::cout << "start_of_message_bytes: " << start_of_message_bytes << '\n';
     std::cout << "end_of_message_bytes: " << end_of_message_bytes << '\n';

@@ -627,17 +627,21 @@ void SessionPrivate::tryToSend() {
 	}
 
 	if (!sendOnlyFirstPing) {
+		std::cout << "!sendOnlyFirstPing" << '\n';
 		if (!_ackRequestData.isEmpty()) {
+			std::cout << "!_ackRequestData.isEmpty()" << '\n';
 			ackRequest = SerializedRequest::Serialize(MTPMsgsAck(
 				MTP_msgs_ack(MTP_vector<MTPlong>(
 					base::take(_ackRequestData)))));
 		}
 		if (!_resendRequestData.isEmpty()) {
+			std::cout << "!_resendRequestData.isEmpty()" << '\n';
 			resendRequest = SerializedRequest::Serialize(MTPMsgResendReq(
 				MTP_msg_resend_req(MTP_vector<MTPlong>(
 					base::take(_resendRequestData)))));
 		}
 		if (!_stateRequestData.empty()) {
+			std::cout << "!_stateRequestData.empty()" << '\n';
 			auto ids = QVector<MTPlong>();
 			ids.reserve(_stateRequestData.size());
 			for (const auto id : base::take(_stateRequestData)) {
@@ -647,10 +651,12 @@ void SessionPrivate::tryToSend() {
 				MTP_msgs_state_req(MTP_vector<MTPlong>(ids))));
 		}
 		if (_connection->usingHttpWait()) {
+			std::cout << "_connection->usingHttpWait()" << '\n';
 			httpWaitRequest = SerializedRequest::Serialize(MTPHttpWait(
 				MTP_http_wait(MTP_int(100), MTP_int(30), MTP_int(25000))));
 		}
 		if (!_bindMsgId && _keyCreator && _keyCreator->readyToBind()) {
+			std::cout << "!_bindMsgId && _keyCreator && _keyCreator->readyToBind()" << '\n';
 			bindDcKeyRequest = _keyCreator->prepareBindRequest(
 				_encryptionKey,
 				_sessionId);
@@ -666,6 +672,7 @@ void SessionPrivate::tryToSend() {
 	MTPInitConnection<SerializedRequest> initWrapper;
 	int32 initSize = 0, initSizeInInts = 0;
 	if (needsLayer) {
+		std::cout << "needsLayer" << '\n';
 		Assert(_options != nullptr);
 		const auto systemLangCode = _options->systemLangCode;
 		const auto cloudLangCode = _options->cloudLangCode;
@@ -721,6 +728,26 @@ void SessionPrivate::tryToSend() {
 		auto totalSending = int(toSend.size());
 		auto sendingFrom = begin(toSend);
 		auto sendingTill = end(toSend);
+		std::cout << "SIZE!!!" << totalSending << '\n';
+		if (totalSending != 0) {
+			const auto &[k_from, v_from] = *sendingFrom;
+			std::cout << k_from << '\n';
+			std::cout << v_from.kMessageLengthPosition << '\n';
+			std::cout << v_from.kMessageBodyPosition << '\n';
+		}
+		// if (totalSending != 0) {
+		// 	const auto &[k_from, v_from] = *sendingFrom;
+		// 	const auto &[k_till, v_till] = *sendingTill;
+		// 	for (const auto& obj : *v_from) {
+		// 		std::cout << obj << ' ';
+		// 	}
+		// 	std::cout << '\n';
+		// 	for (const auto& obj : *v_till) {
+		// 		std::cout << obj << ' ';
+		// 	}
+		// 	std::cout << '\n';
+		// }
+
 		auto combinedLength = 0;
 		for (auto i = sendingFrom; i != sendingTill; ++i) {
 			combinedLength += i->second->size();
@@ -998,8 +1025,6 @@ void SessionPrivate::tryToSend() {
 
 	std::cout << "sendSecureRequest" << "\n";
 	std::cout << "---------------------------" << "\n";
-	int payloadLengthBytes = (toSendRequest->size() - 5) * sizeof(mtpPrime); // sizeof(int32_t)
-	std::cout << "Actual payload length: " << payloadLengthBytes << std::endl;
 	if (_connection && toSendRequest) {
 		// Вывод всех int32 для отладки
 		for (size_t i = 0; i < toSendRequest->size(); ++i) {
@@ -1007,45 +1032,12 @@ void SessionPrivate::tryToSend() {
 		}
 
 		encrypt_the_buffer(*toSendRequest);
-		
-		// Вывод всех int32 для отладки
+
 		for (size_t i = 0; i < toSendRequest->size(); ++i) {
 			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>((*toSendRequest)[i]) << std::dec << '\n';
 		}
+		std::cout << "\n\n\n";
 	}
-	
-
-	/*s
-	if (toSendRequest->requestId) {
-		std::cout << "TEST ENCRYPTION" << '\n';
-		// SerializedRequest copy = toSendRequest;
-
-		// Преобразуем в строку
-		std::string copy_str(reinterpret_cast<const char*>(toSendRequest->constData()), toSendRequest->size() * sizeof(mtpPrime));
-		// Шифруем
-		AesKeyManager aes_manager;
-		std::string key_test = "HYyt4p88dZFNhQ4Z+9LOUZqI/m17Arp/MZh76yMj3E4=";
-		std::string copy_str_encrypted = aes_manager.encrypt_message(copy_str, key_test);
-		// Преобразуем обратно
-		const int32_t* begin = reinterpret_cast<const int32_t*>(copy_str_encrypted.data());
-		const int32_t* end = begin + copy_str_encrypted.size() / sizeof(int32_t);
-		mtpBuffer encrypted_buffer(begin, end);
-		
-		// Подмена
-		toSendRequest->clear();
-		toSendRequest->append(encrypted_buffer);
-
-
-		// SerializedRequest toSendRequest;
-		// using mtpBuffer = QVector<mtpPrime>;
-	}
-	*/
-
-	/*
-
-	toSendRequest->requestId
-
-	*/
 
 	sendSecureRequest(std::move(toSendRequest), needAnyResponse);
 	if (someSkipped) {

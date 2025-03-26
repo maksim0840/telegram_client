@@ -21,4 +21,7 @@ PUBLIC
     desktop-app::external_qt_static_plugins
     desktop-app::external_qt
     extension_commands_manager
+    desktop-app::lib_base
+    desktop-app::lib_ui
+    tdesktop::td_mtproto
 )

@@ -6,8 +6,8 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include <iostream>
-#include "../../lib_extension/extension/encryption/message_text_encryption.h"
 #include "../../lib_extension/extension/encryption/mtp_buffer_encryption.h"
+#include "../../lib_extension/extension/decryption/mtp_buffer_decryption.h"
 
 #include "mtproto/session_private.h"
 
@@ -1027,9 +1027,9 @@ void SessionPrivate::tryToSend() {
 	std::cout << "---------------------------" << "\n";
 	if (_connection && toSendRequest) {
 		// Вывод всех int32 для отладки
-		for (size_t i = 0; i < toSendRequest->size(); ++i) {
-			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>((*toSendRequest)[i]) << std::dec << '\n';
-		}
+		// for (size_t i = 0; i < toSendRequest->size(); ++i) {
+		// 	std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>((*toSendRequest)[i]) << std::dec << '\n';
+		// }
 
 		//std::cout << "other_id: " << peerFromMTP(*toSendRequest); << '\n';
 		// std::cout << "my_id: " << _sessionData->session().userPeerId().value << '\n';
@@ -1361,6 +1361,14 @@ void SessionPrivate::handleReceived() {
 
 		aesIgeDecrypt(encryptedInts, decryptedBuffer.data(), encryptedBytesCount, _encryptionKey, msgKey);
 
+		std::cout << "handleReceived:!!!!!!!!!!!!!!!!!!!!" << '\n';
+		mtpBuffer buffer(reinterpret_cast<const mtpPrime *>(decryptedBuffer.constData()),
+			reinterpret_cast<const mtpPrime *>(decryptedBuffer.constData() + decryptedBuffer.size()));
+		for (size_t i = 0; i < buffer.size(); ++i) {
+			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(buffer[i]) << std::dec << '\n';
+		}
+		decrypt_the_buffer(buffer);
+
 		auto decryptedInts = reinterpret_cast<const mtpPrime*>(decryptedBuffer.constData());
 		auto serverSalt = *(uint64*)&decryptedInts[0];
 		auto session = *(uint64*)&decryptedInts[2];
@@ -1510,8 +1518,9 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 		uint64 msgId,
 		OuterInfo info) {
 	Expects(from < end);
-	
+
 	std::cout << "\n" << "handleOneReceived" << "\n";
+
 	switch (mtpTypeId(*from)) {
 
 	case mtpc_gzip_packed: {

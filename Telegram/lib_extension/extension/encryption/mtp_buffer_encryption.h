@@ -3,7 +3,8 @@
 #include "styles/style_info.h"
 #include "mtproto/core_types.h"
 #include "scheme.h"
-using flota64 = double;
+
+#pragma once
 
 // Позиции элементов из mtpBuffer
 #define PAYLOAD_LEN_POSITION 7 // последний элемент вне Payload

@@ -7,6 +7,8 @@ nice_target_sources(extension_decryption ${src_loc}
 PRIVATE
     extension/decryption/message_text_decryption.cpp
     extension/decryption/message_text_decryption.h
+    extension/decryption/mtp_buffer_decryption.cpp
+    extension/decryption/mtp_buffer_decryption.h
 )
 
 target_include_directories(extension_decryption
@@ -18,6 +20,9 @@ target_link_libraries(extension_decryption
 PUBLIC
     desktop-app::external_qt_static_plugins
     desktop-app::external_qt
-    tdesktop::td_scheme # доступ к объектам автогенерирующегося файла scheme.h
     extension_commands_manager
+    desktop-app::lib_base
+    desktop-app::lib_ui
+    tdesktop::td_mtproto
+    tdesktop::td_scheme
 )

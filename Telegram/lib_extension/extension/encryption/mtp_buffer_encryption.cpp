@@ -20,6 +20,19 @@ void encrypt_the_buffer(mtpBuffer& buffer) {
     if (!(chat_type == mtpc_inputPeerChat || chat_type == mtpc_inputPeerUser || chat_type == mtpc_inputPeerSelf)) {
         return;
     }
+
+    // Определяем id чата
+    uint64_t chat_id = 0; // сообщение самому себе (mtpc_inputPeerSelf)
+    if (chat_type == mtpc_inputPeerUser) {
+        chat_id =   static_cast<uint32_t>(buffer[CHAT_ID_FIRST_POSITION + payload_bias]) |
+                    (static_cast<uint64_t>(static_cast<uint32_t>(buffer[CHAT_ID_SECOND_POSITION + payload_bias])) << 32);
+    }
+    else if (chat_type == mtpc_inputPeerChat) {
+        chat_id =   static_cast<uint32_t>(buffer[CHAT_ID_FIRST_POSITION + payload_bias]) |
+                    (static_cast<uint64_t>(static_cast<uint32_t>(buffer[CHAT_ID_SECOND_POSITION + payload_bias])) << 32) |
+                    CHAT_TYPE_VALUE;
+    }
+    std::string chat_id_str = std::to_string(chat_id);
     
     // Определяем тип запроса на сервер
     const uint32_t request_type = static_cast<uint32_t>(buffer[REQUEST_TYPE_POSITION + payload_bias]);
@@ -132,4 +145,5 @@ void encrypt_the_buffer(mtpBuffer& buffer) {
     std::cout << "message_len: " << message_len << '\n';
     std::cout << "message: " << message << '\n';
     std::cout << "encrypted_message: " << encrypted_message << '\n';
+    std::cout << "chat_id_str: " << chat_id_str << '\n'; 
 }

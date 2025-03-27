@@ -118,7 +118,7 @@ private:
 
 	SessionOptions _options;
 	mutable QReadWriteLock _optionsLock;
-
+		
 	base::flat_map<mtpRequestId, SerializedRequest> _toSend; // map of request_id -> request, that is waiting to be sent
 	QReadWriteLock _toSendLock;
 

@@ -1,6 +1,6 @@
 #include "mtp_buffer_encryption.h"
 
-void encrypt_the_buffer(mtpBuffer& buffer) {
+void Send::encrypt_the_buffer(mtpBuffer& buffer) {
 
     const int buffer_len = buffer.size();
     const int buffer_element_size = sizeof(mtpPrime); // размер блока/элемента внутри mtpBuffer
@@ -36,7 +36,6 @@ void encrypt_the_buffer(mtpBuffer& buffer) {
     
     // Определяем тип запроса на сервер
     const uint32_t request_type = static_cast<uint32_t>(buffer[REQUEST_TYPE_POSITION + payload_bias]);
-    std::cout << "!!!!!!!!!!!!!" << std::hex << request_type << std::dec << ' ' << (request_type==mtpc_messages_sendMessage) << "!!!!!!!!!" << '\n';
     if (request_type != mtpc_messages_sendMessage) {
         return;
     }
@@ -73,7 +72,7 @@ void encrypt_the_buffer(mtpBuffer& buffer) {
 
     // Извлекаем сообщение
     std::string message;
-    uint32_t cur_block_ind = start_block_ind;
+    uint32_t cur_block_ind = start_message_byte / buffer_element_size;
 
     for (int i = start_message_byte; i < end_message_byte + 1; ++i) {
         if ((i % buffer_element_size == 0) && (i != start_message_byte)) {

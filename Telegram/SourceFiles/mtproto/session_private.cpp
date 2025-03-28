@@ -1033,7 +1033,7 @@ void SessionPrivate::tryToSend() {
 
 		//std::cout << "other_id: " << peerFromMTP(*toSendRequest); << '\n';
 		// std::cout << "my_id: " << _sessionData->session().userPeerId().value << '\n';
-		encrypt_the_buffer(*toSendRequest);
+		Send::encrypt_the_buffer(*toSendRequest);
 
 		// for (size_t i = 0; i < toSendRequest->size(); ++i) {
 		// 	std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>((*toSendRequest)[i]) << std::dec << '\n';
@@ -1364,10 +1364,16 @@ void SessionPrivate::handleReceived() {
 		std::cout << "handleReceived:!!!!!!!!!!!!!!!!!!!!" << '\n';
 		mtpBuffer buffer(reinterpret_cast<const mtpPrime *>(decryptedBuffer.constData()),
 			reinterpret_cast<const mtpPrime *>(decryptedBuffer.constData() + decryptedBuffer.size()));
+		mtpPrime* ungzip_from = buffer.data() + kEncryptedHeaderIntsCount;
+		mtpPrime* ungzip_end = ungzip_from + (static_cast<uint32_t>(buffer[7]) / kIntSize);
+		mtpBuffer ungzip_data = (*ungzip_from == mtpc_gzip_packed) ? ungzip(ungzip_from + 1, ungzip_end) : mtpBuffer(); 
 		for (size_t i = 0; i < buffer.size(); ++i) {
 			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(buffer[i]) << std::dec << '\n';
 		}
-		decrypt_the_buffer(buffer);
+		for (size_t i = 0; i < ungzip_data.size(); ++i) {
+			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(ungzip_data[i]) << std::dec << '\n';
+		}
+		Recieve::decrypt_the_buffer(buffer, ungzip_data);
 
 		auto decryptedInts = reinterpret_cast<const mtpPrime*>(decryptedBuffer.constData());
 		auto serverSalt = *(uint64*)&decryptedInts[0];
@@ -1525,6 +1531,7 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 
 	case mtpc_gzip_packed: {
 		std::cout << "mtpc_gzip_packed" << '\n';
+		std::cout << "gzip: " << *(from + 1) << ' ' << *(end - 1) << '\n';
 		DEBUG_LOG(("Message Info: gzip container"));
 		mtpBuffer response = ungzip(++from, end);
 		if (response.empty()) {

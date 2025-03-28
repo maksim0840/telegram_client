@@ -9,12 +9,19 @@ void Recieve::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
         return;
     }
 
-    // Определяем способ отправки данных (в зависимости от него выбираем контейнер для обработки данных)
+    // Определяем запакована ли информация в какую-либо доп. обёртку
+    uint32_t wrap_type = 0;
     mtpBuffer buf = buffer;
     int bias = 0;
+    
     if (buffer[REQUEST_TYPE_POSITION] == mtpc_gzip_packed) { // сообщение дополнительно запаковано
+        wrap_type = mtpc_gzip_packed;
         buf = ungzip_data;
         bias = GZIP_BIAS;
+    }
+    else if (buffer[REQUEST_TYPE_POSITION] == mtpc_msg_container) {
+        wrap_type = mtpc_msg_container;
+        bias = CONTAINER_BIAS;
     }
 
     // Определяем тип запроса
@@ -87,11 +94,15 @@ void Recieve::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
     std::string key_test = "HYyt4p88dZFNhQ4Z+9LOUZqI/m17Arp/MZh76yMj3E4=";
     // std::string decrypted_message = aes_manager.decrypt_message(message, key_test);
     std::string decrypted_message = message;
+    decrypted_message = "test test test!!??";
     uint32_t decrypted_message_len = decrypted_message.size();
     
     // Копируем информацию после сообщения
     uint32_t copy_from = end_message_byte / buffer_element_size + 1;
     mtpBuffer saved_postfix(buf.begin() + copy_from, buf.end());
+
+    int inserted_bytes_count = (saved_postfix.size() + 1) * buffer_element_size; // информация которую мы вернём + информация о длинне сообщения + ...
+    const int erased_bytes_count = (buf.size() - start_block_ind) * buffer_element_size;
 
     // Удаляем сообщение и всю информацию после него
     buf.erase(buf.begin() + start_block_ind, buf.end());
@@ -123,37 +134,48 @@ void Recieve::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
             value = value | (static_cast<mtpPrime>(static_cast<uint8_t>(decrypted_message[i + j])) << (j * 8));
         }
         buf.push_back(value);
+        inserted_bytes_count += buffer_element_size;
     }
 
     // Возращаем ранее удалённые конечные значения
     buf.append(saved_postfix);
 
-    /*
-    // Изменим длинну Payload
-    if (request_type == mtpc_gzip_packed) {
-        buffer[PAYLOAD_LEN_POSITION] = 
+    // Подменяем данные
+    if (wrap_type == mtpc_gzip_packed) {
+        // Обратно запаковываем то, что распаковали и подменили
+        mtpBuffer gzip = Gzip::gzip(buf.data(), buf.data() + buf.size());
+
+        // Удаляем старый gzip из итогового буфера
+        int del_from = REQUEST_TYPE_POSITION + 1;
+        int del_end= REQUEST_TYPE_POSITION + (buffer[PAYLOAD_LEN_POSITION] / buffer_element_size);
+        buffer.erase(buffer.begin() + del_from, buffer.begin() + del_end);
+
+        // Вставляем новый gzip 
+        auto insert_pos = buffer.begin() + del_from;
+        for (auto it = gzip.constBegin(); it != gzip.constEnd(); ++it) {
+            insert_pos = buffer.insert(insert_pos, *it);
+            ++insert_pos;
+        }
+
+        // Изменим длинну Payload на текущую
+        buffer[PAYLOAD_LEN_POSITION] = (gzip.size() + 1) * buffer_element_size; // payload = содержимое gzip и тип запроса
     }
     else {
-        buffer[PAYLOAD_LEN_POSITION] = end_message_byte - REQUEST_TYPE_POSITION + 1;
+        buffer = buf;
+        // Изменим длинну Payload на текущую
+        buffer[PAYLOAD_LEN_POSITION] += (inserted_bytes_count - erased_bytes_count);
+
+        // Изменим Payload контейнера (если сообщение не обёрнуто в контейнер, то просто перезапишем на то же число)
+        if (buffer[REQUEST_TYPE_POSITION] == mtpc_msg_container) {
+            buffer[PAYLOAD_LEN_POSITION + bias] += (inserted_bytes_count - erased_bytes_count);
+        }
     }
-    uint32_t not_payload_elements = PAYLOAD_LEN_POSITION + 1;
-    buf[PAYLOAD_LEN_POSITION] = (buf.size() - not_payload_elements) * buffer_element_size;
 
-    // Изменим длинну контейнера (если сообщение не обёрнуто в контейнер, то просто перезапишем Payload на то же значение)
-    uint32_t not_container_elements = PAYLOAD_LEN_POSITION + bias + 1;
-    buf[PAYLOAD_LEN_POSITION + bias] = (buf.size() - not_container_elements) * buffer_element_size;
-    */
-
+    mtpBuffer new_buffer(buffer.begin(), buffer.end());
     std::cout << "start_message_byte: " << start_message_byte << '\n';
     std::cout << "end_message_byte: " << end_message_byte << '\n';
     std::cout << "message_len: " << message_len << '\n';
     std::cout << "message: " << message << '\n';
     std::cout << "decrypted_message: " << decrypted_message << '\n';
-    std::cout << "chat_id_str: " << chat_id_str << '\n';
-
-    std::cout << "buf: " << '\n';
-    for (size_t i = 0; i < buf.size(); ++i) {
-        std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(buf[i]) << std::dec << '\n';
-    }
-     
+    std::cout << "chat_id_str: " << chat_id_str << '\n';    
 }

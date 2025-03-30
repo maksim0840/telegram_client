@@ -8,9 +8,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <iostream>
 #include "../../../lib_extension/extension/buttons/top_bar_buttons.h"
+#include "../../../lib_extension/extension/commands_manager/chat_key_creation.h"
 
 #include "history/view/history_view_top_bar_widget.h"
-
 #include "history/history.h"
 #include "history/view/history_view_send_action.h"
 #include "boxes/add_contact_box.h"
@@ -281,9 +281,14 @@ void TopBarWidget::refreshLang() {
 // Реакция на клик при начале шифрования
 void TopBarWidget::start_encryption() {
 	std::cout << "button start_encryption click!" << '\n';
-	Api::MessageToSend sending_params(Api::SendAction(_activeChat.key.owningHistory(), Api::SendOptions()));
-	sending_params.textWithTags.text = "/[start_encryption]"; // Подменяем текст
-	session().api().sendMessage(std::move(sending_params));
+	
+	// Передаём лямбда функцию, которая отправляет сообщения
+	start_chat_key_creation([this](const std::string& message) {
+		Api::MessageToSend sending_params(Api::SendAction(_activeChat.key.owningHistory(), Api::SendOptions()));
+		sending_params.textWithTags.text = QString::fromStdString(message); // подменяем текст сообщения
+		
+		session().api().sendMessage(std::move(sending_params)); // отправляем
+	});
 }
 
 // Реакция на клик при сбросе шифрования

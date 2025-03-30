@@ -14,4 +14,5 @@ PUBLIC
     extension_decryption
     extension_chat_members
     extension_buttons
+    extension_commands_manager
 )

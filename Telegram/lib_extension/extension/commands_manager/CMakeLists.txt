@@ -9,6 +9,8 @@ PRIVATE
     extension/commands_manager/chat_commands_manager.h
     extension/commands_manager/message_options.cpp
     extension/commands_manager/message_options.h
+    extension/commands_manager/chat_key_creation.cpp
+    extension/commands_manager/chat_key_creation.h
 )
 
 target_include_directories(extension_commands_manager

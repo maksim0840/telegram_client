@@ -101,6 +101,7 @@ void Recieve::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
     uint32_t copy_from = end_message_byte / buffer_element_size + 1;
     mtpBuffer saved_postfix(buf.begin() + copy_from, buf.end());
 
+    // Счётчики имзенённых байтов для подсчёта длинны сообщения
     int inserted_bytes_count = (saved_postfix.size() + 1) * buffer_element_size; // информация которую мы вернём + информация о длинне сообщения + ...
     const int erased_bytes_count = (buf.size() - start_block_ind) * buffer_element_size;
 
@@ -165,7 +166,7 @@ void Recieve::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
         // Изменим длинну Payload на текущую
         buffer[PAYLOAD_LEN_POSITION] += (inserted_bytes_count - erased_bytes_count);
 
-        // Изменим Payload контейнера (если сообщение не обёрнуто в контейнер, то просто перезапишем на то же число)
+        // Изменим Payload контейнера
         if (buffer[REQUEST_TYPE_POSITION] == mtpc_msg_container) {
             buffer[PAYLOAD_LEN_POSITION + bias] += (inserted_bytes_count - erased_bytes_count);
         }

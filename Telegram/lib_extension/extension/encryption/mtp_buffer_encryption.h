@@ -10,14 +10,15 @@ class Send {
 private:
     // Позиции элементов из mtpBuffer
     static const uint32_t PAYLOAD_LEN_POSITION = 7; // последний элемент вне Payload
-    // Секция Payload (позиции указаны для сообщений, которые отправляются напрямую)
     static const uint32_t REQUEST_TYPE_POSITION = 8;
-    static const uint32_t CHAT_TYPE_POSITION = 10;
-    static const uint32_t CHAT_ID_FIRST_POSITION = 11;
-    static const uint32_t CHAT_ID_SECOND_POSITION = 12;
-    static const uint32_t SELF_MESSAGE_POSITION = 11;
-    static const uint32_t CHAT_MESSAGE_POSITION = 13;
-    static const uint32_t USER_MESSAGE_POSITION = 15;
+
+    // Позиции относительно найденного типа запроса (REQUEST_TYPE_POSITION)
+    static const uint32_t CHAT_TYPE_POSITION = 2;
+    static const uint32_t CHAT_ID_FIRST_POSITION = 3;
+    static const uint32_t CHAT_ID_SECOND_POSITION = 4;
+    static const uint32_t SELF_MESSAGE_POSITION = 3;
+    static const uint32_t CHAT_MESSAGE_POSITION = 5;
+    static const uint32_t USER_MESSAGE_POSITION = 7;
 
     // Дополнения к значениям типов чата (нужны для определения id чата из буфера) - дополнения установлены самим телеграммом, чтобы не путать их типы
     static const uint64_t CHAT_TYPE_VALUE = 0x0001000000000000;
@@ -28,6 +29,9 @@ private:
     // Маска младшего байта
     static const uint32_t LEAST_BYTE_MASK = 0xFF;
 
+    // Дополнительный флаг который всегда идёт после типа запроса
+    static const uint32_t message_addition_flags = 0x80;
+    
 public:
     // using mtpBuffer = QVector<mtpPrime>;
     static void encrypt_the_buffer(mtpBuffer& buffer);

@@ -278,22 +278,30 @@ void TopBarWidget::refreshLang() {
 	InvokeQueued(this, [this] { updateControlsGeometry(); });
 }
 
+void TopBarWidget::send_api_message_wrapper(const std::string& message) {
+	Api::MessageToSend sending_params(Api::SendAction(_activeChat.key.owningHistory(), Api::SendOptions()));
+	sending_params.textWithTags.text = QString::fromStdString(message); // подменяем текст сообщения
+	session().api().sendMessage(std::move(sending_params)); // отправляем
+}
+
 // Реакция на клик при начале шифрования
 void TopBarWidget::start_encryption() {
 	std::cout << "button start_encryption click!" << '\n';
 	
 	// Передаём лямбда функцию, которая отправляет сообщения
-	start_chat_key_creation([this](const std::string& message) {
-		Api::MessageToSend sending_params(Api::SendAction(_activeChat.key.owningHistory(), Api::SendOptions()));
-		sending_params.textWithTags.text = QString::fromStdString(message); // подменяем текст сообщения
-		
-		session().api().sendMessage(std::move(sending_params)); // отправляем
+	ChatKeyCreation::start([this](const std::string& message) {
+		this->send_api_message_wrapper(message);
 	});
 }
 
 // Реакция на клик при сбросе шифрования
 void TopBarWidget::stop_encryption() {
 	std::cout << "button stop_encryption click!" << '\n';
+
+	// Передаём лямбда функцию, которая отправляет сообщения
+	ChatKeyCreation::stop([this](const std::string& message) {
+		this->send_api_message_wrapper(message);
+	});
 }
 
 void TopBarWidget::call() {

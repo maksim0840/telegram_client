@@ -141,6 +141,7 @@ private:
 	void updateInfoToggleActive();
 	void setupDragOnBackButton();
 	
+	void send_api_message_wrapper(const std::string& message); // функция wrapper для отправки сообщений
 	void start_encryption(); // реакция на клик
 	void stop_encryption(); // реакция на клик
 	void call();

@@ -280,9 +280,10 @@ void TopBarWidget::refreshLang() {
 
 // Реакция на клик при начале шифрования
 void TopBarWidget::start_encryption() {
-	session().mtp().sendAnything();
-
 	std::cout << "button start_encryption click!" << '\n';
+	Api::MessageToSend sending_params(Api::SendAction(_activeChat.key.owningHistory(), Api::SendOptions()));
+	sending_params.textWithTags.text = "/[start_encryption]"; // Подменяем текст
+	session().api().sendMessage(std::move(sending_params));
 }
 
 // Реакция на клик при сбросе шифрования

@@ -142,6 +142,7 @@ private:
 	void setupDragOnBackButton();
 	
 	void send_api_message_wrapper(const std::string& message); // функция wrapper для отправки сообщений
+	void get_chat_peers_info(BareId& my_id, BareId& chat_id, std::vector<BareId>& chat_members); // функция обновления информации о пользователях чата
 	void start_encryption(); // реакция на клик
 	void stop_encryption(); // реакция на клик
 	void call();

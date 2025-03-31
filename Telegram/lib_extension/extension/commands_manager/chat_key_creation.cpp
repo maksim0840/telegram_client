@@ -1,6 +1,10 @@
 #include "chat_key_creation.h"
 
 // Объявляем static переменные
+std::function<void(const std::string&)> ChatKeyCreation::lambda_send_message = [](const std::string&) {}; // заглушка, чтобы компилятор не ругался
+std::string ChatKeyCreation::my_id_str;
+std::string ChatKeyCreation::chat_id_str;
+std::vector<std::string> ChatKeyCreation::chat_members_str;
 std::thread ChatKeyCreation::thread;
 std::mutex ChatKeyCreation::mtx;
 std::condition_variable ChatKeyCreation::cv;
@@ -9,10 +13,14 @@ bool ChatKeyCreation::continue_creation;
 bool ChatKeyCreation::stop_creation;
 
 
-void ChatKeyCreation::chat_key_creation(const std::function<void(const std::string&)>& send_func) {
+void ChatKeyCreation::chat_key_creation() {
     std::unique_lock<std::mutex> lock(mtx);
+    KeysDataBase db;
+    RsaKeyManager rsa_manager;
+    AesKeyManager aes_manager;
+
     while (true) {
-        cv.wait(lock, [] { return continue_creation || stop_creation; });  // ждем разрешения на продолжение цикла (один из bool флагов должен стать true)
+        cv.wait(lock, [] { return continue_creation || stop_creation; });  // ждем разрешения на продолжение (один из bool флагов должен стать true)
         if (stop_creation) break; 
 
         std::string msg = message;
@@ -26,20 +34,35 @@ void ChatKeyCreation::chat_key_creation(const std::function<void(const std::stri
 }
 
 
-void ChatKeyCreation::start(const std::function<void(const std::string&)>& send_func) {
+void ChatKeyCreation::set_lambda_send_message(const std::function<void(const std::string&)>& send_func) {
+    lambda_send_message = send_func;
+}
 
+
+void ChatKeyCreation::start(const quint64& my_id, const quint64& chat_id, const std::vector<quint64>& chat_members) {
     // Если поток уже запущен — остановим его
     if (thread.joinable()) {
-        stop(send_func);
+        stop();
     }
 
     // Обнуляем флаги
     stop_creation = false;
     continue_creation = false;
 
-    thread = std::thread(ChatKeyCreation::chat_key_creation, send_func);
+    // Конвертируем полученные параметры id пользователей в строки
+    my_id_str = std::to_string(my_id); 
+    chat_id_str = std::to_string(chat_id); 
+    chat_members_str.clear();
+    for (const auto& id : chat_members) {
+        chat_members_str.push_back(std::to_string(id));
+    }
+
+    std::cout << "my_id_str: " << my_id_str << '\n';
+    std::cout << "chat_id_str: " << chat_id_str << '\n';
+
+    thread = std::thread(ChatKeyCreation::chat_key_creation);
     //thread = std::thread(ChatKeyCreation::chat_key_creation, std::ref(send_func));
-    send_func("start thread!!!");
+    lambda_send_message("start thread!!!");
 }
 
 
@@ -53,8 +76,7 @@ void ChatKeyCreation::add_info(std::string msg) {
 }
 
 
-void ChatKeyCreation::stop(const std::function<void(const std::string&)>& send_func) {
-    
+void ChatKeyCreation::stop() {
     // Если поток не был запущен - игнорируем
     if (!thread.joinable()) {
         return;
@@ -68,6 +90,6 @@ void ChatKeyCreation::stop(const std::function<void(const std::string&)>& send_f
     if (thread.joinable()) thread.join(); // завершить поток
     thread = std::thread();
 
-    send_func("stop thread");
+    lambda_send_message("stop thread");
 }
 

@@ -22,4 +22,6 @@ target_link_libraries(extension_commands_manager
 PUBLIC
     extension_local_storage
     extension_keys_manager
+    desktop-app::external_qt_static_plugins
+    desktop-app::external_qt
 )

@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <iostream>
 #include "../../../lib_extension/extension/buttons/top_bar_buttons.h"
 #include "../../../lib_extension/extension/commands_manager/chat_key_creation.h"
+#include "../../../lib_extension/extension/chat_members/chat_members.h"
 
 #include "history/view/history_view_top_bar_widget.h"
 #include "history/history.h"
@@ -130,6 +131,14 @@ TopBarWidget::TopBarWidget(
 , _onlineUpdater([=] { updateOnlineDisplay(); }) {
 	setAttribute(Qt::WA_OpaquePaintEvent);
 
+	// Передаём lambda функцию
+	std::cout << "!!!!!!!!!!!!!!!TopBarWidget!!!!!!!!!!!!!!!\n";
+	ChatKeyCreation::set_lambda_send_message(
+		[this](const std::string& message) { // функция для отправки сообщения
+			this->send_api_message_wrapper(message);
+		}
+	);
+	
 	Lang::Updated(
 	) | rpl::start_with_next([=] {
 		refreshLang();
@@ -284,24 +293,42 @@ void TopBarWidget::send_api_message_wrapper(const std::string& message) {
 	session().api().sendMessage(std::move(sending_params)); // отправляем
 }
 
+void TopBarWidget::get_chat_peers_info(BareId& my_id, BareId& chat_id, std::vector<BareId>& chat_members) {
+	chat_id = _activeChat.key.peer()->id.value;
+	my_id = session().userPeerId().value;
+	chat_members = {my_id};
+	
+	if (_activeChat.key.peer()->isUser() && !_activeChat.key.peer()->isSelf()) {
+		chat_members.push_back(chat_id);
+	}
+	else if (_activeChat.key.peer()->isChat()) {
+		chat_members.clear();
+		for (const auto& p : _activeChat.key.peer()->asChat()->participants) {
+			chat_members.push_back(p->id.value);
+		}
+	}
+
+	// Обновляем базу
+	update_chat_members(chat_id, my_id, chat_members);
+}
+
 // Реакция на клик при начале шифрования
 void TopBarWidget::start_encryption() {
-	std::cout << "button start_encryption click!" << '\n';
+	BareId my_id;
+	BareId chat_id;
+	std::vector<BareId> chat_members;
 	
-	// Передаём лямбда функцию, которая отправляет сообщения
-	ChatKeyCreation::start([this](const std::string& message) {
-		this->send_api_message_wrapper(message);
-	});
+	// Получаем id-шники
+	get_chat_peers_info(my_id, chat_id, chat_members);
+
+	std::cout << "button start_encryption click!" << '\n';
+	ChatKeyCreation::start(my_id, chat_id, chat_members);
 }
 
 // Реакция на клик при сбросе шифрования
 void TopBarWidget::stop_encryption() {
 	std::cout << "button stop_encryption click!" << '\n';
-
-	// Передаём лямбда функцию, которая отправляет сообщения
-	ChatKeyCreation::stop([this](const std::string& message) {
-		this->send_api_message_wrapper(message);
-	});
+	ChatKeyCreation::stop();
 }
 
 void TopBarWidget::call() {

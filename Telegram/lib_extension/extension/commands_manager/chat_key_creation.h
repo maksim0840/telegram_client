@@ -17,8 +17,13 @@
 
 #pragma once
 
+#define MAX_PEERS_IN_CHAT 100 // для удобства (можно спокойно увеличивать данное значение если требуется)
+
 enum class KeyCreationStages {
-    INIT_ENCRYPTION
+    INIT_RSA_ENCRYPTION,
+    RSA_SEND_PUBLIC_KEY,
+    INIT_AES_ENCRYPTION,
+    AES_FORM_SESSION_KEY
 };
 
 class ChatKeyCreation {
@@ -29,6 +34,8 @@ private:
     static std::string my_id_str;
     static std::string chat_id_str;
     static std::vector<std::string> chat_members_str;
+    static int my_id_pos; // индекс элемента из chat_members_str, который равен my_id_str
+    static int members_len; // размер chat_members_str
 
     static Message recieved_message; // сообщение которое было получено
     static std::string sender_id; // id собеседника, который отправил это сообщение
@@ -40,10 +47,16 @@ private:
     static bool continue_creation;
     static bool stop_creation;
 
+    static bool is_started_flag; // флаг, что создание ключей было начато
+
     // Создание ключа
     static void chat_key_creation();
 
 public:
+
+    static bool is_started() {
+        return is_started_flag;
+    }
 
     static void set_lambda_functions(
         const std::function<void(const std::string&)>& send_func,

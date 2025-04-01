@@ -1,4 +1,5 @@
 #include "message_text_decryption.h"
+#include "../commands_manager/chat_key_creation.h"
 #include "base/basic_types.h"
 #include "styles/style_info.h"
 #include "mtproto/core_types.h"

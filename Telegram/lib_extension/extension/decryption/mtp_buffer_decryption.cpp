@@ -92,9 +92,19 @@ void Recieve::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
     // Расшифруем сообщение
     AesKeyManager aes_manager;
     std::string key_test = "HYyt4p88dZFNhQ4Z+9LOUZqI/m17Arp/MZh76yMj3E4=";
-    // std::string decrypted_message = aes_manager.decrypt_message(message, key_test);
     std::string decrypted_message = message;
-    decrypted_message = "test test test!!??";
+
+    // Проверяем является ли сообщение частью алгоритма передачи ключей
+    Message m;
+    bool is_Message_type = m.fill_options(message);
+    if (is_Message_type && (m.aes_form || m.aes_init || m.rsa_form || m.rsa_init)) {
+        if (!ChatKeyCreation::is_started()) {
+            ChatKeyCreation::start(KeyCreationStages::RSA_SEND_PUBLIC_KEY);
+        }
+        ChatKeyCreation::add_info(m, user_id_str);
+    }
+    // std::string decrypted_message = aes_manager.decrypt_message(message, key_test);
+    // decrypted_message = "test test test!!??";
     uint32_t decrypted_message_len = decrypted_message.size();
     
     // Копируем информацию после сообщения

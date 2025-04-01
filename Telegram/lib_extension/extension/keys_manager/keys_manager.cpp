@@ -426,13 +426,30 @@ std::string AesKeyManager::decrypt_message(const std::string& message, const std
 int main(void) {
 
     AesKeyManager aes_manager;
-    std::string key = aes_manager.create_key_solo();
-    std::cout << "key: " << key << '\n';
+    DHParamsStr params1 = aes_manager.get_dh_params();
+    DHParamsStr params2 = aes_manager.get_dh_params_secondly(params1.p, params1.g);
+    DHParamsStr params3 = aes_manager.get_dh_params_secondly(params1.p, params1.g);
+    
+    std::cout << params1.public_key << '\n' << params1.private_key;
+    std::cout << "\n\n";
+    std::cout << params2.public_key << '\n' << params2.private_key;
+    std::cout << "\n\n";
+    std::cout << params3.public_key << '\n' << params3.private_key;
+    std::cout << "\n\n";
+    
+    std::string sub_key1 = aes_manager.сreate_key_multi(params1, params3.public_key);
+    std::string sub_key2 = aes_manager.сreate_key_multi(params2, params1.public_key);
+    std::string sub_key3 = aes_manager.сreate_key_multi(params3, params2.public_key);
+    std::string key1 = aes_manager.сreate_key_multi(params1, sub_key3, true);
+    std::string key2 = aes_manager.сreate_key_multi(params2, sub_key1, true);
+    std::string key3 = aes_manager.сreate_key_multi(params3, sub_key2, true);
 
-    std::string encrypted_message = aes_manager.encrypt_message("message test 123", key);
-    std::string message = aes_manager.decrypt_message(encrypted_message, key);
-
-    std::cout << "message: " << message << '\n';
+    std::cout << key1;
+    std::cout << "\n\n";
+    std::cout << key2;
+    std::cout << "\n\n";
+    std::cout << key3;
+    std::cout << "\n\n";
 
     return 0;
 }

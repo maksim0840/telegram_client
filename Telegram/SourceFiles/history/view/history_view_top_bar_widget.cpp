@@ -9,7 +9,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <iostream>
 #include "../../../lib_extension/extension/buttons/top_bar_buttons.h"
 #include "../../../lib_extension/extension/commands_manager/chat_key_creation.h"
-#include "../../../lib_extension/extension/chat_members/chat_members.h"
 
 #include "history/view/history_view_top_bar_widget.h"
 #include "history/history.h"
@@ -131,11 +130,14 @@ TopBarWidget::TopBarWidget(
 , _onlineUpdater([=] { updateOnlineDisplay(); }) {
 	setAttribute(Qt::WA_OpaquePaintEvent);
 
-	// Передаём lambda функцию
+	// Передаём lambda функции
 	std::cout << "!!!!!!!!!!!!!!!TopBarWidget!!!!!!!!!!!!!!!\n";
-	ChatKeyCreation::set_lambda_send_message(
+	ChatKeyCreation::set_lambda_functions(
 		[this](const std::string& message) { // функция для отправки сообщения
 			this->send_api_message_wrapper(message);
+		},
+		[this](BareId& my_id, BareId& chat_id, std::vector<BareId>& chat_members) { // функция для получения id собеседников
+			this->get_chat_peers_info(my_id, chat_id, chat_members);
 		}
 	);
 	
@@ -307,22 +309,12 @@ void TopBarWidget::get_chat_peers_info(BareId& my_id, BareId& chat_id, std::vect
 			chat_members.push_back(p->id.value);
 		}
 	}
-
-	// Обновляем базу
-	update_chat_members(chat_id, my_id, chat_members);
 }
 
 // Реакция на клик при начале шифрования
 void TopBarWidget::start_encryption() {
-	BareId my_id;
-	BareId chat_id;
-	std::vector<BareId> chat_members;
-	
-	// Получаем id-шники
-	get_chat_peers_info(my_id, chat_id, chat_members);
-
 	std::cout << "button start_encryption click!" << '\n';
-	ChatKeyCreation::start(my_id, chat_id, chat_members);
+	ChatKeyCreation::start(KeyCreationStages::INIT_ENCRYPTION);
 }
 
 // Реакция на клик при сбросе шифрования

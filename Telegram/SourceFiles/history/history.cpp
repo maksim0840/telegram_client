@@ -452,35 +452,35 @@ not_null<HistoryItem*> History::createItem(
 		bool newMessage) {
 	
 	// Обрабатываем входящие сообщения
-	std::vector<QString> auto_reply_messages = message.match([this](const MTPDmessage &msg) {
-		std::cout << "history.cpp createItem: " << msg.vmessage().v.toStdString() << '\n';
-		BareId chat_id = peer->id.value;
-		BareId my_id = peer->owner().session().userPeerId().value;
-		return decrypt_the_message(msg, chat_id, my_id);
-	}, [](auto &) -> std::vector<QString> { return {}; });
+	// std::vector<QString> auto_reply_messages = message.match([this](const MTPDmessage &msg) {
+	// 	std::cout << "history.cpp createItem: " << msg.vmessage().v.toStdString() << '\n';
+	// 	BareId chat_id = peer->id.value;
+	// 	BareId my_id = peer->owner().session().userPeerId().value;
+	// 	return decrypt_the_message(msg, chat_id, my_id);
+	// }, [](auto &) -> std::vector<QString> { return {}; });
 
 	// Автоматически отвечаем на сообщения, требующие потверждения (используется при создании общего ключа)
-	std::thread([this, auto_reply_messages]() {
-		std::this_thread::sleep_for(std::chrono::seconds(1)); // Ждём 1 секунду
-		for (const auto& reply_message : auto_reply_messages) {
-			std::cout << "0.0\n";
-			Api::MessageToSend sending_params(Api::SendAction(owningHistory(), Api::SendOptions()));
-			sending_params.textWithTags.text = reply_message; // Подменяем текст
-			for (int i = 0; i < 5; ++i) { // пробуем отправить одно сообщение несколько раз т.к. api не всегда стабильно работает
-				try {
-					std::cout << "0.1\n";
-					session().api().sendMessage(std::move(sending_params));
-				} catch (...) {
-					if (i == 4) { std::cout << "0.2\n"; throw std::runtime_error("Bad API response (sendMessage)"); } // не удалось отправить сообщение
-					std::this_thread::sleep_for(std::chrono::milliseconds(500));
-					continue;
-				}
-				break;
-			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(500)); // перед следующей отправкой ждём ещё пол секунды
-			std::cout << "0.3\n";
-		}
-	}).detach();
+	// std::thread([this, auto_reply_messages]() {
+	// 	std::this_thread::sleep_for(std::chrono::seconds(1)); // Ждём 1 секунду
+	// 	for (const auto& reply_message : auto_reply_messages) {
+	// 		std::cout << "0.0\n";
+	// 		Api::MessageToSend sending_params(Api::SendAction(owningHistory(), Api::SendOptions()));
+	// 		sending_params.textWithTags.text = reply_message; // Подменяем текст
+	// 		for (int i = 0; i < 5; ++i) { // пробуем отправить одно сообщение несколько раз т.к. api не всегда стабильно работает
+	// 			try {
+	// 				std::cout << "0.1\n";
+	// 				session().api().sendMessage(std::move(sending_params));
+	// 			} catch (...) {
+	// 				if (i == 4) { std::cout << "0.2\n"; throw std::runtime_error("Bad API response (sendMessage)"); } // не удалось отправить сообщение
+	// 				std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	// 				continue;
+	// 			}
+	// 			break;
+	// 		}
+	// 		std::this_thread::sleep_for(std::chrono::milliseconds(500)); // перед следующей отправкой ждём ещё пол секунды
+	// 		std::cout << "0.3\n";
+	// 	}
+	// }).detach();
 
 	if (const auto result = owner().message(peer, id)) {
 		if (detachExistingItem) {

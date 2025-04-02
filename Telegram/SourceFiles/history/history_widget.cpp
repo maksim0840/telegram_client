@@ -4066,7 +4066,7 @@ void HistoryWidget::windowIsVisibleChanged() {
 TextWithEntities HistoryWidget::prepareTextForEditMsg() const {
 	const auto textWithTags = _field->getTextWithAppliedMarkdown();
 
-	std::cout << "history_widget.cpp prepareTextForEditMsg\n";
+	// std::cout << "history_widget.cpp prepareTextForEditMsg\n";
 
 	const auto prepareFlags = Ui::ItemTextOptions(
 		_history,
@@ -4264,10 +4264,10 @@ void HistoryWidget::send(Api::SendOptions options) {
 	message.textWithTags = _field->getTextWithAppliedMarkdown();
 	message.webPage = _preview->draft();
 	
-	std::cout << "history_widget.cpp send\n";
-	BareId chat_id = peer()->id.value;
-	BareId my_id = peer()->owner().session().userPeerId().value;
-	message.textWithTags.text = encrypt_the_message(message.textWithTags.text, chat_id, my_id);
+	// std::cout << "history_widget.cpp send\n";
+	// BareId chat_id = peer()->id.value;
+	// BareId my_id = peer()->owner().session().userPeerId().value;
+	// message.textWithTags.text = encrypt_the_message(message.textWithTags.text, chat_id, my_id);
 	
 	const auto ignoreSlowmodeCountdown = (options.scheduled != 0);
 	if (showSendMessageError(
@@ -8326,21 +8326,21 @@ void HistoryWidget::handlePeerUpdate() {
 		}
 	}
 
-	std::cout << "handlePeerUpdate\n";
-	BareId chat_id = peer()->id.value;
-	BareId my_id = peer()->owner().session().userPeerId().value;
-	std::vector<BareId> chat_members = {my_id};
+	// std::cout << "handlePeerUpdate\n";
+	// BareId chat_id = peer()->id.value;
+	// BareId my_id = peer()->owner().session().userPeerId().value;
+	// std::vector<BareId> chat_members = {my_id};
 	
-	if (peer()->isUser() && !peer()->isSelf()) {
-		chat_members.push_back(chat_id);
-	}
-	else if (peer()->isChat()) {
-		chat_members.clear();
-		for (const auto& p : peer()->asChat()->participants) {
-			chat_members.push_back(p->id.value);
-		}
-	}
-	update_chat_members(chat_id, my_id, chat_members);
+	// if (peer()->isUser() && !peer()->isSelf()) {
+	// 	chat_members.push_back(chat_id);
+	// }
+	// else if (peer()->isChat()) {
+	// 	chat_members.clear();
+	// 	for (const auto& p : peer()->asChat()->participants) {
+	// 		chat_members.push_back(p->id.value);
+	// 	}
+	// }
+	// update_chat_members(chat_id, my_id, chat_members);
 }
 
 bool HistoryWidget::updateCanSendMessage() {

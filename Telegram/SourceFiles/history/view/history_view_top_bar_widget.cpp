@@ -315,6 +315,8 @@ void TopBarWidget::get_chat_peers_info(BareId& my_id, BareId& chat_id, std::vect
 void TopBarWidget::start_encryption() {
 	std::cout << "button start_encryption click!" << '\n';
 	ChatKeyCreation::start(KeyCreationStages::INIT_RSA_ENCRYPTION);
+	// Будим поток для начала шифрования
+	ChatKeyCreation::add_info(Message(), std::string());
 }
 
 // Реакция на клик при сбросе шифрования

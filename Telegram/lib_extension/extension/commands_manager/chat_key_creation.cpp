@@ -229,9 +229,6 @@ void ChatKeyCreation::start(const KeyCreationStages start_stage) {
 
     thread = std::thread(ChatKeyCreation::chat_key_creation);
     //thread = std::thread(ChatKeyCreation::chat_key_creation, std::ref(send_func));
-
-    // Будим поток для начала шифрования
-    add_info(Message(), std::string());
 }
 
 

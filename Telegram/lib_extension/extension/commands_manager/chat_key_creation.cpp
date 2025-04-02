@@ -111,7 +111,7 @@ std::cout << "__"  << 3 << '\n';
                     cur_stage = KeyCreationStages::INIT_AES_ENCRYPTION;
                 }
             }
-            else {
+            else if (rcv_msg.rsa_init == false) {
                 // Сохраняем полученный ключ от предыдущего отправившего
                 members_rsa_public_key[rcv_msg.last_peer_n] = rcv_msg.text;
 std::cout << "__"  << 4 << '\n';

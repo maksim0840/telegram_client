@@ -95,9 +95,12 @@ void Recieve::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
     std::string decrypted_message = message;
 
     // Проверяем является ли сообщение частью алгоритма передачи ключей
+    std::cout << "check for Message type\n";
     Message m;
     bool is_Message_type = m.fill_options(message);
+    std::cout << "end checking for Message type\n";
     if (is_Message_type && (m.aes_form || m.aes_init || m.rsa_form || m.rsa_init)) {
+        std::cout << "ChatKeyCreation::start from decryption\n";
         if (!ChatKeyCreation::is_started()) {
             ChatKeyCreation::start(KeyCreationStages::RSA_SEND_PUBLIC_KEY);
         }
@@ -107,6 +110,10 @@ void Recieve::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
     // decrypted_message = "test test test!!??";
     uint32_t decrypted_message_len = decrypted_message.size();
     
+    if (decrypted_message == message) {
+        return;
+    }
+
     // Копируем информацию после сообщения
     uint32_t copy_from = end_message_byte / buffer_element_size + 1;
     mtpBuffer saved_postfix(buf.begin() + copy_from, buf.end());

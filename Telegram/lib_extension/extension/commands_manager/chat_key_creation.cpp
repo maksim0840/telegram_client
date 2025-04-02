@@ -142,7 +142,7 @@ std::cout << "__"  << 6 << '\n';
                 
                 // Отправляем сообщение
                 lambda_send_message(message_to_send.get_text_with_options());
-                
+
                 // Переходим на следующиую стадию
                 cur_stage = KeyCreationStages::AES_FORM_SESSION_KEY;
             }
@@ -227,7 +227,6 @@ void ChatKeyCreation::start(const KeyCreationStages start_stage) {
 
     thread = std::thread(ChatKeyCreation::chat_key_creation);
     //thread = std::thread(ChatKeyCreation::chat_key_creation, std::ref(send_func));
-    lambda_send_message("start thread!!!");
 
     // Будим поток для начала шифрования
     add_info(Message(), std::string());
@@ -258,8 +257,6 @@ void ChatKeyCreation::stop() {
     cv.notify_one(); // разбудить поток
     if (thread.joinable()) thread.join(); // завершить поток
     thread = std::thread();
-
-    lambda_send_message("stop thread");
 
     // Убираем флаг работы
     is_started_flag = false;

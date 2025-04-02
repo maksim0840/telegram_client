@@ -1027,9 +1027,9 @@ void SessionPrivate::tryToSend() {
 	std::cout << "---------------------------" << "\n";
 	if (_connection && toSendRequest) {
 		// Вывод всех int32 для отладки
-		for (size_t i = 0; i < toSendRequest->size(); ++i) {
-			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>((*toSendRequest)[i]) << std::dec << '\n';
-		}
+		// for (size_t i = 0; i < toSendRequest->size(); ++i) {
+		// 	std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>((*toSendRequest)[i]) << std::dec << '\n';
+		// }
 
 		//std::cout << "other_id: " << peerFromMTP(*toSendRequest); << '\n';
 		// std::cout << "my_id: " << _sessionData->session().userPeerId().value << '\n';
@@ -1384,7 +1384,6 @@ void SessionPrivate::handleReceived() {
 
 		constexpr auto kMsgKeyShift = 8U;
 		if (ConstTimeIsDifferent(&msgKey, sha256Buffer.data() + kMsgKeyShift, sizeof(msgKey))) {
-			std::cout << "TCP Error: bad SHA256 hash after aesDecrypt in message" << '\n';
 			LOG(("TCP Error: bad SHA256 hash after aesDecrypt in message"));
 			return restart();
 		}
@@ -1393,7 +1392,6 @@ void SessionPrivate::handleReceived() {
 			|| (messageLength & 0x03)
 			|| (paddingSize < kMinPaddingSize)
 			|| (paddingSize > kMaxPaddingSize)) {
-			std::cout << QString("TCP Error: bad msg_len received %1, data size: %2").arg(messageLength).arg(encryptedBytesCount).toStdString() << '\n';
 			LOG(("TCP Error: bad msg_len received %1, data size: %2").arg(messageLength).arg(encryptedBytesCount));
 			return restart();
 		}
@@ -1407,7 +1405,6 @@ void SessionPrivate::handleReceived() {
 		}
 
 		if (session != _sessionId) {
-			std::cout << "MTP Error: bad server session received" << '\n';
 			LOG(("MTP Error: bad server session received"));
 			return restart();
 		}
@@ -1415,7 +1412,6 @@ void SessionPrivate::handleReceived() {
 		const auto serverTime = int32(msgId >> 32);
 		const auto isReply = ((msgId & 0x03) == 1);
 		if (!isReply && ((msgId & 0x03) != 3)) {
-			std::cout << QString("MTP Error: bad msg_id %1 in message received").arg(msgId).toStdString() << '\n';
 			LOG(("MTP Error: bad msg_id %1 in message received").arg(msgId));
 
 			return restart();
@@ -1425,14 +1421,12 @@ void SessionPrivate::handleReceived() {
 		const auto badTime = (serverTime > clientTime + 60)
 			|| (serverTime + 300 < clientTime);
 		if (badTime) {
-			std::cout << QString("MTP Info: bad server time from msg_id: %1, my time: %2").arg(serverTime).arg(clientTime).toStdString() << '\n';
 			DEBUG_LOG(("MTP Info: bad server time from msg_id: %1, my time: %2").arg(serverTime).arg(clientTime));
 		}
 
 		bool wasConnected = (getState() == ConnectedState);
 		if (serverSalt != _sessionSalt) {
 			if (!badTime) {
-				std::cout << QString("MTP Info: other salt received... received: %1, my salt: %2, updating...").arg(serverSalt).arg(_sessionSalt).toStdString() << '\n';
 				DEBUG_LOG(("MTP Info: other salt received... received: %1, my salt: %2, updating...").arg(serverSalt).arg(_sessionSalt));
 				_sessionSalt = serverSalt;
 
@@ -1440,7 +1434,6 @@ void SessionPrivate::handleReceived() {
 					resendAll();
 				}
 			} else {
-				std::cout << QString("MTP Info: other salt received... received: %1, my salt: %2").arg(serverSalt).arg(_sessionSalt).toStdString() << '\n';
 				DEBUG_LOG(("MTP Info: other salt received... received: %1, my salt: %2").arg(serverSalt).arg(_sessionSalt));
 			}
 		} else {
@@ -1450,7 +1443,6 @@ void SessionPrivate::handleReceived() {
 		if (needAck) _ackRequestData.push_back(MTP_long(msgId));
 
 		
-		std::cout << "handleReceived:!!!!!!!!!!!!!!!!!!!!" << '\n';
 		mtpBuffer buffer(reinterpret_cast<const mtpPrime *>(decryptedBuffer.constData()),
 			reinterpret_cast<const mtpPrime *>(decryptedBuffer.constData() + decryptedBuffer.size()));
 		mtpPrime* ungzip_from = buffer.data() + kEncryptedHeaderIntsCount;
@@ -1497,7 +1489,6 @@ void SessionPrivate::handleReceived() {
 
 		// send acks
 		if (const auto toAckSize = _ackRequestData.size()) {
-			std::cout << QString("MTP Info: will send %1 acks, ids: %2").arg(toAckSize).arg(LogIdsVector(_ackRequestData)).toStdString() << '\n';
 			DEBUG_LOG(("MTP Info: will send %1 acks, ids: %2").arg(toAckSize).arg(LogIdsVector(_ackRequestData)));
 			_sessionData->queueSendAnything(kAckSendWaiting);
 		}
@@ -1507,7 +1498,6 @@ void SessionPrivate::handleReceived() {
 		lock.unlock();
 
 		if (tryToReceive) {
-			std::cout << QString("MTP Info: queueTryToReceive() - need to parse in another thread, %1 messages.").arg(_sessionData->haveReceivedMessages().size()).toStdString() << '\n';
 			DEBUG_LOG(("MTP Info: queueTryToReceive() - need to parse in another thread, %1 messages.").arg(_sessionData->haveReceivedMessages().size()));
 			_sessionData->queueTryToReceive();
 		}
@@ -1542,13 +1532,9 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 		OuterInfo info) {
 	Expects(from < end);
 
-	std::cout << "\n" << "handleOneReceived" << "\n";
-
 	switch (mtpTypeId(*from)) {
 
 	case mtpc_gzip_packed: {
-		std::cout << "mtpc_gzip_packed" << '\n';
-		std::cout << "gzip: " << *(from + 1) << ' ' << *(end - 1) << '\n';
 		DEBUG_LOG(("Message Info: gzip container"));
 		mtpBuffer response = ungzip(++from, end);
 		if (response.empty()) {
@@ -1558,7 +1544,6 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	}
 
 	case mtpc_msg_container: {
-		std::cout << "mtpc_msg_container" << '\n';
 		if (++from >= end) {
 			return HandleResult::ParseError;
 		}
@@ -1624,7 +1609,6 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	} return HandleResult::Success;
 
 	case mtpc_msgs_ack: {
-		std::cout << "mtpc_msgs_ack" << '\n';
 		MTPMsgsAck msg;
 		if (!msg.read(from, end)) {
 			return HandleResult::ParseError;
@@ -1647,7 +1631,6 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	} return HandleResult::Success;
 
 	case mtpc_bad_msg_notification: {
-		std::cout << "mtpc_bad_msg_notification" << '\n';
 		MTPBadMsgNotification msg;
 		if (!msg.read(from, end)) {
 			return HandleResult::ParseError;
@@ -1754,7 +1737,6 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 	} return HandleResult::Success;
 
 	case mtpc_bad_server_salt: {
-		std::cout << "mtpc_bad_server_salt" << '\n';
 		MTPBadMsgNotification msg;
 		if (!msg.read(from, end)) {
 			return HandleResult::ParseError;

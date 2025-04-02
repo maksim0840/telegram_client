@@ -37,6 +37,7 @@ void ChatKeyCreation::chat_key_creation() {
         cv.wait(lock, [] { return continue_creation || stop_creation; });  // ждем разрешения на продолжение (один из bool флагов должен стать true)
         if (stop_creation) break; 
 
+        std::cout << "KeyCreationStages: " << (int) KeyCreationStages::INIT_RSA_ENCRYPTION << '\n';
         Message rcv_msg = recieved_message;
         std::string snd_id = sender_id;
 
@@ -44,7 +45,7 @@ void ChatKeyCreation::chat_key_creation() {
         lock.unlock();
 
         /* Критическая секция */
-
+std::cout << "__"  << 0 << '\n';
         if (cur_stage == KeyCreationStages::INIT_RSA_ENCRYPTION) { // мы являемся инициатором шифрования
 
             // Получаем последние номера уже созданных ключей и увеличиваем их на 1
@@ -52,7 +53,7 @@ void ChatKeyCreation::chat_key_creation() {
             std::optional<int> aes_key_n = db.get_last_key_n(chat_id_str, my_id_str, KeysTablesDefs::AES);
             rsa_key_n = (rsa_key_n) ? (*rsa_key_n + 1) : 1;
             aes_key_n = (aes_key_n) ? (*aes_key_n + 1) : 1;
-            
+
             // Собираем сообщение для отправки
             Message message_to_send;
             message_to_send.rsa_init = true;
@@ -61,7 +62,7 @@ void ChatKeyCreation::chat_key_creation() {
             message_to_send.aes_key_n = *aes_key_n;
             message_to_send.last_peer_n = my_id_pos; // свой id (тот, кто инициализирует rsa шифрование)
             message_to_send.rsa_key_len = 2048;
-            message_to_send.text = "start_encryption (RSA)";
+            message_to_send.text = "start_encryption";
 
             // Отправляем сообщение
             lambda_send_message(message_to_send.get_text_with_options());
@@ -72,11 +73,11 @@ void ChatKeyCreation::chat_key_creation() {
             // Получаем своё же сообщение
             rcv_msg = message_to_send;
         }
-
+std::cout << "__"  << 1 << '\n';
         if (cur_stage == KeyCreationStages::RSA_SEND_PUBLIC_KEY) {
             if ((my_id_pos == 0 && members_rsa_public_key[my_id_pos] == "") || // если мы первый в списке и не отправляли свой ключ (начинаем)
                 (my_id_pos == (rcv_msg.last_peer_n + 1) && rcv_msg.rsa_init == false)) { // если мы следующий кто должен отправлять и первый уже отправил
-
+std::cout << "__"  << 2 << '\n';
                 // Сохраняем полученный ключ от предыдущего отправившего
                 if (rcv_msg.rsa_init == false) { // предыдущее сообщение содержит публичный ключ
                     members_rsa_public_key[rcv_msg.last_peer_n] = rcv_msg.text;
@@ -104,15 +105,17 @@ void ChatKeyCreation::chat_key_creation() {
 
                 // Переходим на следующиую стадию, если мы были последним
                 if (my_id_pos == members_len - 1) {
+std::cout << "__"  << 3 << '\n';
                     cur_stage = KeyCreationStages::INIT_AES_ENCRYPTION;
                 }
             }
             else {
                 // Сохраняем полученный ключ от предыдущего отправившего
                 members_rsa_public_key[rcv_msg.last_peer_n] = rcv_msg.text;
-
+std::cout << "__"  << 4 << '\n';
                 // Переходим на следующиую стадию, если прочитали сообщение последнего
                 if (rcv_msg.last_peer_n == members_len - 1) {
+std::cout << "__"  << 5 << '\n';
                     cur_stage = KeyCreationStages::INIT_AES_ENCRYPTION;
                 }
             }
@@ -120,7 +123,7 @@ void ChatKeyCreation::chat_key_creation() {
 
         if (cur_stage == KeyCreationStages::INIT_AES_ENCRYPTION) {
             if (my_id_pos == 0) { // если мы первый
-
+std::cout << "__"  << 6 << '\n';
                 // Создаём и запоминаем свои параметры aes шифрования
                 DHParamsStr dh_params = aes_manager.get_dh_params();
                 my_dh_params = dh_params;
@@ -137,11 +140,16 @@ void ChatKeyCreation::chat_key_creation() {
                 message_to_send.rsa_key_len = rcv_msg.rsa_key_len;
                 message_to_send.text = KeysDataBaseHelper::vector_to_string(shared_params); // отправляем параметры p и g
                 
+                // Отправляем сообщение
+                lambda_send_message(message_to_send.get_text_with_options());
+                
                 // Переходим на следующиую стадию
                 cur_stage = KeyCreationStages::AES_FORM_SESSION_KEY;
             }
             else {
+std::cout << "__"  << 7 << '\n';
                 if (rcv_msg.aes_form == true) {
+std::cout << "__" << 8 << '\n';
                     // Получаем параметры P и G от первого пользователя
                     std::vector<std::string> shared_params = KeysDataBaseHelper::string_to_vector(rcv_msg.text);
 
@@ -154,7 +162,7 @@ void ChatKeyCreation::chat_key_creation() {
                 }
             }
         }
-  
+std::cout << "__"  << 9 << '\n';
         
 
         lock.lock();

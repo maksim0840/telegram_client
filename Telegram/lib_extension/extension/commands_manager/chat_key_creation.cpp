@@ -76,7 +76,7 @@ std::cout << "__"  << 0 << '\n';
 std::cout << "__"  << 1 << '\n';
 std::cout << my_id_pos << ' ' << rcv_msg.last_peer_n + 1 << ' ' << rcv_msg.rsa_init << ' ' << members_len << '\n';
         if (cur_stage == KeyCreationStages::RSA_SEND_PUBLIC_KEY) {
-            if ((my_id_pos == 0 && members_rsa_public_key[my_id_pos] == "") || // если мы первый в списке и не отправляли свой ключ (начинаем)
+            if ((my_id_pos == 0 && rcv_msg.rsa_init == true) || // если мы первый в списке и не отправляли свой ключ (начинаем)
                 (my_id_pos == (rcv_msg.last_peer_n + 1) && rcv_msg.rsa_init == false)) { // если мы следующий кто должен отправлять и первый уже отправил
 std::cout << "__"  << 2 << '\n';
                 // Сохраняем полученный ключ от предыдущего отправившего
@@ -147,6 +147,9 @@ std::cout << "__"  << 6 << '\n';
 
                 // Переходим на следующиую стадию
                 cur_stage = KeyCreationStages::AES_FORM_SESSION_KEY;
+
+                // Получаем своё же сообщение
+                rcv_msg = message_to_send;
             }
             else {
 std::cout << "__"  << 7 << '\n';
@@ -165,7 +168,24 @@ std::cout << "__" << 8 << '\n';
             }
         }
 std::cout << "__"  << 9 << '\n';
-        
+        if (cur_stage == KeyCreationStages::AES_FORM_SESSION_KEY) {
+            if (my_id_pos == 0 && rcv_msg.aes_init == true) {
+                    
+                // Формируем сообщение
+                Message message_to_send;
+                message_to_send.rsa_use = true;
+                message_to_send.aes_form = true;
+                message_to_send.dh_fastmode = rcv_msg.dh_fastmode;
+                message_to_send.rsa_key_n = rcv_msg.rsa_key_n;
+                message_to_send.aes_key_n = rcv_msg.aes_key_n;
+                message_to_send.last_peer_n = ((my_id_pos - 1) % members_len + members_len) % members_len; // <=> (my_id_pos - 1) mod members_count  (((id человека, для которого формируентся ключ)))
+                message_to_send.rsa_key_len = rcv_msg.rsa_key_len;
+                message_to_send.text = my_dh_params.public_key; // передаём свой публичный ключ в чат (т.к. мы первый отправляющий)
+
+                // Отправляем сообщение
+                lambda_send_message(message_to_send.get_text_with_options());
+            }
+        }
 
         lock.lock();
     }

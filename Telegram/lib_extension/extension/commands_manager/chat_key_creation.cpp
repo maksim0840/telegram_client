@@ -74,12 +74,14 @@ std::cout << "__"  << 0 << '\n';
             rcv_msg = message_to_send;
         }
 std::cout << "__"  << 1 << '\n';
+std::cout << my_id_pos << ' ' << rcv_msg.last_peer_n + 1 << ' ' << rcv_msg.rsa_init << ' ' << members_len << '\n';
         if (cur_stage == KeyCreationStages::RSA_SEND_PUBLIC_KEY) {
             if ((my_id_pos == 0 && members_rsa_public_key[my_id_pos] == "") || // если мы первый в списке и не отправляли свой ключ (начинаем)
                 (my_id_pos == (rcv_msg.last_peer_n + 1) && rcv_msg.rsa_init == false)) { // если мы следующий кто должен отправлять и первый уже отправил
 std::cout << "__"  << 2 << '\n';
                 // Сохраняем полученный ключ от предыдущего отправившего
                 if (rcv_msg.rsa_init == false) { // предыдущее сообщение содержит публичный ключ
+std::cout << "__" << 2.1 << '\n';
                     members_rsa_public_key[rcv_msg.last_peer_n] = rcv_msg.text;
                 }
 
@@ -102,7 +104,7 @@ std::cout << "__"  << 2 << '\n';
 
                 // Отправляем сообщение
                 lambda_send_message(message_to_send.get_text_with_options());
-
+std::cout << "__" << 2.2 << '\n';
                 // Переходим на следующиую стадию, если мы были последним
                 if (my_id_pos == members_len - 1) {
 std::cout << "__"  << 3 << '\n';

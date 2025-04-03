@@ -2,8 +2,7 @@
 #include <QtCore/QString>
 #include <QtGlobal>
 #include <cctype>
-
-#include "../commands_manager/chat_commands_manager.h"
+#include "../keys_manager/keys_manager.h"
 
 #pragma once
 

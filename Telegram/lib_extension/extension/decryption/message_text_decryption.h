@@ -3,8 +3,7 @@
 #include <QtGlobal>
 #include <cctype>
 #include "scheme.h"
-
-#include "../commands_manager/chat_commands_manager.h"
+#include "../keys_manager/keys_manager.h"
 
 #pragma once
 

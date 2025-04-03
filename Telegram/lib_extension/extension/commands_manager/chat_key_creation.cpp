@@ -39,7 +39,7 @@ void ChatKeyCreation::chat_key_creation() {
         cv.wait(lock, [] { return continue_creation || stop_creation; });  // ждем разрешения на продолжение (один из bool флагов должен стать true)
         if (stop_creation) break; 
 
-        std::cout << "KeyCreationStages: " << (int) KeyCreationStages::INIT_RSA_ENCRYPTION << '\n';
+        std::cout << "KeyCreationStages: " << (int) cur_stage << '\n';
         Message rcv_msg = recieved_message;
         int snd_id_pos = sender_id_pos;
 
@@ -70,7 +70,7 @@ std::cout << "__"  << 0 << '\n';
             message_to_send.text = "start encryption key forming";
 
             // Отправляем сообщение
-            std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY));\
+            std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY));
 std::cout << "__"  << 1.5 << '\n';
             lambda_send_message(message_to_send.get_text_with_options());
 

@@ -134,7 +134,7 @@ std::cout << "__"  << 6 << '\n';
                 // Собираем сообщение для отправки параметров P и G
                 Message message_to_send;
                 message_to_send.rsa_use = true;
-                message_to_send.aes_form = true;
+                message_to_send.aes_init = true;
                 message_to_send.dh_fastmode = rcv_msg.dh_fastmode;
                 message_to_send.rsa_key_n = rcv_msg.rsa_key_n;
                 message_to_send.aes_key_n = rcv_msg.aes_key_n;
@@ -153,7 +153,7 @@ std::cout << "__"  << 6 << '\n';
             }
             else {
 std::cout << "__"  << 7 << '\n';
-                if (rcv_msg.aes_form == true) {
+                if (rcv_msg.aes_init == true) {
 std::cout << "__" << 8 << '\n';
                     // Получаем параметры P и G от первого пользователя
                     std::vector<std::string> shared_params = KeysDataBaseHelper::string_to_vector(rcv_msg.text);

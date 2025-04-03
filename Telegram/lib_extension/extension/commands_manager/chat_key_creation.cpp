@@ -191,7 +191,7 @@ std::cout << "__"  << 11 << '\n';
                 cur_stage = KeyCreationStages::END_KEY_FORMING; // завершаем шифрование
             }
             // Если мы первый, но не единственный участник чата
-            else if (rcv_msg.aes_init == true) {
+            else if (my_id_pos == 0 && rcv_msg.aes_init == true) {
 std::cout << "__"  << 12 << '\n';
                 key_to_send = my_dh_params.public_key; // наш публичный ключ является началом фомирования ключа
                 last_peer_n_to_send = members_len - 1; // для последнего человека

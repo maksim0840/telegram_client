@@ -13,7 +13,8 @@ std::vector<std::string> ChatKeyCreation::chat_members_str;
 int ChatKeyCreation::my_id_pos;
 int ChatKeyCreation::members_len;
 Message ChatKeyCreation::recieved_message;
-std::string ChatKeyCreation::sender_id;
+std::string ChatKeyCreation::sender_id_str;
+int ChatKeyCreation::sender_id_pos;
 KeyCreationStages ChatKeyCreation::cur_stage;
 std::thread ChatKeyCreation::thread;
 std::mutex ChatKeyCreation::mtx;
@@ -32,6 +33,7 @@ void ChatKeyCreation::chat_key_creation() {
     std::vector<std::string> members_rsa_public_key(members_len, "");
     std::string my_rsa_private_key;
     DHParamsStr my_dh_params;
+    std::string aes_key = ""; // итоговый ключ шифрования (одинаковый для всех)
 
     while (true) {
         cv.wait(lock, [] { return continue_creation || stop_creation; });  // ждем разрешения на продолжение (один из bool флагов должен стать true)
@@ -39,12 +41,14 @@ void ChatKeyCreation::chat_key_creation() {
 
         std::cout << "KeyCreationStages: " << (int) KeyCreationStages::INIT_RSA_ENCRYPTION << '\n';
         Message rcv_msg = recieved_message;
-        std::string snd_id = sender_id;
+        int snd_id_pos = sender_id_pos;
 
         continue_creation = false;
         lock.unlock();
 
         /* Критическая секция */
+std::cout << "__"  << -1 << '\n';
+
 std::cout << "__"  << 0 << '\n';
         if (cur_stage == KeyCreationStages::INIT_RSA_ENCRYPTION) { // мы являемся инициатором шифрования
 
@@ -54,7 +58,7 @@ std::cout << "__"  << 0 << '\n';
             rsa_key_n = (rsa_key_n) ? (*rsa_key_n + 1) : 1;
             aes_key_n = (aes_key_n) ? (*aes_key_n + 1) : 1;
 
-            // Собираем сообщение для отправки
+            // Формируем сообщение для отправки
             Message message_to_send;
             message_to_send.rsa_init = true;
             message_to_send.dh_fastmode = true;
@@ -62,7 +66,7 @@ std::cout << "__"  << 0 << '\n';
             message_to_send.aes_key_n = *aes_key_n;
             message_to_send.last_peer_n = my_id_pos; // свой id (тот, кто инициализирует rsa шифрование)
             message_to_send.rsa_key_len = 2048;
-            message_to_send.text = "start_encryption";
+            message_to_send.text = "start encryption key forming";
 
             // Отправляем сообщение
             lambda_send_message(message_to_send.get_text_with_options());
@@ -101,7 +105,7 @@ std::cout << "__" << 2.1 << '\n';
                 message_to_send.last_peer_n = my_id_pos; // свой id (тот, кто отправляет публичный ключ)
                 message_to_send.rsa_key_len = rcv_msg.rsa_key_len;
                 message_to_send.text = public_key; // передаём свой публичный ключ в чат
-
+std::cout << "__" << 2.15 << '\n';
                 // Отправляем сообщение
                 lambda_send_message(message_to_send.get_text_with_options());
 std::cout << "__" << 2.2 << '\n';
@@ -169,8 +173,48 @@ std::cout << "__" << 8 << '\n';
         }
 std::cout << "__"  << 9 << '\n';
         if (cur_stage == KeyCreationStages::AES_FORM_SESSION_KEY) {
-            if (my_id_pos == 0 && rcv_msg.aes_init == true) {
-                    
+            
+std::cout << "__"  << 10 << '\n';
+            std::string key_to_send = ""; // ключ, который будет отправлен следующему участнику чата
+            int last_peer_n_to_send = -1; // позиция человека, для которого формируется ключ
+
+            // Если мы первый и едниственный участник чата
+            if (members_len == 1) {
+std::cout << "__"  << 11 << '\n';
+                aes_key = aes_manager.create_key_solo(); // создаём ключ в соло
+                std::cout << "!!! aes_key: " << aes_key << '\n';
+                cur_stage = KeyCreationStages::END_KEY_FORMING; // завершаем шифрование
+            }
+            // Если мы первый, но не единственный участник чата
+            else if (rcv_msg.aes_init == true) {
+std::cout << "__"  << 12 << '\n';
+                key_to_send = my_dh_params.public_key; // наш публичный ключ является началом фомирования ключа
+                last_peer_n_to_send = members_len - 1; // для последнего человека
+            }
+            // Если мы тот, для кого формируется ключ
+            else if (my_id_pos == rcv_msg.last_peer_n) {
+std::cout << "__"  << 13 << '\n';
+                aes_key = aes_manager.сreate_key_multi(my_dh_params, rcv_msg.text, true); // формируем ключ из отправленного нам
+                std::cout << "!!! aes_key: " << aes_key << '\n';
+                // Начинаем формирование ключа для следующего пользователя
+                key_to_send = my_dh_params.public_key; // наш публичный ключ является началом фомирования ключа
+                last_peer_n_to_send = my_id_pos - 1; // для человека перед нами
+
+                // Если мы являемся последним, кто получил aes_key
+                if (my_id_pos == 0) {
+                    cur_stage = KeyCreationStages::END_KEY_FORMING; // завершаем шифрование
+                }
+            }
+            // Если мы тот, кто является промежуточным этапом в формировании ключа
+            else if (my_id_pos == (snd_id_pos + 1) % members_len) { // мы являемся следующим человеком по возрастанию id после того, кто отправил сообщение
+std::cout << "__"  << 14 << '\n';
+                key_to_send = aes_manager.сreate_key_multi(my_dh_params, rcv_msg.text); // домнажаем ключ отправившего на свою приватную степень
+                last_peer_n_to_send = rcv_msg.last_peer_n; // позиция человека, для которого формируется ключ
+            }
+
+            // Если мы предварительно не завершили шифрование и у нас есть, что отправить
+            if (cur_stage != KeyCreationStages::END_KEY_FORMING && last_peer_n_to_send != -1 && key_to_send != "") {
+std::cout << "__"  << 15 << '\n';
                 // Формируем сообщение
                 Message message_to_send;
                 message_to_send.rsa_use = true;
@@ -178,17 +222,43 @@ std::cout << "__"  << 9 << '\n';
                 message_to_send.dh_fastmode = rcv_msg.dh_fastmode;
                 message_to_send.rsa_key_n = rcv_msg.rsa_key_n;
                 message_to_send.aes_key_n = rcv_msg.aes_key_n;
-                message_to_send.last_peer_n = ((my_id_pos - 1) % members_len + members_len) % members_len; // <=> (my_id_pos - 1) mod members_count  (((id человека, для которого формируентся ключ)))
+                message_to_send.last_peer_n = last_peer_n_to_send; // указываем собеседника, определённого нами ранее
                 message_to_send.rsa_key_len = rcv_msg.rsa_key_len;
-                message_to_send.text = my_dh_params.public_key; // передаём свой публичный ключ в чат (т.к. мы первый отправляющий)
+                message_to_send.text = key_to_send; // передаём ключ, определённый нами ранее
 
                 // Отправляем сообщение
                 lambda_send_message(message_to_send.get_text_with_options());
             }
         }
+std::cout << "__"  << 16 << '\n';   
+        // Сюда может попасть толькол pos=0
+        if (cur_stage == KeyCreationStages::END_KEY_FORMING) {
+std::cout << "__"  << 17 << '\n';
+
+            // Формируем сообщение
+            Message message_to_send;
+            message_to_send.end_key_forming = true;
+            message_to_send.dh_fastmode = rcv_msg.dh_fastmode;
+            message_to_send.rsa_key_n = rcv_msg.rsa_key_n;
+            message_to_send.aes_key_n = rcv_msg.aes_key_n;
+            message_to_send.last_peer_n = my_id_pos;
+            message_to_send.rsa_key_len = rcv_msg.rsa_key_len;
+            message_to_send.text = "stop encryption key forming";
+
+            // Отправляем сообщение
+            lambda_send_message(message_to_send.get_text_with_options());
+
+            // Временный костыль (завершаем этот поток через другой поток, который завершит себя) - можно завершить в mtp_buffer_ecnrypt (в теории)
+            std::thread([] {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                ChatKeyCreation::stop();  // вызывается из другого потока
+            }).detach();
+        }
+std::cout << "__"  << 18 << '\n';
 
         lock.lock();
     }
+std::cout << "__"  << 19 << '\n';
 }
 
 
@@ -255,8 +325,15 @@ void ChatKeyCreation::start(const KeyCreationStages start_stage) {
 void ChatKeyCreation::add_info(const Message& rcv_msg, const std::string& snd_id) {
     {
         std::lock_guard<std::mutex> lock(mtx); // лочим мьютекс, чтобы другой поток не смог одновременно вызвать функцию создания ключа
+        
+        // Сохраняем переданные данные в класс
         recieved_message = rcv_msg;
-        sender_id = (snd_id == "0") ? my_id_str : snd_id; // если передали id=0 => это сообщение отправили мы сами (особбеность дешифровки и запросов в mtpBuffer телеграм)
+        sender_id_str = (snd_id == "0" || snd_id == "") ? my_id_str : snd_id; // если передали id=0 => это сообщение отправили мы сами (особбеность дешифровки и запросов в mtpBuffer телеграм)
+        
+        // Получаем индекс id отправителя из chat_members_str
+        auto it = std::find(chat_members_str.begin(), chat_members_str.end(), sender_id_str);
+        sender_id_pos = std::distance(chat_members_str.begin(), it);
+
         continue_creation = true;  // говорим функции, что можно разблокироваться (с целью продолжить цикл)
     }
     cv.notify_one(); // разбудить поток
@@ -279,5 +356,7 @@ void ChatKeyCreation::stop() {
 
     // Убираем флаг работы
     is_started_flag = false;
+
+    std::cout << "_Поток был остановлен_" << '\n';
 }
 

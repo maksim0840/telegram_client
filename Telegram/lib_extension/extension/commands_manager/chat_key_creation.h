@@ -23,7 +23,8 @@ enum class KeyCreationStages {
     INIT_RSA_ENCRYPTION,
     RSA_SEND_PUBLIC_KEY,
     INIT_AES_ENCRYPTION,
-    AES_FORM_SESSION_KEY
+    AES_FORM_SESSION_KEY,
+    END_KEY_FORMING
 };
 
 class ChatKeyCreation {
@@ -38,7 +39,8 @@ private:
     static int members_len; // размер chat_members_str
 
     static Message recieved_message; // сообщение которое было получено
-    static std::string sender_id; // id собеседника, который отправил это сообщение
+    static std::string sender_id_str; // id собеседника, который отправил это сообщение
+    static int sender_id_pos; // индекс элемента из chat_members_str, который равен sender_id_str
     static KeyCreationStages cur_stage; // текущая стадия создания ключа
 
     static std::thread thread;

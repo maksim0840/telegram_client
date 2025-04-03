@@ -107,6 +107,9 @@ void Recieve::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
         }
         ChatKeyCreation::add_info(m, user_id_str);
     }
+    else if (is_Message_type && m.end_key_forming) {
+        ChatKeyCreation::stop();
+    }
     // std::string decrypted_message = aes_manager.decrypt_message(message, key_test);
     // decrypted_message = "test test test!!??";
     uint32_t decrypted_message_len = decrypted_message.size();

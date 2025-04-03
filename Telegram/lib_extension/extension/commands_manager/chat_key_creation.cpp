@@ -194,7 +194,7 @@ std::cout << "__"  << 12 << '\n';
                 last_peer_n_to_send = members_len - 1; // для последнего человека
             }
             // Если мы тот, для кого формируется ключ
-            else if (my_id_pos == rcv_msg.last_peer_n && rcv_msg.aes_form) {
+            else if (my_id_pos == (snd_id_pos + 1) % members_len && rcv_msg.aes_form && my_id_pos == rcv_msg.last_peer_n) {
 std::cout << "__"  << 13 << '\n';
                 std::cout << "!!! my_public_key: " << my_dh_params.public_key << '\n';
                 std::cout << "!!! my_private_key: " << my_dh_params.private_key << '\n';

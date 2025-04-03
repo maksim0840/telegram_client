@@ -160,20 +160,17 @@ std::cout << "__"  << 6 << '\n';
                 // Получаем своё же сообщение
                 rcv_msg = message_to_send;
             }
-            else {
-std::cout << "__"  << 7 << '\n';
-                if (rcv_msg.aes_init == true) {
-std::cout << "__" << 8 << '\n';
-                    // Получаем параметры P и G от первого пользователя
-                    std::vector<std::string> shared_params = KeysDataBaseHelper::string_to_vector(rcv_msg.text);
+            else if (rcv_msg.aes_init == true) {
+std::cout << "__"  << 78 << '\n';
+                // Получаем параметры P и G от первого пользователя
+                std::vector<std::string> shared_params = KeysDataBaseHelper::string_to_vector(rcv_msg.text);
 
-                    // Создаём и запоминаем свои параметры aes шифрования (используя уже сфорированные P и G)
-                    DHParamsStr dh_params = aes_manager.get_dh_params_secondly(shared_params[0], shared_params[1]);
-                    my_dh_params = dh_params;
+                // Создаём и запоминаем свои параметры aes шифрования (используя уже сфорированные P и G)
+                DHParamsStr dh_params = aes_manager.get_dh_params_secondly(shared_params[0], shared_params[1]);
+                my_dh_params = dh_params;
 
-                    // Переходим на следующиую стадию
-                    cur_stage = KeyCreationStages::AES_FORM_SESSION_KEY;
-                }
+                // Переходим на следующиую стадию
+                cur_stage = KeyCreationStages::AES_FORM_SESSION_KEY;
             }
         }
 std::cout << "__"  << 9 << '\n';
@@ -191,13 +188,13 @@ std::cout << "__"  << 11 << '\n';
                 cur_stage = KeyCreationStages::END_KEY_FORMING; // завершаем шифрование
             }
             // Если мы первый, но не единственный участник чата
-            else if (my_id_pos == 0 && rcv_msg.aes_init == true) {
+            else if (my_id_pos == 0 && rcv_msg.aes_init) {
 std::cout << "__"  << 12 << '\n';
                 key_to_send = my_dh_params.public_key; // наш публичный ключ является началом фомирования ключа
                 last_peer_n_to_send = members_len - 1; // для последнего человека
             }
             // Если мы тот, для кого формируется ключ
-            else if (my_id_pos == rcv_msg.last_peer_n) {
+            else if (my_id_pos == rcv_msg.last_peer_n && rcv_msg.aes_form) {
 std::cout << "__"  << 13 << '\n';
                 std::cout << "!!! my_public_key: " << my_dh_params.public_key << '\n';
                 std::cout << "!!! my_private_key: " << my_dh_params.private_key << '\n';
@@ -219,7 +216,7 @@ std::cout << "__"  << 13 << '\n';
                 }
             }
             // Если мы тот, кто является промежуточным этапом в формировании ключа
-            else if (my_id_pos == (snd_id_pos + 1) % members_len) { // мы являемся следующим человеком по возрастанию id после того, кто отправил сообщение
+            else if (my_id_pos == (snd_id_pos + 1) % members_len && rcv_msg.aes_form) { // мы являемся следующим человеком по возрастанию id после того, кто отправил сообщение
 std::cout << "__"  << 14 << '\n';
                 key_to_send = aes_manager.сreate_key_multi(my_dh_params, rcv_msg.text); // домнажаем ключ отправившего на свою приватную степень
                 last_peer_n_to_send = rcv_msg.last_peer_n; // позиция человека, для которого формируется ключ

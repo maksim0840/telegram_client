@@ -70,7 +70,7 @@ std::cout << "__"  << 0 << '\n';
             message_to_send.text = "start encryption key forming";
 
             // Отправляем сообщение
-            std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY))
+            std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY));
             lambda_send_message(message_to_send.get_text_with_options());
 
             // Переходим на следующую стадию
@@ -109,7 +109,7 @@ std::cout << "__" << 2.1 << '\n';
                 message_to_send.text = public_key; // передаём свой публичный ключ в чат
 std::cout << "__" << 2.15 << '\n';
                 // Отправляем сообщение
-                std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY))
+                std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY));
                 lambda_send_message(message_to_send.get_text_with_options());
 std::cout << "__" << 2.2 << '\n';
                 // Переходим на следующиую стадию, если мы были последним
@@ -150,7 +150,7 @@ std::cout << "__"  << 6 << '\n';
                 message_to_send.text = KeysDataBaseHelper::vector_to_string(shared_params); // отправляем параметры p и g
                 
                 // Отправляем сообщение
-                std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY))
+                std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY));
                 lambda_send_message(message_to_send.get_text_with_options());
 
                 // Переходим на следующиую стадию
@@ -231,7 +231,7 @@ std::cout << "__"  << 15 << '\n';
                 message_to_send.text = key_to_send; // передаём ключ, определённый нами ранее
 
                 // Отправляем сообщение
-                std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY))
+                std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY));
                 lambda_send_message(message_to_send.get_text_with_options());
             }
         }
@@ -251,7 +251,7 @@ std::cout << "__"  << 17 << '\n';
             message_to_send.text = "stop encryption key forming";
 
             // Отправляем сообщение
-            std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY))
+            std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY));
             lambda_send_message(message_to_send.get_text_with_options());
 
             // Временный костыль (завершаем этот поток через другой поток, который завершит себя) - можно завершить в mtp_buffer_ecnrypt (в теории)

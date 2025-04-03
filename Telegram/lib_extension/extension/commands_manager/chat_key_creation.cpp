@@ -70,7 +70,8 @@ std::cout << "__"  << 0 << '\n';
             message_to_send.text = "start encryption key forming";
 
             // Отправляем сообщение
-            std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY));
+            std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY));\
+std::cout << "__"  << 1.5 << '\n';
             lambda_send_message(message_to_send.get_text_with_options());
 
             // Переходим на следующую стадию
@@ -205,10 +206,13 @@ std::cout << "__"  << 13 << '\n';
                 std::cout << "!!! other_recieved_key: " << rcv_msg.text << '\n';
                 aes_key = aes_manager.сreate_key_multi(my_dh_params, rcv_msg.text, true); // формируем ключ из отправленного нам
                 std::cout << "!!! aes_key: " << aes_key << '\n';
+                std::cout << "!!! my_id_pos: " << my_id_pos << '\n';
+                std::cout << "!!! members_len: " << members_len << '\n';
                 // Начинаем формирование ключа для следующего пользователя
                 key_to_send = my_dh_params.public_key; // наш публичный ключ является началом фомирования ключа
                 last_peer_n_to_send = my_id_pos - 1; // для человека перед нами
-
+                std::cout << "!!! key_to_send: " << key_to_send << '\n';
+                std::cout << "!!! last_peer_n_to_send: " << last_peer_n_to_send << '\n';
                 // Если мы являемся последним, кто получил aes_key
                 if (my_id_pos == 0) {
                     cur_stage = KeyCreationStages::END_KEY_FORMING; // завершаем шифрование

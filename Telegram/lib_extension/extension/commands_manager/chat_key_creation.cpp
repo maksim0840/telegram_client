@@ -46,6 +46,9 @@ void ChatKeyCreation::chat_key_creation() {
         continue_creation = false;
         lock.unlock();
 
+        // Чтобы полученное сообщение успело прогрузиться раньше, чем отправленные ответ
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
         /* Критическая секция */
 std::cout << "__"  << -1 << '\n';
 
@@ -250,7 +253,7 @@ std::cout << "__"  << 17 << '\n';
 
             // Временный костыль (завершаем этот поток через другой поток, который завершит себя) - можно завершить в mtp_buffer_ecnrypt (в теории)
             std::thread([] {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
                 ChatKeyCreation::stop();  // вызывается из другого потока
             }).detach();
         }

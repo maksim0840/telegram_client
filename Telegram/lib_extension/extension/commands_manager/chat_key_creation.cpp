@@ -198,6 +198,11 @@ std::cout << "__"  << 12 << '\n';
             // Если мы тот, для кого формируется ключ
             else if (my_id_pos == rcv_msg.last_peer_n) {
 std::cout << "__"  << 13 << '\n';
+                std::cout << "!!! my_public_key: " << my_dh_params.public_key << '\n';
+                std::cout << "!!! my_private_key: " << my_dh_params.private_key << '\n';
+                std::cout << "!!! my_p: " << my_dh_params.p << '\n';
+                std::cout << "!!! my_g: " << my_dh_params.g << '\n';
+                std::cout << "!!! other_recieved_key: " << rcv_msg.text << '\n';
                 aes_key = aes_manager.сreate_key_multi(my_dh_params, rcv_msg.text, true); // формируем ключ из отправленного нам
                 std::cout << "!!! aes_key: " << aes_key << '\n';
                 // Начинаем формирование ключа для следующего пользователя

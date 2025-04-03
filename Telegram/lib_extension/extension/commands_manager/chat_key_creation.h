@@ -18,7 +18,7 @@
 #pragma once
 
 #define MAX_PEERS_IN_CHAT 100 // для удобства (можно спокойно увеличивать данное значение если требуется)
-#define SENDING_DELAY 300 // задержка при отправке в милисекундах (лучше не менять т.к. часто банит)
+#define SENDING_DELAY 500 // задержка при отправке в милисекундах (лучше не менять т.к. часто банит)
 
 enum class KeyCreationStages {
     INIT_RSA_ENCRYPTION,

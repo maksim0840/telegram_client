@@ -167,7 +167,7 @@ private:
     void create_keys_tables();
 
 public:
-    // Шаблонные методы получения отдельных параметров в таблице
+    // Шаблонные методы получения отдельных параметров в таблице по активности
     template <typename T, typename = std::enable_if_t<is_keys_column<T>>>
     std::optional<std::string> get_active_param_text(const std::string& chat_id, const KeysTablesDefs table, const T column, const int active_status = 1) {
         const std::string sql_request = "SELECT * FROM " + KeysTablesUndefs.at(table) + " WHERE chat_id = ? AND status = ?;";
@@ -185,25 +185,23 @@ public:
         return stmt.execute_int(static_cast<int>(column));
     }
 
-    // Шаблонные методы получения отдельных параметров в таблице (+ с указанием key_n)
+    // Шаблонные методы получения отдельных параметров в таблице по активности и номеру ключа
     template <typename T, typename = std::enable_if_t<is_keys_column<T>>>
-    std::optional<std::string> get_active_param_text(const std::string& chat_id, const std::string& my_id, const int key_n, const KeysTablesDefs table, const T column, const int active_status = 1) {
-        const std::string sql_request = "SELECT * FROM " + KeysTablesUndefs.at(table) + " WHERE chat_id = ? AND my_id = ? AND  key_n = ? AND status = ?;";
+    std::optional<std::string> get_key_n_active_param_text(const std::string& chat_id, const int key_n, const KeysTablesDefs table, const T column, const int active_status = 1) {
+        const std::string sql_request = "SELECT * FROM " + KeysTablesUndefs.at(table) + " WHERE chat_id = ? AND key_n = ? AND status = ?;";
         Statement stmt(db, sql_request);
         stmt.bind_text(1, chat_id);
-        stmt.bind_text(2, my_id);
-        stmt.bind_int(3, key_n);
-        stmt.bind_int(4, active_status);
+        stmt.bind_int(2, key_n);
+        stmt.bind_int(3, active_status);
         return stmt.execute_text(static_cast<int>(column));
     }
     template <typename T, typename = std::enable_if_t<is_keys_column<T>>>
-    std::optional<int> get_active_param_int(const std::string& chat_id, const std::string& my_id, const int key_n, const KeysTablesDefs table, const T column, const int active_status = 1) {
-        const std::string sql_request = "SELECT * FROM " + KeysTablesUndefs.at(table) + " WHERE chat_id = ? AND my_id = ? AND key_n = ? AND status = ?;";
+    std::optional<int> get_key_n_active_param_int(const std::string& chat_id, const int key_n, const KeysTablesDefs table, const T column, const int active_status = 1) {
+        const std::string sql_request = "SELECT * FROM " + KeysTablesUndefs.at(table) + " WHERE chat_id = ? AND key_n = ? AND status = ?;";
         Statement stmt(db, sql_request);
         stmt.bind_text(1, chat_id);
-        stmt.bind_text(2, my_id);
-        stmt.bind_int(3, key_n);
-        stmt.bind_int(4, active_status);
+        stmt.bind_int(2, key_n);
+        stmt.bind_int(3, active_status);
         return stmt.execute_int(static_cast<int>(column));
     }
 

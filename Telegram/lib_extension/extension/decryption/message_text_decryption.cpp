@@ -22,8 +22,13 @@ std::string decrypt_the_message(const std::string& msg, const std::string& chat_
     }
 	else if (m.aes_use) {
 
-		// Находим ключ шифрования и дешифруем (если есть)
-		std::optional<std::string> aes_key = db.get_active_param_text(chat_id_str, KeysTablesDefs::AES, AesColumnsDefs::SESSION_KEY);
+		// Находим ключ шифрования и дешифруем (если он есть)
+		std::optional<std::string> aes_key;
+		std::optional<std::string> aes_key_active = db.get_key_n_active_param_text(chat_id_str, m.aes_key_n, KeysTablesDefs::AES, AesColumnsDefs::SESSION_KEY, 1);
+		aes_key = (aes_key_active) ? aes_key_active : aes_key;
+		std::optional<std::string> aes_key_not_active = db.get_key_n_active_param_text(chat_id_str, m.aes_key_n, KeysTablesDefs::AES, AesColumnsDefs::SESSION_KEY, 0);
+		aes_key = (aes_key_not_active) ? aes_key_not_active : aes_key;
+
 		if (aes_key) {
 			return aes_manager.decrypt_message(m.text, *aes_key);
 		}

@@ -130,3 +130,7 @@ void ChatKeyCreation::stop() {
     is_started_flag = false;
 }
 
+
+void ChatKeyCreation::end_encryption() {
+    commands.end_encryption();
+}

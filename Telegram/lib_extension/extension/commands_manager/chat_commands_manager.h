@@ -52,10 +52,18 @@ public:
     void set_chat_members_info();
     void reset_functions_results();
 
-
+    // Функции создания ключей
     KeyCreationStages init_rsa_encryption(Message& rcv_msg);
     KeyCreationStages rsa_send_public_key(Message& rcv_msg);
     KeyCreationStages init_aes_encryption(Message& rcv_msg);
     KeyCreationStages aes_form_session_key(Message& rcv_msg, std::string snd_id_str);
     void end_key_forming(Message& rcv_msg);
+
+    void end_encryption();
+
+    // Функции добавления в базу данных
+    void db_add_aes(const int aes_key_n);
+    void db_add_rsa(const int rsa_key_n, const int rsa_key_len);
+    
+
 };

@@ -4072,7 +4072,7 @@ TextWithEntities HistoryWidget::prepareTextForEditMsg() const {
 		_history,
 		session().user()).flags;
 	auto left = TextWithEntities {
-		encrypt_the_message(textWithTags.text, peer()->id.value, peer()->owner().session().userPeerId().value),
+		textWithTags.text,
 		TextUtilities::ConvertTextTagsToEntities(textWithTags.tags) };
 	TextUtilities::PrepareForSending(left, prepareFlags);
 	return left;

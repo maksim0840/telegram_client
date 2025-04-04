@@ -164,7 +164,8 @@ KeyCreationStages ChatCommandsManager::init_aes_encryption(Message& rcv_msg) {
 
 
 KeyCreationStages ChatCommandsManager::aes_form_session_key(Message& rcv_msg, std::string snd_id_str) {
-    
+    KeysDataBase db;
+
     // Определим индекс id-шника человека, который отправил это сообщение
     snd_id_str = (snd_id_str == "0" || snd_id_str == "") ? my_id_str : snd_id_str; // если передали id=0 => это сообщение отправили мы сами (особбеность дешифровки и запросов в mtpBuffer телеграм)
     auto it = std::find(chat_members_str.begin(), chat_members_str.end(), snd_id_str);
@@ -176,6 +177,7 @@ KeyCreationStages ChatCommandsManager::aes_form_session_key(Message& rcv_msg, st
     // Если мы первый и едниственный участник чата
     if (members_len == 1) {
         aes_key = aes_manager.create_key_solo(); // создаём ключ в соло
+        db_add_aes(rcv_msg.aes_key_n); // сохраняем ключ в базу
         return KeyCreationStages::END_KEY_FORMING; // завершаем шифрование
     }
     // Если мы первый, но не единственный участник чата
@@ -186,7 +188,8 @@ KeyCreationStages ChatCommandsManager::aes_form_session_key(Message& rcv_msg, st
     // Если мы тот, для кого формируется ключ
     else if (my_id_pos == (snd_id_pos + 1) % members_len && rcv_msg.aes_form && my_id_pos == rcv_msg.last_peer_n) {
         aes_key = aes_manager.сreate_key_multi(my_dh_params, rcv_msg.text, true); // формируем ключ из отправленного нам
-
+        db_add_aes(rcv_msg.aes_key_n); // сохраняем ключ в базу
+        
         // Начинаем формирование ключа для следующего пользователя
         key_to_send = my_dh_params.public_key; // наш публичный ключ является началом фомирования ключа
         last_peer_n_to_send = my_id_pos - 1; // для человека перед нами
@@ -240,4 +243,45 @@ void ChatCommandsManager::end_key_forming(Message& rcv_msg) {
     // Отправляем сообщение
     std::this_thread::sleep_for(std::chrono::milliseconds(SENDING_DELAY));
     lambda_send_message(message_to_send.get_text_with_options());
+}
+
+void ChatCommandsManager::end_encryption() {
+    KeysDataBase db;
+
+    Message message_to_send;
+
+    db.disable_other_keys(chat_id_str, my_id_str, KeysTablesDefs::AES);
+}
+
+
+void ChatCommandsManager::db_add_aes(const int aes_key_n) {
+    KeysDataBase db;
+    AesParamsFiller db_aes_params;
+
+    db_aes_params.chat_id = chat_id_str;
+    db_aes_params.my_id = my_id_str;
+    db_aes_params.key_n = aes_key_n;
+    db_aes_params.session_key = aes_key;
+    db_aes_params.p = my_dh_params.p;
+    db_aes_params.g = my_dh_params.g;
+    db_aes_params.public_key = my_dh_params.public_key;
+    db_aes_params.private_key = my_dh_params.private_key;
+    db_aes_params.status = 1;
+
+    db.add_aes_key(db_aes_params);
+}
+
+
+void ChatCommandsManager::db_add_rsa(const int rsa_key_n, const int rsa_key_len) {
+    KeysDataBase db;
+    RsaParamsFiller db_rsa_params;
+
+    db_rsa_params.chat_id = chat_id_str;
+    db_rsa_params.my_id = my_id_str;
+    db_rsa_params.key_n = rsa_key_n;
+    db_rsa_params.key_len = rsa_key_len;
+    db_rsa_params.private_key = my_rsa_private_key;
+    db_rsa_params.sent_in_chat = 1;
+
+    db.add_rsa_key(db_rsa_params, members_rsa_public_key[my_id_pos]);
 }

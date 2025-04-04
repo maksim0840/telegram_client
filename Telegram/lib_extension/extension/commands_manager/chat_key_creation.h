@@ -43,4 +43,6 @@ public:
 
     // Функция, которая останавливает поток создания ключа
     static void stop();
+
+    static void end_encryption();
 };

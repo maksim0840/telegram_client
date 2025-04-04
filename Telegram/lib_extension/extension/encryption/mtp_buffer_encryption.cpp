@@ -92,10 +92,7 @@ void Send::encrypt_the_buffer(mtpBuffer& buffer) {
         }
 
         // Шифруем сообщение
-        AesKeyManager aes_manager;
-        std::string key_test = "HYyt4p88dZFNhQ4Z+9LOUZqI/m17Arp/MZh76yMj3E4=";
-        std::string encrypted_message = aes_manager.encrypt_message(message, key_test);
-        encrypted_message = "33333333333333333";
+        std::string encrypted_message = encrypt_the_message(message, chat_id_str);
         uint32_t encrypted_message_len = encrypted_message.size();
         /*
         

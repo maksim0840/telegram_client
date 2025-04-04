@@ -3,11 +3,8 @@
 #include <QtGlobal>
 #include <cctype>
 #include "scheme.h"
-#include "../keys_manager/keys_manager.h"
+#include "../commands_manager/chat_key_creation.h"
 
 #pragma once
 
-// Функция, которая имеет доступ к приватным полям класса MTPDmessage (friend-функция)
-void MTPDmessage_private_fields_access(const MTPDmessage &msg, const std::string& text);
-
-std::vector<QString> decrypt_the_message(const MTPDmessage &msg, const quint64 chat_id, const quint64 my_id);
+std::string decrypt_the_message(const std::string& msg, const std::string& chat_id_str, const std::string& sender_id_str);

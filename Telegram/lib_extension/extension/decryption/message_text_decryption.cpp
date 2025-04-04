@@ -1,24 +1,33 @@
 #include "message_text_decryption.h"
 
-void MTPDmessage_private_fields_access(const MTPDmessage &msg, const std::string& text) {
-	// Снимаем const
-	auto &mutable_message = const_cast<MTPDmessage&>(msg);
-	// Подменяем
-	mutable_message._message.v = QByteArray(text);
-}
+std::string decrypt_the_message(const std::string& msg, const std::string& chat_id_str, const std::string& sender_id_str) {
+	KeysDataBase db;
+	AesKeyManager aes_manager;
 
-std::vector<QString> decrypt_the_message(const MTPDmessage &msg, const quint64 chat_id, const quint64 my_id) {
-	std::vector<std::string> res;
-	std::vector<QString> res_qstring;
+    // Проверяем является ли сообщение частью алгоритма передачи ключей
+    Message m;
+    bool is_Message_type = m.fill_options(msg);
+    if (is_Message_type && (m.aes_form || m.aes_init || m.rsa_form || m.rsa_init)) {
+        std::cout << "ChatKeyCreation::start from decryption\n";
+        if (!ChatKeyCreation::is_started()) {
+            ChatKeyCreation::start(KeyCreationStages::RSA_SEND_PUBLIC_KEY);
+        }
+        ChatKeyCreation::add_info(m, sender_id_str);
+    }
+    else if (is_Message_type && m.end_key_forming) {
+        ChatKeyCreation::stop();
+    }
+    else if (is_Message_type && m.end_encryption) {
+        ChatKeyCreation::end_encryption();
+    }
+	else if (m.aes_use) {
 
-	std::string text = msg.vmessage().v.toStdString();
-	std::string chat_id_str = std::to_string(chat_id);
-	std::string my_id_str = std::to_string(my_id);
+		// Находим ключ шифрования и дешифруем (если есть)
+		std::optional<std::string> aes_key = db.get_active_param_text(chat_id_str, KeysTablesDefs::AES, AesColumnsDefs::SESSION_KEY);
+		if (aes_key) {
+			return aes_manager.decrypt_message(m.text, *aes_key);
+		}
+	}
 
-	std::cout << "decrypt chat by id: " << chat_id_str << '\n';
-	
-	// MTPDmessage_private_fields_access(msg, text);
-	
-	
-	return res_qstring;
+	return msg;
 }

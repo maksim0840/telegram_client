@@ -31,6 +31,7 @@ std::string decrypt_the_message(const std::string& msg, const std::string& chat_
 		aes_key = (aes_key_not_active) ? aes_key_not_active : aes_key;
 
 		if (aes_key) {
+            std::cout << "!!!! decrypt_message: " << m.text << "; by: " << *aes_key << '\n';
 			return aes_manager.decrypt_message(m.text, *aes_key);
 		}
 	}

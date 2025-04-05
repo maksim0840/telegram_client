@@ -15,6 +15,7 @@ std::string encrypt_the_message(const std::string& msg, const std::string& chat_
             m.aes_use = true;
             m.aes_key_n = *aes_key_n;
             m.text = aes_manager.encrypt_message(msg, *aes_key);
+            std::cout << "!!!! encrypt_message: " << msg << "; by: " << *aes_key << '\n';
 			return m.get_text_with_options();
 		}
     }

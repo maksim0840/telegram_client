@@ -79,13 +79,13 @@ void Send::encrypt_the_buffer(mtpBuffer& buffer) {
         std::string message;
         uint32_t cur_block_ind = start_message_byte / buffer_element_size;
 
-        for (int i = start_message_byte; i < end_message_byte + 1; ++i) {
-            if ((i % buffer_element_size == 0) && (i != start_message_byte)) {
+        for (int j = start_message_byte; j < end_message_byte + 1; ++j) {
+            if ((j % buffer_element_size == 0) && (j != start_message_byte)) {
                 ++cur_block_ind;
             }
 
             uint32_t cur_block = static_cast<uint32_t>(buffer[cur_block_ind]);
-            uint32_t mask_move = (i % buffer_element_size) * 8;
+            uint32_t mask_move = (j % buffer_element_size) * 8;
             char cur_byte = static_cast<char>((cur_block & (LEAST_BYTE_MASK << mask_move)) >> mask_move);
 
             message.push_back(cur_byte);
@@ -94,6 +94,18 @@ void Send::encrypt_the_buffer(mtpBuffer& buffer) {
         // Шифруем сообщение
         std::string encrypted_message = encrypt_the_message(message, chat_id_str);
         uint32_t encrypted_message_len = encrypted_message.size();
+
+        // Если ничего не поменялось, то выходим
+        if (encrypted_message == message) {
+            return;
+        }
+
+        // Дополняем длинну строки минимум до трёх пустыми байтами
+        if (encrypted_message_len < 3) {
+            encrypted_message += std::string(3 - encrypted_message_len, '\0');
+            encrypted_message_len = 3;
+        }
+
         /*
         
         //while (последние байты != 0x80mtpc_messages_sendMessage) { перешифровываем}
@@ -131,11 +143,11 @@ void Send::encrypt_the_buffer(mtpBuffer& buffer) {
         }
 
         // Записываем оставшуюся часть сообщения
-        for (int i = start_encrypted_message_ind; i < encrypted_message_len; i += 4) {
+        for (int j = start_encrypted_message_ind; j < encrypted_message_len; j += 4) {
             mtpPrime value = 0;
 
-            for (int j = 0; (j < 4) && (i + j < encrypted_message_len); ++j) {
-                value = value | (static_cast<mtpPrime>(static_cast<uint8_t>(encrypted_message[i + j])) << (j * 8));
+            for (int k = 0; (k < 4) && (j + k < encrypted_message_len); ++k) {
+                value = value | (static_cast<mtpPrime>(static_cast<uint8_t>(encrypted_message[j + k])) << (k * 8));
             }
             buffer.push_back(value);
             inserted_bytes_count += buffer_element_size;

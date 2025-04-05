@@ -1448,9 +1448,9 @@ void SessionPrivate::handleReceived() {
 		mtpPrime* ungzip_from = buffer.data() + kEncryptedHeaderIntsCount;
 		mtpPrime* ungzip_end = ungzip_from + (static_cast<uint32_t>(buffer[7]) / kIntSize);
 		mtpBuffer ungzip_data = (*ungzip_from == mtpc_gzip_packed) ? ungzip(ungzip_from + 1, ungzip_end) : mtpBuffer(); 
-		// for (size_t i = 0; i < buffer.size(); ++i) {
-		// 	std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(buffer[i]) << std::dec << '\n';
-		// }
+		for (size_t i = 0; i < buffer.size(); ++i) {
+			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(buffer[i]) << std::dec << '\n';
+		}
 		//for (size_t i = 0; i < ungzip_data.size(); ++i) {
 		//	std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(ungzip_data[i]) << std::dec << '\n';
 		//}

@@ -97,6 +97,12 @@ void Recieve::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
         return;
     }
 
+    // Дополняем длинну строки минимум до трёх пустыми байтами
+    if (decrypted_message_len < 3) {
+        decrypted_message += std::string(3 - decrypted_message_len, '\0');
+        decrypted_message_len = 3;
+    }
+
     // Копируем информацию после сообщения
     uint32_t copy_from = end_message_byte / buffer_element_size + 1;
     mtpBuffer saved_postfix(buf.begin() + copy_from, buf.end());

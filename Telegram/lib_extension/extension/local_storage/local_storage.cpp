@@ -1,5 +1,6 @@
 #include "local_storage.h"
 
+
 /* class DataBase */
 
 std::string DataBase::get_name() {
@@ -42,7 +43,11 @@ DataBase::~DataBase() {
 
 /* class Statement */
 
+std::mutex Statement::db_mutex; // общий мьютекс
+
 Statement::Statement(sqlite3* db, const std::string& sql_request) {
+    std::lock_guard<std::mutex> lock(db_mutex); // лочим мьютекс чтобы не было гонки
+
     stmt = nullptr;
     db_ = db;
     executed_flag = false;

@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <type_traits>
 #include <optional>
+#include <mutex>
 
 // DB_PATH определяется в файле запуска docker-контейнера в файле run.sh
 #ifndef DB_PATH
@@ -41,6 +42,7 @@ private:
     sqlite3_stmt* stmt;
     sqlite3* db_;
     bool executed_flag; // флаг для проверки факта вызова методов execute с текущим экземляром класса
+    static std::mutex db_mutex;
 
 public:
     Statement(sqlite3* db, const std::string& sql_request);

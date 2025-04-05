@@ -1,8 +1,19 @@
 #include "message_text_decryption.h"
 
-std::string decrypt_the_message(const std::string& msg, const std::string& chat_id_str, const std::string& sender_id_str) {
+std::string decrypt_the_message(const std::string& msg, std::string chat_id_str, std::string sender_id_str) {
 	KeysDataBase db;
 	AesKeyManager aes_manager;
+
+    // Определяем свой id и заменяем id-шники собседников (если они не определены)
+    std::optional<std::string> my_id_str = db.get_my_id();
+    if (chat_id_str == "" || chat_id_str == "0") {
+        if (!my_id_str) { throw std::runtime_error("Ошибка получения параметра (собственного id )"); }
+        else { chat_id_str = *my_id_str; }
+    } 
+    if (sender_id_str == "" || sender_id_str == "0") {
+        if (!my_id_str) { throw std::runtime_error("Ошибка получения параметра (собственного id )"); }
+        else { sender_id_str = *my_id_str; }
+    } 
 
     // Проверяем является ли сообщение частью алгоритма передачи ключей
     Message m;

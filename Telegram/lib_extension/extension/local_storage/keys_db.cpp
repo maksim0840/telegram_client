@@ -232,6 +232,20 @@ void KeysDataBase::increase_aes_messages_counter(const std::string& chat_id, con
     stmt.execute();
 }
 
+std::optional<std::string> KeysDataBase::get_my_id() {
+    const std::string sql_request = "SELECT * FROM " + KeysTablesUndefs.at(KeysTablesDefs::CHATS) + ";";
+    Statement stmt(db, sql_request);
+    std::optional<int> my_id_pos = stmt.execute_int(static_cast<int>(ChatsColumnsDefs::MY_ID_POS));
+    std::optional<std::string> chat_members = stmt.execute_text(static_cast<int>(ChatsColumnsDefs::MEMBERS_IDS));
+    if (!my_id_pos || !chat_members) {
+        return std::nullopt;
+    }
+
+    // Получаем свой id
+    std::vector<std::string> chat_members_vec = KeysDataBaseHelper::string_to_vector(*chat_members);
+    return chat_members_vec[*my_id_pos];
+}
+
 KeysDataBase::KeysDataBase() : DataBase(DB_KEYS) {
     create_keys_tables();
 }

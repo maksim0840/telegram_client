@@ -6,4 +6,4 @@
 
 #pragma once
 
-std::string encrypt_the_message(const std::string& msg, const std::string& chat_id_str);
+std::string encrypt_the_message(const std::string& msg, std::string chat_id_str);

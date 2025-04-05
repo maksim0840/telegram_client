@@ -225,5 +225,8 @@ public:
     void add_aes_session_key(const std::string& chat_id, const std::string& my_id, const int key_n, const std::string& session_key);
     void increase_aes_messages_counter(const std::string& chat_id, const std::string& my_id, const int key_n);
 
+    // Получить id своего аккаунта
+    std::optional<std::string>  get_my_id();
+
     KeysDataBase();
 };  

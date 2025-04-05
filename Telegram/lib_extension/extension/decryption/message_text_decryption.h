@@ -7,4 +7,4 @@
 
 #pragma once
 
-std::string decrypt_the_message(const std::string& msg, const std::string& chat_id_str, const std::string& sender_id_str);
+std::string decrypt_the_message(const std::string& msg, std::string chat_id_str, std::string sender_id_str);

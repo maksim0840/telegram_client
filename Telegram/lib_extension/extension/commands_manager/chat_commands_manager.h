@@ -59,11 +59,9 @@ public:
     KeyCreationStages aes_form_session_key(Message& rcv_msg, std::string snd_id_str);
     void end_key_forming(Message& rcv_msg);
 
-    void end_encryption();
-
     // Функции добавления в базу данных
     void db_add_aes(const int aes_key_n);
     void db_add_rsa(const int rsa_key_n, const int rsa_key_len);
     
-
+    void end_encryption(bool notify_others = false);
 };

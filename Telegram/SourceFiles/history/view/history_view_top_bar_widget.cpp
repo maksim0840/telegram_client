@@ -322,7 +322,8 @@ void TopBarWidget::start_encryption() {
 // Реакция на клик при сбросе шифрования
 void TopBarWidget::stop_encryption() {
 	std::cout << "button stop_encryption click!" << '\n';
-	ChatKeyCreation::stop();
+	ChatKeyCreation::stop(); // остановить поток принятия сообщений формирования клчюа
+	ChatKeyCreation::end_encryption(true); // остановить шифрование, опостив всех остальных учатников чата
 }
 
 void TopBarWidget::call() {

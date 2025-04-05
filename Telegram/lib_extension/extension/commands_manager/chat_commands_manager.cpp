@@ -245,14 +245,6 @@ void ChatCommandsManager::end_key_forming(Message& rcv_msg) {
     lambda_send_message(message_to_send.get_text_with_options());
 }
 
-void ChatCommandsManager::end_encryption() {
-    KeysDataBase db;
-
-    Message message_to_send;
-
-    db.disable_other_keys(chat_id_str, my_id_str, KeysTablesDefs::AES);
-}
-
 
 void ChatCommandsManager::db_add_aes(const int aes_key_n) {
     KeysDataBase db;
@@ -284,4 +276,24 @@ void ChatCommandsManager::db_add_rsa(const int rsa_key_n, const int rsa_key_len)
     db_rsa_params.sent_in_chat = 1;
 
     db.add_rsa_key(db_rsa_params, members_rsa_public_key[my_id_pos]);
+}
+
+
+void ChatCommandsManager::end_encryption(bool notify_others) {
+    KeysDataBase db;
+
+    // Получаем id-шники из чата
+    set_chat_members_info();
+
+    if (notify_others) {
+        // Формируем сообщение
+        Message message_to_send;
+        message_to_send.end_encryption = true;
+        message_to_send.text = "end encryption";
+
+        // Отправляем сообщение
+        lambda_send_message(message_to_send.get_text_with_options());
+    }
+
+    db.disable_other_keys(chat_id_str, my_id_str, KeysTablesDefs::AES);
 }

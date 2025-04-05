@@ -131,6 +131,6 @@ void ChatKeyCreation::stop() {
 }
 
 
-void ChatKeyCreation::end_encryption() {
-    commands.end_encryption();
+void ChatKeyCreation::end_encryption(bool notify_others) {
+    commands.end_encryption(notify_others);
 }

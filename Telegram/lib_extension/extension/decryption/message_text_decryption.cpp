@@ -18,6 +18,7 @@ std::string decrypt_the_message(const std::string& msg, const std::string& chat_
         ChatKeyCreation::stop();
     }
     else if (is_Message_type && m.end_encryption) {
+        ChatKeyCreation::stop();
         ChatKeyCreation::end_encryption();
     }
 	else if (m.aes_use) {
@@ -26,7 +27,7 @@ std::string decrypt_the_message(const std::string& msg, const std::string& chat_
 		std::optional<std::string> aes_key;
 		std::optional<std::string> aes_key_active = db.get_key_n_active_param_text(chat_id_str, m.aes_key_n, KeysTablesDefs::AES, AesColumnsDefs::SESSION_KEY, 1);
 		aes_key = (aes_key_active) ? aes_key_active : aes_key;
-		std::optional<std::string> aes_key_not_active = db.get_key_n_active_param_text(chat_id_str, m.aes_key_n, KeysTablesDefs::AES, AesColumnsDefs::SESSION_KEY, 0);
+		std::optional<std::string> aes_key_not_active = db.get_key_n_active_param_text(chat_id_str, m.aes_key_n, KeysTablesDefs::AES, AesColumnsDefs::SESSION_KEY, -1);
 		aes_key = (aes_key_not_active) ? aes_key_not_active : aes_key;
 
 		if (aes_key) {

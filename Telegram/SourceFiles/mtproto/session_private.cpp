@@ -1454,7 +1454,7 @@ void SessionPrivate::handleReceived() {
 		//for (size_t i = 0; i < ungzip_data.size(); ++i) {
 		//	std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(ungzip_data[i]) << std::dec << '\n';
 		//}
-		Recieve::decrypt_the_buffer(buffer, ungzip_data);
+		Receive::decrypt_the_buffer(buffer, ungzip_data);
 		//for (size_t i = 0; i < buffer.size(); ++i) {
 		//	std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(buffer[i]) << std::dec << '\n';
 		//}

@@ -1,4 +1,4 @@
-#include "message_text_decryption.h"
+#include "../commands_manager/chat_key_creation.h"
 #include "base/basic_types.h"
 #include "styles/style_info.h"
 #include "mtproto/core_types.h"
@@ -7,7 +7,7 @@
 
 #pragma once
 
-class Recieve {
+class Receive {
 private:
     // Позиции элементов из mtpBuffer
     static const int PAYLOAD_LEN_POSITION = 7; // последний элемент вне Payload
@@ -33,6 +33,8 @@ private:
 public:
     // using mtpBuffer = QVector<mtpPrime>;
     static void decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data);
+
+    static std::string decrypt_the_message(const std::string& msg, std::string chat_id_str, std::string sender_id_str);
 };
 
 

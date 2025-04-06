@@ -1,7 +1,7 @@
 #include "top_bar_buttons.h"
 
 
-const style::IconButton& getTopBarStartEncryption() {
+const style::IconButton& TopBarButtons::getTopBarStartEncryption() {
 
 	static style::IconButton topBarStartEncryption = [] {
         // Создаём кнопку (за основу взята кнопка topBarInfo из файла out/Telegram/gen/styles/style_info.cpp)
@@ -17,7 +17,7 @@ const style::IconButton& getTopBarStartEncryption() {
 	return topBarStartEncryption;
 }
 
-const style::IconButton& getTopBarStopEncryption() {
+const style::IconButton& TopBarButtons::getTopBarStopEncryption() {
 
 	static style::IconButton topBarStartEncryption = [] {
         // Создаём кнопку (за основу взята кнопка topBarInfo из файла out/Telegram/gen/styles/style_info.cpp)

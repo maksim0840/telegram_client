@@ -1,6 +1,6 @@
 #include "chat_members.h"
 
-std::tuple<std::string, std::string, std::vector<std::string>, int> update_chat_members(const quint64 my_id, const quint64 chat_id, const std::vector<quint64>& chat_members) {
+std::tuple<std::string, std::string, std::vector<std::string>, int> ChatMembers::update_chat_members(const quint64 my_id, const quint64 chat_id, const std::vector<quint64>& chat_members) {
 
     // Преобразуем в строковый формат (т.к. в базе параметры хранится в строковом формате)
     std::string chat_id_str = std::to_string(chat_id);

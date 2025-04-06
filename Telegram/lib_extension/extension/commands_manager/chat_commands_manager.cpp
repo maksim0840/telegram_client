@@ -18,7 +18,7 @@ void ChatCommandsManager::set_chat_members_info() {
     lambda_get_chat_ids(my_id, chat_id, chat_members);
 
     // Записываем в базу и конвертируем в строки
-    std::tie(my_id_str, chat_id_str, chat_members_str, my_id_pos) = update_chat_members(my_id, chat_id, chat_members);
+    std::tie(my_id_str, chat_id_str, chat_members_str, my_id_pos) = ChatMembers::update_chat_members(my_id, chat_id, chat_members);
     
     // Записываем количество участников чата
     members_len = chat_members.size();

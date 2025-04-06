@@ -5,8 +5,6 @@ get_filename_component(src_loc ../.. REALPATH)
 
 nice_target_sources(extension_decryption ${src_loc}
 PRIVATE
-    extension/decryption/message_text_decryption.cpp
-    extension/decryption/message_text_decryption.h
     extension/decryption/mtp_buffer_decryption.cpp
     extension/decryption/mtp_buffer_decryption.h
 )

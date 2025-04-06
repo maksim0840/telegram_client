@@ -119,8 +119,8 @@ TopBarWidget::TopBarWidget(
 , _delete(this, tr::lng_selected_delete(), st::defaultActiveButton)
 , _back(this, st::historyTopBarBack)
 , _cancelChoose(this, st::topBarCloseChoose)
-, _start_encryption(this, getTopBarStartEncryption()) // создание кнопки для шифровки
-, _stop_encryption(this, getTopBarStopEncryption()) // создание кнопки для сброса шифровки
+, _start_encryption(this, TopBarButtons::getTopBarStartEncryption()) // создание кнопки для шифровки
+, _stop_encryption(this, TopBarButtons::getTopBarStopEncryption()) // создание кнопки для сброса шифровки
 , _call(this, st::topBarCall)
 , _groupCall(this, st::topBarGroupCall)
 , _search(this, st::topBarSearch)

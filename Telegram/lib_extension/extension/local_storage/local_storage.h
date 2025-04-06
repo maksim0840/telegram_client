@@ -18,6 +18,10 @@
 
 #pragma once
 
+
+std::mutex db_mutex; // общий мьютекс для операций, связанных с базой данных
+
+
 // Класс-обёртка базы данных
 class DataBase {
 protected:
@@ -42,7 +46,6 @@ private:
     sqlite3_stmt* stmt;
     sqlite3* db_;
     bool executed_flag; // флаг для проверки факта вызова методов execute с текущим экземляром класса
-    static std::mutex db_mutex;
 
 public:
     Statement(sqlite3* db, const std::string& sql_request);

@@ -1,4 +1,4 @@
-#include "message_text_encryption.h"
+#include "../commands_manager/chat_key_creation.h"
 #include "base/basic_types.h"
 #include "styles/style_info.h"
 #include "mtproto/core_types.h"
@@ -35,4 +35,6 @@ private:
 public:
     // using mtpBuffer = QVector<mtpPrime>;
     static void encrypt_the_buffer(mtpBuffer& buffer);
+    
+    static std::string encrypt_the_message(const std::string& msg, std::string chat_id_str);
 };

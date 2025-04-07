@@ -133,13 +133,18 @@ TopBarWidget::TopBarWidget(
 	// Передаём lambda функции
 	std::cout << "!!!!!!!!!!!!!!!TopBarWidget!!!!!!!!!!!!!!!\n";
 	ChatKeyCreation::set_lambda_functions(
-		[this](const std::string& message) { // функция для отправки сообщения
-			this->send_api_message_wrapper(message);
+		// отправку сообщений дополнительно оборачиваем в invokeMethod, чтобы метод вызывался в ГЛАВНОМ потоке telegram в порядке своей очереди и QT не ругался
+		[this](const std::string& message) {
+			QMetaObject::invokeMethod(this, [=]() {
+				this->send_api_message_wrapper(message);
+			}, Qt::QueuedConnection);
 		},
-		[this](BareId& my_id, BareId& chat_id, std::vector<BareId>& chat_members) { // функция для получения id собеседников
+		// функция для получения id собеседников
+		[this](BareId& my_id, BareId& chat_id, std::vector<BareId>& chat_members) {
 			this->get_chat_peers_info(my_id, chat_id, chat_members);
 		}
 	);
+	
 	
 	Lang::Updated(
 	) | rpl::start_with_next([=] {

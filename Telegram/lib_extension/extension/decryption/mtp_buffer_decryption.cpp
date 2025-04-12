@@ -5,60 +5,79 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
     const int buffer_len = buffer.size();
     const int buffer_element_size = sizeof(mtpPrime); // размер блока/элемента внутри mtpBuffer
 
-    if (buffer_len < REQUEST_TYPE_POSITION + 1) {
-        return;
-    }
-
-    // Определяем запакована ли информация в какую-либо доп. обёртку
-    uint32_t wrap_type = 0;
+    Positions positions;
     mtpBuffer buf = buffer;
-    int bias = 0;
-    
-    if (buffer[REQUEST_TYPE_POSITION] == mtpc_gzip_packed) { // сообщение дополнительно запаковано
-        wrap_type = mtpc_gzip_packed;
-        buf = ungzip_data;
-        bias = GZIP_BIAS;
-    }
-    else if (buffer[REQUEST_TYPE_POSITION] == mtpc_msg_container) {
-        wrap_type = mtpc_msg_container;
-        bias = CONTAINER_BIAS;
-    }
+    uint32_t wrap_type = 0;
+    uint32_t container_type = 0;
 
-    // Определяем тип запроса
-    const uint32_t request_type = static_cast<uint32_t>(buf[REQUEST_TYPE_POSITION + bias]);
-    if (!(request_type == mtpc_updateShortMessage || request_type == mtpc_updateShortChatMessage)) {
+    if (buffer_len < positions.REQUEST_TYPE + 1) {
         return;
     }
+    std::cout << 0 << '\n';
+    // Проверяем упаковано сообщение или нет
+    if (buf[positions.REQUEST_TYPE] == mtpc_gzip_packed || buf[positions.REQUEST_TYPE] == mtpc_rpc_result) {
+        wrap_type = buf[positions.REQUEST_TYPE];
+        buf = ungzip_data;
+        if (wrap_type == mtpc_gzip_packed) { positions.fill_by_gzip_packed(); }
+        else if (wrap_type == mtpc_rpc_result) { positions.fill_by_rpc_result(); }
+    }
 
+    if (buf.size() < positions.REQUEST_TYPE + 1) {
+        return;
+    }
+    std::cout << 1 << '\n';
+    // Проверяем лежит ли сообщение в контейнере из нескольких или нет
+    if (buf[positions.REQUEST_TYPE] == mtpc_msg_container || buf[positions.REQUEST_TYPE] == mtpc_messages_messagesSlice) {
+        container_type = buf[positions.REQUEST_TYPE];
+        if (container_type == mtpc_msg_container) { positions.fill_by_msg_container(); }
+        else if (container_type == mtpc_messages_messagesSlice) { positions.fill_by_messages_messagesSlice(); }
+    }
+    std::cout << 2 << '\n';
+    // Определяем тип сообщения
+    uint32_t message_type = buf[positions.REQUEST_TYPE];
+    if (message_type != mtpc_message && message_type != mtpc_updateShortChatMessage && message_type != mtpc_updateShortMessage) {
+        return;
+    }
+    std::cout << 3 << '\n';
+    // Определяем тип чата
+    uint32_t chat_type = buf[positions.CHAT_TYPE];
+    if (message_type == mtpc_message && chat_type != mtpc_peerUser && chat_type != mtpc_peerChat) {
+        return;
+    }
+    std::cout << 4 << '\n';
     // Определяем id отправителя
-    uint64_t user_id = static_cast<uint32_t>(buf[USER_ID_FIRST_POSITION + bias]) |
-        (static_cast<uint64_t>(static_cast<uint32_t>(buf[USER_ID_SECOND_POSITION + bias])) << 32); 
+    uint64_t user_id = static_cast<uint32_t>(buf[positions.USER_ID_FIRST]) |
+                        (static_cast<uint64_t>(static_cast<uint32_t>(buf[positions.USER_ID_SECOND])) << 32); 
     std::string user_id_str = std::to_string(user_id);
-
+    std::cout << 5 << '\n';
     // Определяем id чата
     uint64_t chat_id;
-    if (request_type == mtpc_updateShortMessage) {
-        chat_id = user_id;
+    if ((message_type == mtpc_message && chat_type != mtpc_peerUser && chat_type != mtpc_peerChat) ||
+        message_type == mtpc_updateShortMessage) {
+
+        chat_id = user_id; // диалоговые сообщения, отправленные собеседником (id чата = id отправителя)
     }
-    else if (request_type == mtpc_updateShortChatMessage) {
+    else {
         chat_id = CHAT_TYPE_VALUE |
-            static_cast<uint32_t>(buf[CHAT_ID_FIRST_POSITION + bias]) |
-            (static_cast<uint64_t>(static_cast<uint32_t>(buf[CHAT_ID_SECOND_POSITION + bias])) << 32); 
+            static_cast<uint32_t>(buf[positions.CHAT_ID_FIRST]) |
+            (static_cast<uint64_t>(static_cast<uint32_t>(buf[positions.CHAT_ID_SECOND])) << 32);
     }
     std::string chat_id_str = std::to_string(chat_id);
-
-
+    std::cout << 6 << '\n';
     // Находим начало сообщения
     uint32_t start_block_ind; // индекс блока, где начинается сообщение
-    if (request_type == mtpc_updateShortChatMessage) {
-        start_block_ind = CHAT_MESSAGE_POSITION + bias;
+    if ((message_type == mtpc_message && chat_type != mtpc_peerUser && chat_type != mtpc_peerChat) ||
+        message_type == mtpc_updateShortMessage) {
+
+        start_block_ind = positions.USER_MESSAGE; // укороченный запрос (без id чата)
     }
-    else if (request_type == mtpc_updateShortMessage) {
-        start_block_ind = USER_MESSAGE_POSITION + bias;
+    else {
+        start_block_ind = positions.CHAT_MESSAGE;
     }
-    
+    std::cout << 7 << '\n';
     uint32_t start_message_byte = start_block_ind * buffer_element_size; // индекс первого байта в сообщении
     uint32_t first_block = static_cast<uint32_t>(buf[start_block_ind]); // значение первого блока
+    std::cout << 8 << '\n';
     // Извлекаем длинну сообщения (которая находится в начале)
     uint32_t message_len;
     if ((first_block & LEAST_BYTE_MASK) == 0xFE) { // 0xFE - флаг, что длинна сообщения превышает (или равна) 0xFE
@@ -71,13 +90,13 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
         message_len = first_block & LEAST_BYTE_MASK;
         start_message_byte += 1;
     }
-
+    std::cout << 9 << '\n';
     uint32_t end_message_byte = start_message_byte + message_len - 1; // индекс последнего байта в сообщении
 
     // Извлекаем сообщение
     std::string message;
     uint32_t cur_block_ind = start_message_byte / buffer_element_size;
-
+    std::cout << 10 << '\n';
     for (int i = start_message_byte; i < end_message_byte + 1; ++i) {
         if ((i % buffer_element_size == 0) && (i != start_message_byte)) {
             ++cur_block_ind;
@@ -88,7 +107,7 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
         char cur_byte = static_cast<char>((cur_block & (LEAST_BYTE_MASK << mask_move)) >> mask_move);
         message.push_back(cur_byte);
     }
-
+    std::cout << 11 << '\n';
     // Расшифруем сообщение
     std::string decrypted_message = decrypt_the_message(message, chat_id_str, user_id_str);
     uint32_t decrypted_message_len = decrypted_message.size();
@@ -96,7 +115,7 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
     if (decrypted_message == message) {
         return;
     }
-
+    std::cout << 12 << '\n';
     // Дополняем длинну строки минимум до трёх пустыми байтами
     if (decrypted_message_len < 3) {
         decrypted_message += std::string(3 - decrypted_message_len, '\0');
@@ -106,14 +125,14 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
     // Копируем информацию после сообщения
     uint32_t copy_from = end_message_byte / buffer_element_size + 1;
     mtpBuffer saved_postfix(buf.begin() + copy_from, buf.end());
-
+    std::cout << 13 << '\n';
     // Счётчики имзенённых байтов для подсчёта длинны сообщения
     int inserted_bytes_count = (saved_postfix.size() + 1) * buffer_element_size; // информация которую мы вернём + информация о длинне сообщения + ...
     const int erased_bytes_count = (buf.size() - start_block_ind) * buffer_element_size;
 
     // Удаляем сообщение и всю информацию после него
     buf.erase(buf.begin() + start_block_ind, buf.end());
-    
+    std::cout << 14 << '\n';
     uint32_t start_decrypted_message_ind = 0; // индекс с которого начнётся считывание расифрованной строки
 
     // Записываем длинну
@@ -132,7 +151,7 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
         mtpPrime value = (0xFE | (decrypted_message_len << 8));
         buf.push_back(value);
     }
-
+    std::cout << 15 << '\n';
     // Записываем оставшуюся часть сообщения
     for (int i = start_decrypted_message_ind; i < decrypted_message_len; i += 4) {
         mtpPrime value = 0;
@@ -143,18 +162,18 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
         buf.push_back(value);
         inserted_bytes_count += buffer_element_size;
     }
-
+    std::cout << 16 << '\n';
     // Возращаем ранее удалённые конечные значения
     buf.append(saved_postfix);
 
     // Подменяем данные
-    if (wrap_type == mtpc_gzip_packed) {
+    if (wrap_type == mtpc_gzip_packed || wrap_type == mtpc_rpc_result) {
         // Обратно запаковываем то, что распаковали и подменили
         mtpBuffer gzip = Gzip::gzip(buf.data(), buf.data() + buf.size());
 
         // Удаляем старый gzip из итогового буфера
-        int del_from = REQUEST_TYPE_POSITION + 1;
-        int del_end= REQUEST_TYPE_POSITION + (buffer[PAYLOAD_LEN_POSITION] / buffer_element_size);
+        int del_from = PAYLOAD_LEN_POSITION + 2;
+        int del_end= PAYLOAD_LEN_POSITION + 1 + (buffer[PAYLOAD_LEN_POSITION] / buffer_element_size);
         buffer.erase(buffer.begin() + del_from, buffer.begin() + del_end);
 
         // Вставляем новый gzip 
@@ -173,11 +192,11 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
         buffer[PAYLOAD_LEN_POSITION] += (inserted_bytes_count - erased_bytes_count);
 
         // Изменим Payload контейнера
-        if (buffer[REQUEST_TYPE_POSITION] == mtpc_msg_container) {
-            buffer[PAYLOAD_LEN_POSITION + bias] += (inserted_bytes_count - erased_bytes_count);
+        if (container_type == mtpc_msg_container) {
+            buffer[PAYLOAD_LEN_POSITION + MSG_CONTAINER_BIAS] += (inserted_bytes_count - erased_bytes_count);
         }
     }
-
+    std::cout << 17 << '\n';
     mtpBuffer new_buffer(buffer.begin(), buffer.end());
     std::cout << "start_message_byte: " << start_message_byte << '\n';
     std::cout << "end_message_byte: " << end_message_byte << '\n';

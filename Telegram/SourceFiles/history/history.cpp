@@ -450,6 +450,7 @@ not_null<HistoryItem*> History::createItem(
 		bool detachExistingItem,
 		bool newMessage) {
 	
+	std::cout << "createItem!!!!!\n";
 	// Обрабатываем входящие сообщения
 	// std::vector<QString> auto_reply_messages = message.match([this](const MTPDmessage &msg) {
 	// 	std::cout << "history.cpp createItem: " << msg.vmessage().v.toStdString() << '\n';
@@ -505,6 +506,7 @@ std::vector<not_null<HistoryItem*>> History::createItems(
 	result.reserve(data.size());
 	const auto localFlags = MessageFlags();
 	const auto detachExistingItem = true;
+	std::cout << "createItems!!!!!\n";
 	for (auto i = data.cend(), e = data.cbegin(); i != e;) {
 		const auto &data = *--i;
 		const auto id = IdFromMessage(data);
@@ -528,6 +530,7 @@ not_null<HistoryItem*> History::addNewMessage(
 		const MTPMessage &message,
 		MessageFlags localFlags,
 		NewMessageType type) {
+	std::cout << "addNewMessage!!!!!\n";
 	const auto newMessage = (type == NewMessageType::Unread);
 	const auto detachExisting = newMessage;
 	const auto item = createItem(
@@ -1436,7 +1439,7 @@ void History::addOlderSlice(const QVector<MTPMessage> &slice) {
 		checkLocalMessages();
 		return;
 	}
-
+	std::cout << "addOlderSlice!!!!!\n";
 	if (const auto added = createItems(slice); !added.empty()) {
 		addCreatedOlderSlice(added);
 	} else {
@@ -1477,7 +1480,7 @@ void History::addNewerSlice(const QVector<MTPMessage> &slice) {
 			setLastMessage(lastAvailableMessage());
 		}
 	}
-
+	std::cout << "addNewerSlice!!!!!\n";
 	if (const auto added = createItems(slice); !added.empty()) {
 		Assert(!isBuildingFrontBlock());
 

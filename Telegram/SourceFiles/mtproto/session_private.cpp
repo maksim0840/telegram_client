@@ -1445,15 +1445,28 @@ void SessionPrivate::handleReceived() {
 		
 		mtpBuffer buffer(reinterpret_cast<const mtpPrime *>(decryptedBuffer.constData()),
 			reinterpret_cast<const mtpPrime *>(decryptedBuffer.constData() + decryptedBuffer.size()));
-		mtpPrime* ungzip_from = buffer.data() + kEncryptedHeaderIntsCount;
-		mtpPrime* ungzip_end = ungzip_from + (static_cast<uint32_t>(buffer[7]) / kIntSize);
-		mtpBuffer ungzip_data = (*ungzip_from == mtpc_gzip_packed) ? ungzip(ungzip_from + 1, ungzip_end) : mtpBuffer(); 
+		mtpBuffer ungzip_data = mtpBuffer();
+		const mtpPrime* ungzip_from = buffer.data() + 8;
+		const mtpPrime* ungzip_end = ungzip_from + (static_cast<uint32_t>(buffer[7]) / kIntSize);
+		MTPlong reqMsgId;
+		if ((buffer.size() > 9) && buffer[8] == mtpc_gzip_packed) {
+			std::cout << "1 ";
+			ungzip_data = ungzip(++ungzip_from, ungzip_end);
+		}
+		else if ((buffer.size() > 9) && buffer[8] == mtpc_rpc_result && reqMsgId.read(++ungzip_from, ungzip_end) && ungzip_from[0] == mtpc_gzip_packed) {
+			std::cout << "2 ";
+			ungzip_data = ungzip(++ungzip_from, ungzip_end);
+		}
+		std::cout << "ungzip_from[0] " << ungzip_from[0] << '\n';
+
 		for (size_t i = 0; i < buffer.size(); ++i) {
 			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(buffer[i]) << std::dec << '\n';
 		}
-		//for (size_t i = 0; i < ungzip_data.size(); ++i) {
-		//	std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(ungzip_data[i]) << std::dec << '\n';
-		//}
+		std::cout << "ungzip_data "<< ungzip_data.size() << "\n";
+		for (size_t i = 0; i < ungzip_data.size(); ++i) {
+			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(ungzip_data[i]) << std::dec << '\n';
+		}
+		std::cout << "\n\n";
 		Receive::decrypt_the_buffer(buffer, ungzip_data);
 		//for (size_t i = 0; i < buffer.size(); ++i) {
 		//	std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(buffer[i]) << std::dec << '\n';
@@ -1923,7 +1936,7 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 				return HandleResult::Ignored;
 			}
 		}
-
+		std::cout << "from[0] " << from[0] << '\n';
 		mtpTypeId typeId = from[0];
 		if (typeId == mtpc_gzip_packed) {
 			DEBUG_LOG(("RPC Info: gzip container"));
@@ -1936,6 +1949,10 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 			response.resize(end - from);
 			memcpy(response.data(), from, (end - from) * sizeof(mtpPrime));
 		}
+		// std::cout << "response / unziped mtpc_rpc_result!!!!!!!!!!!!!!\n";
+		// for (size_t i = 0; i < response.size(); ++i) {
+		// 	std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(response[i]) << std::dec << '\n';
+		// }
 		if (typeId == mtpc_rpc_error) {
 			if (IsDestroyedTemporaryKeyError(response)) {
 				return HandleResult::DestroyTemporaryKey;

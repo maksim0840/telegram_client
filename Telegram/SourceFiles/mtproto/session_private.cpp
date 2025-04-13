@@ -1445,32 +1445,22 @@ void SessionPrivate::handleReceived() {
 		
 		mtpBuffer buffer(reinterpret_cast<const mtpPrime *>(decryptedBuffer.constData()),
 			reinterpret_cast<const mtpPrime *>(decryptedBuffer.constData() + decryptedBuffer.size()));
-		mtpBuffer ungzip_data = mtpBuffer();
-		const mtpPrime* ungzip_from = buffer.data() + 8;
-		const mtpPrime* ungzip_end = ungzip_from + (static_cast<uint32_t>(buffer[7]) / kIntSize);
-		MTPlong reqMsgId;
-		if ((buffer.size() > 9) && buffer[8] == mtpc_gzip_packed) {
-			std::cout << "1 ";
-			ungzip_data = ungzip(++ungzip_from, ungzip_end);
-		}
-		else if ((buffer.size() > 9) && buffer[8] == mtpc_rpc_result && reqMsgId.read(++ungzip_from, ungzip_end) && ungzip_from[0] == mtpc_gzip_packed) {
-			std::cout << "2 ";
-			ungzip_data = ungzip(++ungzip_from, ungzip_end);
-		}
-		std::cout << "ungzip_from[0] " << ungzip_from[0] << '\n';
-
+			
+		auto ungzip_lambda = [this](const mtpPrime* from, const mtpPrime* end) -> mtpBuffer {
+			return this->ungzip(from, end);
+		};
+			
 		for (size_t i = 0; i < buffer.size(); ++i) {
 			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(buffer[i]) << std::dec << '\n';
 		}
-		std::cout << "ungzip_data "<< ungzip_data.size() << "\n";
-		for (size_t i = 0; i < ungzip_data.size(); ++i) {
-			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(ungzip_data[i]) << std::dec << '\n';
-		}
+
 		std::cout << "\n\n";
-		Receive::decrypt_the_buffer(buffer, ungzip_data);
-		//for (size_t i = 0; i < buffer.size(); ++i) {
-		//	std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(buffer[i]) << std::dec << '\n';
-		//}
+		Receive::decrypt_the_buffer(buffer, ungzip_lambda);
+
+		
+		for (size_t i = 0; i < buffer.size(); ++i) {
+			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(buffer[i]) << std::dec << '\n';
+		}
 		decryptedInts = buffer.constData();
 		messageLength = *(uint32*)&decryptedInts[7];
 
@@ -1936,7 +1926,8 @@ SessionPrivate::HandleResult SessionPrivate::handleOneReceived(
 				return HandleResult::Ignored;
 			}
 		}
-		std::cout << "from[0] " << from[0] << '\n';
+		std::cout << "*from" << *from << '\n';
+		std::cout << "*end" << *end << '\n';
 		mtpTypeId typeId = from[0];
 		if (typeId == mtpc_gzip_packed) {
 			DEBUG_LOG(("RPC Info: gzip container"));

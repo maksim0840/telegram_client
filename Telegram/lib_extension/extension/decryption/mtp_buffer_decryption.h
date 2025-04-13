@@ -24,7 +24,7 @@ private:
 
 public:
     // using mtpBuffer = QVector<mtpPrime>;
-    static void decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data);
+    static void decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(const mtpPrime*, const mtpPrime*)> ungzip_lambda);
 
     static std::string decrypt_the_message(const std::string& msg, std::string chat_id_str, std::string sender_id_str);
 

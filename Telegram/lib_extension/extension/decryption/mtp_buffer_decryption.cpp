@@ -1,6 +1,6 @@
 #include "mtp_buffer_decryption.h"
 
-void Receive::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
+void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(const mtpPrime*, const mtpPrime*)> ungzip_lambda) {
     
     const int buffer_len = buffer.size();
     const int buffer_element_size = sizeof(mtpPrime); // размер блока/элемента внутри mtpBuffer
@@ -16,10 +16,27 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
     std::cout << 0 << '\n';
     // Проверяем упаковано сообщение или нет
     if (buf[positions.REQUEST_TYPE] == mtpc_gzip_packed || buf[positions.REQUEST_TYPE] == mtpc_rpc_result) {
+
         wrap_type = buf[positions.REQUEST_TYPE];
-        buf = ungzip_data;
-        if (wrap_type == mtpc_gzip_packed) { positions.fill_by_gzip_packed(); }
-        else if (wrap_type == mtpc_rpc_result) { positions.fill_by_rpc_result(); }
+
+        mtpBuffer ungzip_data = mtpBuffer();
+		const mtpPrime* ungzip_from = buf.data() + positions.REQUEST_TYPE;
+		const mtpPrime* ungzip_end = ungzip_from + (static_cast<uint32_t>(buf[PAYLOAD_LEN_POSITION]) / buffer_element_size);
+
+		MTPlong reqMsgId;
+		if (wrap_type == mtpc_gzip_packed) {
+			buf = ungzip_lambda(++ungzip_from, ungzip_end);
+            positions.fill_by_gzip_packed();
+		}
+		else if (wrap_type == mtpc_rpc_result && reqMsgId.read(++ungzip_from, ungzip_end) && ungzip_from[0] == mtpc_gzip_packed) {
+			buf = ungzip_lambda(++ungzip_from, ungzip_end);
+            positions.fill_by_rpc_result();
+		}
+
+        // std::cout << "ungzip_data "<< ungzip_data.size() << "\n";
+		// for (size_t i = 0; i < buf.size(); ++i) {
+		// 	std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(buf[i]) << std::dec << '\n';
+		// }
     }
 
     if (buf.size() < positions.REQUEST_TYPE + 1) {
@@ -41,9 +58,7 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
     std::cout << 3 << '\n';
     // Определяем тип чата
     uint32_t chat_type = buf[positions.CHAT_TYPE];
-    if (message_type == mtpc_message && chat_type != mtpc_peerUser && chat_type != mtpc_peerChat) {
-        return;
-    }
+    
     std::cout << 4 << '\n';
     // Определяем id отправителя
     uint64_t user_id = static_cast<uint32_t>(buf[positions.USER_ID_FIRST]) |
@@ -197,7 +212,6 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, mtpBuffer& ungzip_data) {
         }
     }
     std::cout << 17 << '\n';
-    mtpBuffer new_buffer(buffer.begin(), buffer.end());
     std::cout << "start_message_byte: " << start_message_byte << '\n';
     std::cout << "end_message_byte: " << end_message_byte << '\n';
     std::cout << "message_len: " << message_len << '\n';

@@ -146,7 +146,7 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
         std::cout << "user_id_str: " << user_id_str << '\n';
 
         // Расшифруем сообщение
-        std::string decrypted_message = decrypt_the_message(message, chat_id_str, user_id_str, wrap_type == 0);
+        std::string decrypted_message = decrypt_the_message(message, chat_id_str, user_id_str, wrap_type != mtpc_rpc_result);
         uint32_t decrypted_message_len = decrypted_message.size();
  
         // Дополняем длинну строки минимум до трёх пустыми байтами
@@ -265,14 +265,14 @@ std::string Receive::decrypt_the_message(const std::string& msg, std::string cha
     if (!is_Message_type) {
         return msg;
     }
-
-    // Заменяем id-шники собседников (если они не определены)
-    if (chat_id_str == "" || chat_id_str == "0") { chat_id_str = *my_id_str; }
-    if (sender_id_str == "" || sender_id_str == "0") { sender_id_str = *my_id_str; }
-
+    
     std::optional<int> aes_key_n = std::nullopt;
     if (my_id_str) {
         aes_key_n = db.get_last_key_n(chat_id_str, *my_id_str, KeysTablesDefs::AES);
+
+        // Заменяем id-шники собседников (если они не определены)
+        if (chat_id_str == "" || chat_id_str == "0") { chat_id_str = *my_id_str; }
+        if (sender_id_str == "" || sender_id_str == "0") { sender_id_str = *my_id_str; }
     }
     aes_key_n = (aes_key_n) ? (*aes_key_n) : 0;
 

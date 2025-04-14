@@ -83,10 +83,10 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
 
             chat_id = user_id; // диалоговые сообщения, отправленные собеседником (id чата = id отправителя)
         }
-        else {
-            chat_id = CHAT_TYPE_VALUE |
-                static_cast<uint32_t>(buf[positions.CHAT_ID_FIRST + bias]) |
-                (static_cast<uint64_t>(static_cast<uint32_t>(buf[positions.CHAT_ID_SECOND + bias])) << 32);
+        else { // id чата находится в отдельном поле
+            chat_id = static_cast<uint32_t>(buf[positions.CHAT_ID_FIRST + bias]) |
+                        (static_cast<uint64_t>(static_cast<uint32_t>(buf[positions.CHAT_ID_SECOND + bias])) << 32);
+            if (chat_type != mtpc_peerUser) { chat_id = chat_id | CHAT_TYPE_VALUE; } // если это не диалог, то преписываем маску чата
         }
         std::string chat_id_str = std::to_string(chat_id);
 
@@ -133,7 +133,10 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
             char cur_byte = static_cast<char>((cur_block & (LEAST_BYTE_MASK << mask_move)) >> mask_move);
             message.push_back(cur_byte);
         }
-  
+        
+        std::cout << "chat_id_str: " << chat_id_str << '\n';
+        std::cout << "user_id_str: " << user_id_str << '\n';
+
         // Расшифруем сообщение
         std::string decrypted_message = decrypt_the_message(message, chat_id_str, user_id_str);
         uint32_t decrypted_message_len = decrypted_message.size();

@@ -146,7 +146,7 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
         std::cout << "user_id_str: " << user_id_str << '\n';
 
         // Расшифруем сообщение
-        std::string decrypted_message = decrypt_the_message(message, chat_id_str, user_id_str);
+        std::string decrypted_message = decrypt_the_message(message, chat_id_str, user_id_str, wrap_type == 0);
         uint32_t decrypted_message_len = decrypted_message.size();
  
         // Дополняем длинну строки минимум до трёх пустыми байтами
@@ -248,7 +248,7 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
 }
 
 
-std::string Receive::decrypt_the_message(const std::string& msg, std::string chat_id_str, std::string sender_id_str) {
+std::string Receive::decrypt_the_message(const std::string& msg, std::string chat_id_str, std::string sender_id_str, const bool is_recieved) {
 	KeysDataBase db;
 	AesKeyManager aes_manager;
 
@@ -262,7 +262,7 @@ std::string Receive::decrypt_the_message(const std::string& msg, std::string cha
     std::cout << "msg: " << msg << '\n';
     std::cout << "is_Message_type: " << is_Message_type << '\n';
     std::cout << "!my_id_str: " << !my_id_str << '\n';
-    if (!is_Message_type || !my_id_str) {
+    if (!is_Message_type) {
         return msg;
     }
 
@@ -270,20 +270,23 @@ std::string Receive::decrypt_the_message(const std::string& msg, std::string cha
     if (chat_id_str == "" || chat_id_str == "0") { chat_id_str = *my_id_str; }
     if (sender_id_str == "" || sender_id_str == "0") { sender_id_str = *my_id_str; }
 
-    std::optional<int> aes_key_n = db.get_last_key_n(chat_id_str, *my_id_str, KeysTablesDefs::AES);
+    std::optional<int> aes_key_n = std::nullopt;
+    if (my_id_str) {
+        aes_key_n = db.get_last_key_n(chat_id_str, *my_id_str, KeysTablesDefs::AES);
+    }
     aes_key_n = (aes_key_n) ? (*aes_key_n) : 0;
 
-    if ((m.aes_form || m.aes_init || m.rsa_form || m.rsa_init) && (m.aes_key_n > *aes_key_n) && (sender_id_str != *my_id_str)) {
+    if ((m.aes_form || m.aes_init || m.rsa_form || m.rsa_init) && (m.aes_key_n > *aes_key_n) && is_recieved) {
         std::cout << "ChatKeyCreation::start from decryption\n";
         if (!ChatKeyCreation::is_started()) {
             ChatKeyCreation::start(KeyCreationStages::RSA_SEND_PUBLIC_KEY);
         }
         ChatKeyCreation::add_info(m, sender_id_str);
     }
-    else if (m.end_key_forming && (m.aes_key_n > *aes_key_n) && (sender_id_str != *my_id_str)) {
+    else if (m.end_key_forming && (m.aes_key_n > *aes_key_n) && is_recieved) {
         ChatKeyCreation::stop();
     }
-    else if (m.end_encryption && (m.aes_key_n > *aes_key_n) && (sender_id_str != *my_id_str)) {
+    else if (m.end_encryption && (m.aes_key_n > *aes_key_n) && is_recieved) {
         ChatKeyCreation::stop();
         ChatKeyCreation::end_encryption();
     }

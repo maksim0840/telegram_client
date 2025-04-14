@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <iostream>
 #include "../../../lib_extension/extension/buttons/top_bar_buttons.h"
 #include "../../../lib_extension/extension/commands_manager/chat_key_creation.h"
+#include "../../../lib_extension/extension/chat_members/chat_members.h"
 
 #include "history/view/history_view_top_bar_widget.h"
 #include "history/history.h"
@@ -144,7 +145,6 @@ TopBarWidget::TopBarWidget(
 			this->get_chat_peers_info(my_id, chat_id, chat_members);
 		}
 	);
-	
 	
 	Lang::Updated(
 	) | rpl::start_with_next([=] {

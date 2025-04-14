@@ -254,17 +254,19 @@ std::string Receive::decrypt_the_message(const std::string& msg, std::string cha
         if (!my_id_str) { throw std::runtime_error("Ошибка получения параметра (собственного id )"); }
         else { sender_id_str = *my_id_str; }
     }
-    std::optional<int> aes_key_n = db.get_last_key_n(chat_id_str, *my_id_str, KeysTablesDefs::AES);
-    aes_key_n = (aes_key_n) ? (*aes_key_n) : 0;
 
     // Проверяем является ли сообщение частью алгоритма передачи ключей
     Message m;
     bool is_Message_type = m.fill_options(msg);
+
     std::cout << "msg: " << msg << '\n';
     std::cout << "is_Message_type: " << is_Message_type << '\n';
     if (!is_Message_type) {
         return msg;
     }
+
+    std::optional<int> aes_key_n = db.get_last_key_n(chat_id_str, *my_id_str, KeysTablesDefs::AES);
+    aes_key_n = (aes_key_n) ? (*aes_key_n) : 0;
 
     if ((m.aes_form || m.aes_init || m.rsa_form || m.rsa_init) && (m.aes_key_n > *aes_key_n) && (sender_id_str != *my_id_str)) {
         std::cout << "ChatKeyCreation::start from decryption\n";

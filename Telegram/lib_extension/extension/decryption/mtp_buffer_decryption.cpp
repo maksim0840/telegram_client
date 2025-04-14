@@ -50,10 +50,14 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
     }
 
     // Проверяем лежит ли сообщение в контейнере из нескольких или нет
-    if (buf[positions.REQUEST_TYPE] == mtpc_msg_container || buf[positions.REQUEST_TYPE] == mtpc_messages_messagesSlice) {
+    if (buf[positions.REQUEST_TYPE] == mtpc_msg_container || 
+        buf[positions.REQUEST_TYPE] == mtpc_messages_messagesSlice ||
+        buf[positions.REQUEST_TYPE] == mtpc_messages_dialogs) {
+
         container_type = buf[positions.REQUEST_TYPE];
         if (container_type == mtpc_msg_container) { positions.fill_by_msg_container(); }
         else if (container_type == mtpc_messages_messagesSlice) { positions.fill_by_messages_messagesSlice(); }
+        else if (container_type == mtpc_messages_dialogs) { positions.fill_by_messages_dialogs(); }
     }
 
     int total_delta = 0; // итоговая разница между длиннами зашифрованных и расшифрованнхы сообщений
@@ -64,7 +68,11 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
         uint32_t message_type = buf[positions.REQUEST_TYPE + bias];
         std::cout << "message_type: 0x" << std::hex << static_cast<uint32_t>(message_type) << std::dec << '\n';
         if (message_type != mtpc_message && message_type != mtpc_updateShortChatMessage && message_type != mtpc_updateShortMessage) {
-            if (bias == 0) { return; }
+            if (container_type == mtpc_messages_dialogs && (positions.REQUEST_TYPE + bias + MESSAGES_DIALOGS_FIND_INDENT < buf.size())) { 
+                bias += MESSAGES_DIALOGS_FIND_INDENT; 
+                continue;
+            }
+            else if (bias == 0) { return; }
             break;
         }
 
@@ -253,6 +261,7 @@ std::string Receive::decrypt_the_message(const std::string& msg, std::string cha
 
     std::cout << "msg: " << msg << '\n';
     std::cout << "is_Message_type: " << is_Message_type << '\n';
+    std::cout << "!my_id_str: " << !my_id_str << '\n';
     if (!is_Message_type || !my_id_str) {
         return msg;
     }

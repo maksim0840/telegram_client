@@ -244,16 +244,8 @@ std::string Receive::decrypt_the_message(const std::string& msg, std::string cha
 	KeysDataBase db;
 	AesKeyManager aes_manager;
 
-    // Определяем свой id и заменяем id-шники собседников (если они не определены)
+    // Определяем свой id
     std::optional<std::string> my_id_str = db.get_my_id();
-    if (chat_id_str == "" || chat_id_str == "0") {
-        if (!my_id_str) { throw std::runtime_error("Ошибка получения параметра (собственного id )"); }
-        else { chat_id_str = *my_id_str; }
-    } 
-    if (sender_id_str == "" || sender_id_str == "0") {
-        if (!my_id_str) { throw std::runtime_error("Ошибка получения параметра (собственного id )"); }
-        else { sender_id_str = *my_id_str; }
-    }
 
     // Проверяем является ли сообщение частью алгоритма передачи ключей
     Message m;
@@ -261,9 +253,13 @@ std::string Receive::decrypt_the_message(const std::string& msg, std::string cha
 
     std::cout << "msg: " << msg << '\n';
     std::cout << "is_Message_type: " << is_Message_type << '\n';
-    if (!is_Message_type) {
+    if (!is_Message_type || !my_id_str) {
         return msg;
     }
+
+    // Заменяем id-шники собседников (если они не определены)
+    if (chat_id_str == "" || chat_id_str == "0") { chat_id_str = *my_id_str; }
+    if (sender_id_str == "" || sender_id_str == "0") { sender_id_str = *my_id_str; }
 
     std::optional<int> aes_key_n = db.get_last_key_n(chat_id_str, *my_id_str, KeysTablesDefs::AES);
     aes_key_n = (aes_key_n) ? (*aes_key_n) : 0;

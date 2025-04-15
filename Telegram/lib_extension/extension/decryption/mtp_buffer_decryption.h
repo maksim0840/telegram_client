@@ -15,10 +15,8 @@ private:
     // Смещение, занимаемое объявлением контейнера, если сообщений в 1 response несколько
     static const int MSG_CONTAINER_BIAS = 6;
     static const int MESSAGES_MESSAGESSLICE_BIAS = 6;
-    static const int MESSAGES_DIALOGS_BIAS = 21;
-
-    // Оступ, на который увеличить bias, в случаем если не удалось обднаружить тип сообщения в самом начале запроса
-    static const int MESSAGES_DIALOGS_FIND_INDENT = 13; // информация по типу запроса mtpc_messages_dialogs находится в конце запроса, а не в начале как в остальных
+    static const int MESSAGES_DIALOGS_BIAS = 3;
+    static const int UPDATES_BIAS = 8;
 
     // Дополнения к значениям типов чата (нужны для определения id чата из буфера) - дополнения установлены самим телеграммом, чтобы не путать их типы
     static const uint64_t CHAT_TYPE_VALUE = 0x0001000000000000;
@@ -92,6 +90,16 @@ private:
             CHAT_ID_SECOND += MESSAGES_DIALOGS_BIAS;
             USER_MESSAGE += MESSAGES_DIALOGS_BIAS;
             CHAT_MESSAGE += MESSAGES_DIALOGS_BIAS;
+        }
+        void fill_by_updates() {
+            REQUEST_TYPE += UPDATES_BIAS;
+            CHAT_TYPE += UPDATES_BIAS;
+            USER_ID_FIRST += UPDATES_BIAS;
+            USER_ID_SECOND += UPDATES_BIAS;
+            CHAT_ID_FIRST += UPDATES_BIAS;
+            CHAT_ID_SECOND += UPDATES_BIAS;
+            USER_MESSAGE += UPDATES_BIAS;
+            CHAT_MESSAGE += UPDATES_BIAS;
         }
     };
 };

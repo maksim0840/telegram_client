@@ -52,12 +52,14 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
     // Проверяем лежит ли сообщение в контейнере из нескольких или нет
     if (buf[positions.REQUEST_TYPE] == mtpc_msg_container || 
         buf[positions.REQUEST_TYPE] == mtpc_messages_messagesSlice ||
-        buf[positions.REQUEST_TYPE] == mtpc_messages_dialogs) {
+        buf[positions.REQUEST_TYPE] == mtpc_messages_dialogs ||
+        buf[positions.REQUEST_TYPE] == mtpc_updates) {
 
         container_type = buf[positions.REQUEST_TYPE];
         if (container_type == mtpc_msg_container) { positions.fill_by_msg_container(); }
         else if (container_type == mtpc_messages_messagesSlice) { positions.fill_by_messages_messagesSlice(); }
         else if (container_type == mtpc_messages_dialogs) { positions.fill_by_messages_dialogs(); }
+        else if (container_type == mtpc_updates) { positions.fill_by_updates(); }
     }
 
     int total_delta = 0; // итоговая разница между длиннами зашифрованных и расшифрованнхы сообщений
@@ -68,8 +70,8 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
         uint32_t message_type = buf[positions.REQUEST_TYPE + bias];
         std::cout << "message_type: 0x" << std::hex << static_cast<uint32_t>(message_type) << std::dec << '\n';
         if (message_type != mtpc_message && message_type != mtpc_updateShortChatMessage && message_type != mtpc_updateShortMessage) {
-            if (container_type == mtpc_messages_dialogs && (positions.REQUEST_TYPE + bias + MESSAGES_DIALOGS_FIND_INDENT < buf.size())) { 
-                bias += MESSAGES_DIALOGS_FIND_INDENT; 
+            if (container_type == mtpc_messages_dialogs && (positions.REQUEST_TYPE + bias + 1 < buf.size())) { 
+                bias += 1; 
                 continue;
             }
             else if (bias == 0) { return; }
@@ -147,6 +149,7 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
 
         // Расшифруем сообщение
         std::string decrypted_message = decrypt_the_message(message, chat_id_str, user_id_str, wrap_type != mtpc_rpc_result);
+        std::cout << "decrypted_message: " << decrypted_message << '\n';
         uint32_t decrypted_message_len = decrypted_message.size();
  
         // Дополняем длинну строки минимум до трёх пустыми байтами

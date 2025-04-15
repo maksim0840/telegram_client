@@ -5,6 +5,8 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include <iostream>
+#include "../../../lib_extension/extension/buttons/message_bottom_info.h"
 #include "history/view/history_view_bottom_info.h"
 
 #include "ui/chat/message_bubble.h"
@@ -220,17 +222,24 @@ void BottomInfo::paint(
 	auto right = position.x() + width();
 	const auto firstLineBottom = position.y() + st::msgDateFont->height;
 	if (_data.flags & Data::Flag::OutLayout) {
-		const auto &icon = (_data.flags & Data::Flag::Sending)
-			? (inverted
-				? st->historySendingInvertedIcon()
-				: st->historySendingIcon())
-			: unread
-			? (inverted
-				? st->historySentInvertedIcon()
-				: stm->historySentIcon)
-			: (inverted
-				? st->historyReceivedInvertedIcon()
-				: stm->historyReceivedIcon);
+		// const auto &icon = (_data.flags & Data::Flag::Sending)
+		// 	? (inverted
+		// 		? st->historySendingInvertedIcon()
+		// 		: st->historySendingIcon())
+		// 	: unread
+		// 	? (inverted
+		// 		? st->historySentInvertedIcon()
+		// 		: stm->historySentIcon)
+		// 	: (inverted
+		// 		? st->historyReceivedInvertedIcon()
+		// 		: stm->historyReceivedIcon);
+		std::cout << "_data.msgId.bare: " << _data.msgId.bare << '\n';
+		std::cout << "_data.text: " << _data.text.toStdString() << '\n';
+		
+		const auto &icon = unread
+			? (MessageBottomInfo::getEncryptedMessageNotReadIcon())
+			: (MessageBottomInfo::getEncryptedMessageReadIcon());
+
 		icon.paint(
 			p,
 			QPoint(right, firstLineBottom) + st::historySendStatePosition,
@@ -556,6 +565,8 @@ BottomInfo::Data BottomInfoDataFromMessage(not_null<Message*> message) {
 	const auto item = message->data();
 
 	auto result = BottomInfo::Data();
+	result.msgId = item->id;
+	result.text = item->originalText().text;
 	result.date = message->dateTime();
 	result.effectId = item->effectId();
 	if (message->hasOutLayout()) {

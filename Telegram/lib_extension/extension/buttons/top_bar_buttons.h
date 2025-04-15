@@ -2,6 +2,7 @@
 #include "ui/style/style_core_icon.h"
 #include "styles/style_info.h"
 #include "styles/style_dialogs.h"
+#include "icons.h"
 
 class TopBarButtons {
 public:

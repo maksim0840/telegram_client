@@ -46,6 +46,8 @@ void KeysDataBase::create_keys_tables() {
     stmt.execute();
     stmt = Statement(db, create_chats_table_request);
     stmt.execute();
+    stmt = Statement(db, create_messages_table_request);
+    stmt.execute();
 }
 
 std::optional<int> KeysDataBase::get_last_key_n(const std::string& chat_id, const std::string& my_id, const KeysTablesDefs table) {
@@ -160,6 +162,20 @@ void KeysDataBase::add_chat_params(const ChatsParamsFiller& data) {
     stmt.execute();
 }
 
+void KeysDataBase::add_message(const MessagesParamsFiller& data) {
+    const std::string sql_request = "INSERT INTO messages (my_id, message_id, key_n, date, status) VALUES (?, ?, ?, ?, ?);";
+    std::string date = KeysDataBaseHelper::get_system_time();
+
+    Statement stmt(db, sql_request);
+
+    stmt.bind_text(1, data.my_id);
+    stmt.bind_text(2, data.message_id);
+    stmt.bind_int(3, data.key_n);
+    stmt.bind_text(4, date);
+    stmt.bind_int(5, 1); // status = 1
+    stmt.execute();
+}
+
 void KeysDataBase::set_rsa_sent_flag(const std::string& chat_id, const std::string& my_id, const int key_n) {
     const std::string sql_request = "UPDATE rsa SET sent_in_chat = 1 WHERE chat_id = ? AND my_id = ? AND key_n = ?;";
     Statement stmt(db, sql_request);
@@ -244,6 +260,14 @@ std::optional<std::string> KeysDataBase::get_my_id() {
     // Получаем свой id
     std::vector<std::string> chat_members_vec = KeysDataBaseHelper::string_to_vector(*chat_members);
     return chat_members_vec[*my_id_pos];
+}
+
+std::optional<int> KeysDataBase::get_message_key(const std::string& my_id, const std::string& message_id) {
+    const std::string sql_request = "SELECT * FROM " + KeysTablesUndefs.at(KeysTablesDefs::MESSAGES) + " WHERE my_id = ? AND message_id = ? AND status = 1;";
+    Statement stmt(db, sql_request);
+    stmt.bind_text(1, my_id);
+    stmt.bind_text(2, message_id);
+    return stmt.execute_int(static_cast<int>(MessagesColumnsDefs::KEY_N));
 }
 
 KeysDataBase::KeysDataBase() : DataBase(DB_KEYS) {

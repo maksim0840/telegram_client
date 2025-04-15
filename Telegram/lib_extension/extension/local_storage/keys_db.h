@@ -63,6 +63,16 @@ const std::string create_chats_table_request = R"(
         status INTEGER DEFAULT 0
     );
 )";
+const std::string create_messages_table_request = R"(
+    CREATE TABLE IF NOT EXISTS messages (
+        node_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        my_id TEXT DEFAULT "",
+        message_id TEXT DEFAULT "",
+        key_n INTEGER DEFAULT 0,
+        date TEXT DEFAULT "",
+        status INTEGER DEFAULT 0
+    );
+)";
 
 // Структуры для задания параметров (значения столбцов) в таблице rsa и aes
 struct AesParamsFiller {
@@ -103,6 +113,14 @@ struct ChatsParamsFiller {
     std::string date = "";                      // дата создания ваших ключей
     int status = 0;                             // статус информации о пользователях чата: устарел(-1) / используется(1)
 };
+struct MessagesParamsFiller {
+    int node_id = 0;                            // id записи в таблице
+    std::string my_id = "";                     // id собственного аккаунта
+    std::string message_id = "";                // id сообщения
+    int key_n = 0;                              // номер ключа
+    std::string date = "";                      // дата создания ваших ключей
+    int status = 0;                             // статус информации о пользователях чата: устарел(-1) / используется(1)
+};
 
 // Определения имён таблиц и порядка колонок
 enum class AesColumnsDefs : int {
@@ -140,24 +158,35 @@ enum class ChatsColumnsDefs : int {
     MY_ID_POS,
     MEMBERS_COUNT,
     MEMBERS_IDS,
-    DATE
+    DATE,
+    STATUS
+};
+enum class MessagesColumnsDefs : int {
+    NODE_ID,
+    MY_ID,
+    MESSAGE_ID,
+    KEY_N,
+    DATE,
+    STATUS
 };
 enum class KeysTablesDefs : int {
     AES,
     RSA,
-    CHATS
+    CHATS,
+    MESSAGES
 };
 
 // Перевод числового значения параметров в их строковое определение
 const std::unordered_map<KeysTablesDefs, std::string> KeysTablesUndefs = {
     {KeysTablesDefs::AES, "aes"},
     {KeysTablesDefs::RSA, "rsa"},
-    {KeysTablesDefs::CHATS, "chats"}
+    {KeysTablesDefs::CHATS, "chats"},
+    {KeysTablesDefs::MESSAGES, "messages"}
 };
 
 // Ограничение возможных типов для обобщения некоторых функций, связанных с таблицей rsa
 template <typename T>
-constexpr bool is_keys_column = std::is_same_v<T, AesColumnsDefs> || std::is_same_v<T, RsaColumnsDefs> || std::is_same_v<T, ChatsColumnsDefs>;
+constexpr bool is_keys_column = std::is_same_v<T, AesColumnsDefs> || std::is_same_v<T, RsaColumnsDefs> || std::is_same_v<T, ChatsColumnsDefs> || std::is_same_v<T, MessagesColumnsDefs>;
 
 
 // Класс для работы с базой данных ключей пользователей
@@ -217,6 +246,7 @@ public:
     void add_aes_key(const AesParamsFiller& data);
     void add_rsa_key(const RsaParamsFiller& data, const std::string& my_public_key);
     void add_chat_params(const ChatsParamsFiller& data);
+    void add_message(const MessagesParamsFiller& data);
 
     // Добавление параметров после создания записи
     void set_rsa_sent_flag(const std::string& chat_id, const std::string& my_id, const int key_n);
@@ -226,7 +256,10 @@ public:
     void increase_aes_messages_counter(const std::string& chat_id, const std::string& my_id, const int key_n);
 
     // Получить id своего аккаунта
-    std::optional<std::string>  get_my_id();
+    std::optional<std::string> get_my_id();
+
+    // Получить id ключа, по которому зашифрованно сообщение
+    std::optional<int> get_message_key(const std::string& my_id, const std::string& message_id);
 
     KeysDataBase();
 };  

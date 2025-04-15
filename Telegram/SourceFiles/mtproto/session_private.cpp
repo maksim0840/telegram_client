@@ -1027,9 +1027,9 @@ void SessionPrivate::tryToSend() {
 	std::cout << "---------------------------" << "\n";
 	if (_connection && toSendRequest) {
 		// Вывод всех int32 для отладки
-		// for (size_t i = 0; i < toSendRequest->size(); ++i) {
-		// 	std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>((*toSendRequest)[i]) << std::dec << '\n';
-		// }
+		for (size_t i = 0; i < toSendRequest->size(); ++i) {
+			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>((*toSendRequest)[i]) << std::dec << '\n';
+		}
 
 		//std::cout << "other_id: " << peerFromMTP(*toSendRequest); << '\n';
 		// std::cout << "my_id: " << _sessionData->session().userPeerId().value << '\n';

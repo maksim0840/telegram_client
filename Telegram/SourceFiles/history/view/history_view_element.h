@@ -337,7 +337,7 @@ public:
 		not_null<HistoryItem*> data,
 		Element *replacing,
 		Flag serviceFlag);
-
+		
 	[[nodiscard]] not_null<ElementDelegate*> delegate() const;
 	[[nodiscard]] not_null<HistoryItem*> data() const;
 	[[nodiscard]] not_null<History*> history() const;

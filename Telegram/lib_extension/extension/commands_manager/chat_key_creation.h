@@ -7,6 +7,8 @@
 
 #pragma once
 
+namespace ext {
+
 class ChatKeyCreation {
 private:
     static ChatCommandsManager commands;
@@ -46,3 +48,5 @@ public:
 
     static void end_encryption(bool notify_others = false);
 };
+
+} // namespace ext

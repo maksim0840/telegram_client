@@ -6,6 +6,8 @@
 
 #pragma once
 
+namespace ext {
+
 struct Message {
     // Опции перед сообщением
     bool rsa_init = false;
@@ -30,3 +32,5 @@ struct Message {
     // Получить строку с параметрами для отрпавки
     std::string get_text_with_options();
 };
+
+} // namespace ext

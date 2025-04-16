@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <iostream>
 
+namespace ext {
+
 // Структуры для хранения параметров DH
 struct DHParamsStr {
     std::string p;
@@ -56,3 +58,5 @@ public:
     // Потсепенное получение общего ключа (other_public_key^my_private_key mod p)
     static std::vector<unsigned char> compute_shared_secret(DH* dh, const std::vector<unsigned char>& other_public_key);
 };
+
+} // namespace ext

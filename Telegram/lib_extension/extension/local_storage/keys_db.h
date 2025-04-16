@@ -6,6 +6,8 @@
 
 #pragma once
 
+namespace ext {
+
 // Класс со вспомогательными функциями, которые не изменяют данные в базе, но нужны для их обработки
 class KeysDataBaseHelper {
 public:
@@ -67,6 +69,7 @@ const std::string create_messages_table_request = R"(
     CREATE TABLE IF NOT EXISTS messages (
         node_id INTEGER PRIMARY KEY AUTOINCREMENT,
         my_id TEXT DEFAULT "",
+        request_id TEXT DEFAULT "",
         message_id TEXT DEFAULT "",
         key_n INTEGER DEFAULT 0,
         date TEXT DEFAULT "",
@@ -116,6 +119,7 @@ struct ChatsParamsFiller {
 struct MessagesParamsFiller {
     int node_id = 0;                            // id записи в таблице
     std::string my_id = "";                     // id собственного аккаунта
+    std::string request_id = "";                // id запроса
     std::string message_id = "";                // id сообщения
     int key_n = 0;                              // номер ключа
     std::string date = "";                      // дата создания ваших ключей
@@ -164,6 +168,7 @@ enum class ChatsColumnsDefs : int {
 enum class MessagesColumnsDefs : int {
     NODE_ID,
     MY_ID,
+    REQUEST_ID,
     MESSAGE_ID,
     KEY_N,
     DATE,
@@ -246,7 +251,8 @@ public:
     void add_aes_key(const AesParamsFiller& data);
     void add_rsa_key(const RsaParamsFiller& data, const std::string& my_public_key);
     void add_chat_params(const ChatsParamsFiller& data);
-    void add_message(const MessagesParamsFiller& data);
+    void add_message_by_message_id(const MessagesParamsFiller& data);
+    void add_message_by_request_id(const MessagesParamsFiller& data);
 
     // Добавление параметров после создания записи
     void set_rsa_sent_flag(const std::string& chat_id, const std::string& my_id, const int key_n);
@@ -254,6 +260,7 @@ public:
     void add_aes_sent_in_chat(const std::string& chat_id, const std::string& my_id, const int key_n, const int pos);
     void add_aes_session_key(const std::string& chat_id, const std::string& my_id, const int key_n, const std::string& session_key);
     void increase_aes_messages_counter(const std::string& chat_id, const std::string& my_id, const int key_n);
+    void add_message_id_by_request_id(const std::string& my_id, const std::string& request_id, const std::string& message_id);
 
     // Получить id своего аккаунта
     std::optional<std::string> get_my_id();
@@ -263,3 +270,5 @@ public:
 
     KeysDataBase();
 };  
+
+}

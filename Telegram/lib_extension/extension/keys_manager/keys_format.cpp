@@ -1,5 +1,7 @@
 #include "keys_format.h"
 
+namespace ext {
+
 /* class Base64Format */
 
 void Base64Format::fill() {
@@ -78,3 +80,5 @@ std::vector<unsigned char> Base64Format::decode_from_base64(const std::string& d
     BIO_free_all(b64);
     return result;
 }
+
+} // namespace ext

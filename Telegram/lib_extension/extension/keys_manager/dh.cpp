@@ -1,5 +1,7 @@
 #include "dh.h"
 
+namespace ext {
+
 /* DiffieHellman */
 
 DH* DiffieHellman::generate_dh_fast(const int p_length) {
@@ -278,3 +280,5 @@ std::vector<unsigned char> MultiDiffieHellman::compute_shared_secret(DH* dh, con
 
     return shared_secret_bytes;
 }
+
+} // namespace ext

@@ -18,6 +18,7 @@
 
 #pragma once
 
+namespace ext {
 
 std::mutex db_mutex; // общий мьютекс для операций, связанных с базой данных
 
@@ -70,3 +71,5 @@ public:
     std::optional<int> execute_int(const int column_index);
 
 };
+
+}

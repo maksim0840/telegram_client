@@ -1,5 +1,6 @@
 #include "local_storage.h"
 
+namespace ext {
 
 /* class DataBase */
 
@@ -144,3 +145,5 @@ std::optional<int> Statement::execute_int(const int column_index) {
     int res = sqlite3_column_int(stmt, column_index);
     return res;
 }
+
+} // namespace ext

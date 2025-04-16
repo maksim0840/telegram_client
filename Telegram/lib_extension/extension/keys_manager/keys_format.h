@@ -7,6 +7,7 @@
 
 #pragma once
 
+namespace ext {
 
 class Base64Format {
 private:
@@ -27,3 +28,5 @@ public:
     // Функция для декодирования из формата Base64
     std::vector<unsigned char> decode_from_base64(const std::string& data);
 };
+
+} // namespace ext

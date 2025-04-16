@@ -1,5 +1,7 @@
 #include "chat_key_creation.h"
 
+namespace ext {
+
 // Объявляем static переменные
 ChatCommandsManager ChatKeyCreation::commands;
 Message ChatKeyCreation::recieved_message;
@@ -134,3 +136,5 @@ void ChatKeyCreation::stop() {
 void ChatKeyCreation::end_encryption(bool notify_others) {
     commands.end_encryption(notify_others);
 }
+
+} // namespace ext

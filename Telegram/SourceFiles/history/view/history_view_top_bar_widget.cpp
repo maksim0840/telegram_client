@@ -120,8 +120,8 @@ TopBarWidget::TopBarWidget(
 , _delete(this, tr::lng_selected_delete(), st::defaultActiveButton)
 , _back(this, st::historyTopBarBack)
 , _cancelChoose(this, st::topBarCloseChoose)
-, _start_encryption(this, TopBarButtons::getTopBarStartEncryption()) // создание кнопки для шифровки
-, _stop_encryption(this, TopBarButtons::getTopBarStopEncryption()) // создание кнопки для сброса шифровки
+, _start_encryption(this, ext::TopBarButtons::getTopBarStartEncryption()) // создание кнопки для шифровки
+, _stop_encryption(this, ext::TopBarButtons::getTopBarStopEncryption()) // создание кнопки для сброса шифровки
 , _call(this, st::topBarCall)
 , _groupCall(this, st::topBarGroupCall)
 , _search(this, st::topBarSearch)
@@ -133,7 +133,7 @@ TopBarWidget::TopBarWidget(
 
 	// Передаём lambda функции
 	std::cout << "!!!!!!!!!!!!!!!TopBarWidget!!!!!!!!!!!!!!!\n";
-	ChatKeyCreation::set_lambda_functions(
+	ext::ChatKeyCreation::set_lambda_functions(
 		// отправку сообщений дополнительно оборачиваем в invokeMethod, чтобы метод вызывался в ГЛАВНОМ потоке telegram в порядке своей очереди и QT не ругался
 		[this](const std::string& message) {
 			QMetaObject::invokeMethod(this, [=]() {
@@ -319,16 +319,16 @@ void TopBarWidget::get_chat_peers_info(BareId& my_id, BareId& chat_id, std::vect
 // Реакция на клик при начале шифрования
 void TopBarWidget::start_encryption() {
 	std::cout << "button start_encryption click!" << '\n';
-	ChatKeyCreation::start(KeyCreationStages::INIT_RSA_ENCRYPTION);
+	ext::ChatKeyCreation::start(ext::KeyCreationStages::INIT_RSA_ENCRYPTION);
 	// Будим поток для начала шифрования
-	ChatKeyCreation::add_info(Message(), std::string());
+	ext::ChatKeyCreation::add_info(ext::Message(), std::string());
 }
 
 // Реакция на клик при сбросе шифрования
 void TopBarWidget::stop_encryption() {
 	std::cout << "button stop_encryption click!" << '\n';
-	ChatKeyCreation::stop(); // остановить поток принятия сообщений формирования клчюа
-	ChatKeyCreation::end_encryption(true); // остановить шифрование, опостив всех остальных учатников чата
+	ext::ChatKeyCreation::stop(); // остановить поток принятия сообщений формирования клчюа
+	ext::ChatKeyCreation::end_encryption(true); // остановить шифрование, опостив всех остальных учатников чата
 }
 
 void TopBarWidget::call() {

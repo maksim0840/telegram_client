@@ -1,5 +1,6 @@
 #include "top_bar_buttons.h"
 
+namespace ext {
 
 const style::IconButton& TopBarButtons::getTopBarStartEncryption() {
 
@@ -32,3 +33,5 @@ const style::IconButton& TopBarButtons::getTopBarStopEncryption() {
 
 	return topBarStartEncryption;
 }
+
+} // namespace ext

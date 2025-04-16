@@ -11,6 +11,8 @@
 
 #pragma once
 
+namespace ext {
+
 class RsaKeyManager {
 private:
     RSA* rsa;             // структура для хранения частей RSA ключей
@@ -58,3 +60,5 @@ public:
     // Расшифровывает сообщения по AES-256 ключу
     std::string decrypt_message(const std::string& message, const std::string& key);
 };
+
+} // namespace ext

@@ -6,9 +6,13 @@
 
 #pragma once
 
+namespace ext {
+
 class Send {
 private:
     // Позиции элементов из mtpBuffer
+    static const uint32_t REQUEST_ID_FIRST_POSITION = 4;
+    static const uint32_t REQUEST_ID_SECOND_POSITION = 5;
     static const uint32_t PAYLOAD_LEN_POSITION = 7; // последний элемент вне Payload
     static const uint32_t REQUEST_TYPE_POSITION = 8;
 
@@ -36,5 +40,7 @@ public:
     // using mtpBuffer = QVector<mtpPrime>;
     static void encrypt_the_buffer(mtpBuffer& buffer);
     
-    static std::string encrypt_the_message(const std::string& msg, std::string chat_id_str);
+    static std::string encrypt_the_message(const std::string& msg, const std::string& request_id, std::string chat_id_str);
 };
+
+} // namespace ext

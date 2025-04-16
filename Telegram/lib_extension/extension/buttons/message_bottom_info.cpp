@@ -1,5 +1,6 @@
 #include "message_bottom_info.h"
 
+namespace ext {
 
 const style::icon& MessageBottomInfo::getEncryptedMessageReadIcon() {
 
@@ -24,10 +25,4 @@ const style::icon& MessageBottomInfo::getEncryptedMessageNotReadIcon() {
 	return encryptedMessageInvertedIcon;
 }
 
-
-// st::historyIconFgInverted.get()->c;
-// st::historyIconFgInverted.get()->p;
-// st::historyIconFgInverted.get()->b;
-// QColor c;
-// QPen p;
-// QBrush b;
+} // namespace ext

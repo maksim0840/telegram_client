@@ -54,8 +54,7 @@ public:
 		std::optional<int> replies;
 		std::optional<int> forwardsCount;
 		Flags flags;
-		MsgId msgId;
-		QString text;
+		bool is_encrypted = false;
 	};
 	BottomInfo(not_null<::Data::Reactions*> reactionsOwner, Data &&data);
 	~BottomInfo();

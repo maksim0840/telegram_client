@@ -1,5 +1,7 @@
 #include "message_options.h"
 
+namespace ext {
+
 bool Message::fill_options(const std::string& text_with_options) {
     std::regex re(R"(\[/([01]{9})-(\d+)-(\d+)-(\d+)-(\d+)\] (.*))");
     std::smatch match;
@@ -36,3 +38,5 @@ std::string Message::get_text_with_options() {
 
     return std::string(text_with_options);
 }
+
+} // namespace ext

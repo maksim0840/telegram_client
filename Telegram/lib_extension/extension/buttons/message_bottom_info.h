@@ -8,6 +8,8 @@
 #include "ui/chat/chat_style.h"
 #include "icons.h"
 
+namespace ext {
+
 class MessageBottomInfo {
 public:
     // Получить иконку для обозначения зашифрованных сообщений
@@ -16,3 +18,5 @@ public:
     // Получить инвертированную иконку для обозначения зашифрованных сообщений
     static const style::icon& getEncryptedMessageNotReadIcon();
 };
+
+} // namespace ext

@@ -1,5 +1,7 @@
 #include "mtp_buffer_decryption.h"
 
+namespace ext {
+
 void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(const mtpPrime*, const mtpPrime*)> ungzip_lambda) {
     
     const int buffer_len = buffer.size();
@@ -29,20 +31,25 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
 		if (wrap_type == mtpc_gzip_packed) {
             wrap_begin_ind = ungzip_from - buf.data() + 1;
             wrap_end_ind = ungzip_end - buf.data();
-			buf = ungzip_lambda(++ungzip_from, ungzip_end);
+			buf = ungzip_lambda(++ungzip_from, ungzip_end); // распаковываем
             positions.fill_by_gzip_packed();
 		}
 		else if (wrap_type == mtpc_rpc_result && reqMsgId.read(++ungzip_from, ungzip_end) && ungzip_from[0] == mtpc_gzip_packed) {
             wrap_begin_ind = ungzip_from - buf.data() + 1;
             wrap_end_ind = ungzip_end - buf.data();
-			buf = ungzip_lambda(++ungzip_from, ungzip_end);
+			buf = ungzip_lambda(++ungzip_from, ungzip_end); // распаковываем
             positions.fill_by_rpc_result();
 		}
+        else if (wrap_type == mtpc_rpc_result) { // после распаковки буфер не изменился
+            check_id_for_accepted_messages(buf);
+            return;
+        }
 
-        std::cout << "ungzip_data "<< ungzip_data.size() << "\n";
+        std::cout << "ungzip_data_start:" << "\n";
 		for (size_t i = 0; i < buf.size(); ++i) {
 			std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>(buf[i]) << std::dec << '\n';
 		}
+        std::cout << ":ungzip_data_end " << "\n\n";
     }
     
     if (buf.size() < positions.REQUEST_TYPE + 1) {
@@ -77,6 +84,10 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
             else if (bias == 0) { return; }
             break;
         }
+
+        // Получаем id сообщения
+        uint32_t message_id = buf[positions.MESSAGE_ID + bias];
+        std::string message_id_str = std::to_string(message_id);
 
         // Определяем тип чата
         uint32_t chat_type = buf[positions.CHAT_TYPE + bias];
@@ -113,7 +124,7 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
 
         uint32_t start_message_byte = start_block_ind * buffer_element_size; // индекс первого байта в сообщении
         uint32_t first_block = static_cast<uint32_t>(buf[start_block_ind]); // значение первого блока
-  
+
         // Извлекаем длинну сообщения (которая находится в начале)
         uint32_t message_len;
         if ((first_block & LEAST_BYTE_MASK) == 0xFE) { // 0xFE - флаг, что длинна сообщения превышает (или равна) 0xFE
@@ -126,7 +137,7 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
             message_len = first_block & LEAST_BYTE_MASK;
             start_message_byte += 1;
         }
-  
+
         uint32_t end_message_byte = start_message_byte + message_len - 1; // индекс последнего байта в сообщении
 
         // Извлекаем сообщение
@@ -148,7 +159,7 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
         std::cout << "user_id_str: " << user_id_str << '\n';
 
         // Расшифруем сообщение
-        std::string decrypted_message = decrypt_the_message(message, chat_id_str, user_id_str, wrap_type != mtpc_rpc_result);
+        std::string decrypted_message = decrypt_the_message(message, message_id_str, chat_id_str, user_id_str, wrap_type != mtpc_rpc_result);
         std::cout << "decrypted_message: " << decrypted_message << '\n';
         uint32_t decrypted_message_len = decrypted_message.size();
  
@@ -251,7 +262,7 @@ void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(cons
 }
 
 
-std::string Receive::decrypt_the_message(const std::string& msg, std::string chat_id_str, std::string sender_id_str, const bool is_recieved) {
+std::string Receive::decrypt_the_message(const std::string& msg, const std::string& msg_id, std::string chat_id_str, std::string sender_id_str, const bool is_recieved) {
 	KeysDataBase db;
 	AesKeyManager aes_manager;
 
@@ -304,9 +315,49 @@ std::string Receive::decrypt_the_message(const std::string& msg, std::string cha
 
 		if (aes_key) {
             std::cout << "!!!! decrypt_message: " << m.text << "; by: " << *aes_key << '\n';
+
+            // Добавление сообщение, как зашифрованное
+            MessagesParamsFiller params;
+            params.my_id = *my_id_str;
+            params.message_id = msg_id;
+            params.key_n = m.aes_key_n;
+            db.add_message_by_message_id(params);
+
 			return aes_manager.decrypt_message(m.text, *aes_key);
 		}
 	}
 
 	return msg;
 }
+
+void Receive::check_id_for_accepted_messages(const mtpBuffer& buf) {
+    Positions positions;
+    positions.fill_by_check_id();
+    std::cout << "buf.size(): " << buf.size() << '\n';
+    if (buf.size() < positions.MESSAGE_ID_SELF + 1) {
+        return;
+    }
+
+    uint32_t message_id;
+    std::cout << "buf[positions.REQUEST_TYPE]: " << buf[positions.REQUEST_TYPE] << '\n';
+    if (buf[positions.REQUEST_TYPE] == mtpc_updates) { message_id = buf[positions.MESSAGE_ID_SELF]; }
+    else if (buf[positions.REQUEST_TYPE] == mtpc_updateShortSentMessage) { message_id = buf[positions.MESSAGE_ID]; }
+    else { return; }
+    std::string message_id_str = std::to_string(message_id);
+    std::cout << "message_id_str: " << message_id_str << '\n';
+
+    // Получаем id запроса к которому принадлежит id сообщения
+    uint64_t request_id = static_cast<uint32_t>(buf[positions.REQUEST_ID_FIRST]) |
+                        (static_cast<uint64_t>(static_cast<uint32_t>(buf[positions.REQUEST_ID_SECOND])) << 32);
+    std::string request_id_str = std::to_string(request_id);
+
+    std::cout << "request_id_str: " << request_id_str << '\n';
+
+    // Добавляем id сообщению
+    KeysDataBase db;
+    std::optional<std::string> my_id_str = db.get_my_id();
+    if (my_id_str) { db.add_message_id_by_request_id(*my_id_str, request_id_str, message_id_str); }
+}
+
+
+} // namespace ext

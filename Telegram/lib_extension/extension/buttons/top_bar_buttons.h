@@ -4,6 +4,8 @@
 #include "styles/style_dialogs.h"
 #include "icons.h"
 
+namespace ext {
+
 class TopBarButtons {
 public:
     // Получить кнопку для начала шифрования
@@ -12,3 +14,5 @@ public:
     // Получить кнопку для сброса шифрования
     static const style::IconButton& getTopBarStopEncryption();
 };
+
+} // namespace ext

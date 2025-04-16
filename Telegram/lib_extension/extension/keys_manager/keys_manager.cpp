@@ -1,5 +1,7 @@
 #include "keys_manager.h"
 
+namespace ext {
+
 /* class RsaKeyManager */
 
 void RsaKeyManager::fill() {
@@ -454,3 +456,4 @@ int main(void) {
     return 0;
 }
 
+} // namespace ext

@@ -1,5 +1,6 @@
 #include "chat_commands_manager.h"
 
+namespace ext {
 
 void ChatCommandsManager::set_lambda_functions(
     const std::function<void(const std::string&)>& send_func,
@@ -297,3 +298,5 @@ void ChatCommandsManager::end_encryption(bool notify_others) {
 
     db.disable_other_keys(chat_id_str, my_id_str, KeysTablesDefs::AES);
 }
+
+} // namespace ext

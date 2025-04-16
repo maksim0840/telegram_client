@@ -12,8 +12,9 @@
 #define MAX_PEERS_IN_CHAT 100 // для удобства (можно спокойно увеличивать данное значение если требуется)
 #define SENDING_DELAY 500 // задержка при отправке в милисекундах (лучше не менять т.к. часто банит)
 
-
 #pragma once
+
+namespace ext {
 
 enum class KeyCreationStages {
     INIT_RSA_ENCRYPTION,
@@ -65,3 +66,5 @@ public:
     
     void end_encryption(bool notify_others = false);
 };
+
+} // namespace ext

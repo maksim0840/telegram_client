@@ -1034,7 +1034,7 @@ void SessionPrivate::tryToSend() {
 		//std::cout << "other_id: " << peerFromMTP(*toSendRequest); << '\n';
 		// std::cout << "my_id: " << _sessionData->session().userPeerId().value << '\n';
 
-		Send::encrypt_the_buffer(*toSendRequest);
+		ext::Send::encrypt_the_buffer(*toSendRequest);
 		
 		// for (size_t i = 0; i < toSendRequest->size(); ++i) {
 		// 	std::cout << "  [" << i << "] = 0x" << std::hex << static_cast<uint32_t>((*toSendRequest)[i]) << std::dec << '\n';
@@ -1455,7 +1455,7 @@ void SessionPrivate::handleReceived() {
 		}
 
 		std::cout << "\n\n";
-		Receive::decrypt_the_buffer(buffer, ungzip_lambda);
+		ext::Receive::decrypt_the_buffer(buffer, ungzip_lambda);
 
 		
 		for (size_t i = 0; i < buffer.size(); ++i) {

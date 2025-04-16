@@ -7,8 +7,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include <iostream>
 #include "../../../lib_extension/extension/buttons/message_bottom_info.h"
-#include "history/view/history_view_bottom_info.h"
+#include "../../../lib_extension/extension/local_storage/keys_db.h"
 
+#include "history/view/history_view_bottom_info.h"
 #include "ui/chat/message_bubble.h"
 #include "ui/chat/chat_style.h"
 #include "ui/effects/reaction_fly_animation.h"
@@ -221,24 +222,31 @@ void BottomInfo::paint(
 
 	auto right = position.x() + width();
 	const auto firstLineBottom = position.y() + st::msgDateFont->height;
-	if (_data.flags & Data::Flag::OutLayout) {
-		// const auto &icon = (_data.flags & Data::Flag::Sending)
-		// 	? (inverted
-		// 		? st->historySendingInvertedIcon()
-		// 		: st->historySendingIcon())
-		// 	: unread
-		// 	? (inverted
-		// 		? st->historySentInvertedIcon()
-		// 		: stm->historySentIcon)
-		// 	: (inverted
-		// 		? st->historyReceivedInvertedIcon()
-		// 		: stm->historyReceivedIcon);
-		std::cout << "_data.msgId.bare: " << _data.msgId.bare << '\n';
-		std::cout << "_data.text: " << _data.text.toStdString() << '\n';
+
+	if (_data.is_encrypted) {
+		const auto &icon = (_data.flags && unread)
+			? ext::MessageBottomInfo::getEncryptedMessageNotReadIcon()
+			: ext::MessageBottomInfo::getEncryptedMessageReadIcon();
+
+		icon.paint(
+			p,
+			QPoint(right, firstLineBottom) + st::historySendStatePosition,
+			outerWidth);
+		right -= st::historySendStateSpace;
+	}
+	else if (_data.flags & Data::Flag::OutLayout) {
 		
-		const auto &icon = unread
-			? (MessageBottomInfo::getEncryptedMessageNotReadIcon())
-			: (MessageBottomInfo::getEncryptedMessageReadIcon());
+		const auto &icon = (_data.flags & Data::Flag::Sending)
+			? (inverted
+				? st->historySendingInvertedIcon()
+				: st->historySendingIcon())
+			: unread
+			? (inverted
+				? st->historySentInvertedIcon()
+				: stm->historySentIcon)
+			: (inverted
+				? st->historyReceivedInvertedIcon()
+				: stm->historyReceivedIcon);
 
 		icon.paint(
 			p,
@@ -563,10 +571,14 @@ QRect BottomInfo::effectIconGeometry() const {
 BottomInfo::Data BottomInfoDataFromMessage(not_null<Message*> message) {
 	using Flag = BottomInfo::Data::Flag;
 	const auto item = message->data();
-
+	
 	auto result = BottomInfo::Data();
-	result.msgId = item->id;
-	result.text = item->originalText().text;
+
+	std::cout << "BottomInfoDataFromMessage_id: " << item->id.bare << '\n';
+	ext::KeysDataBase db;
+	std::optional<std::string> my_id_str = db.get_my_id();
+	if (my_id_str && db.get_message_key(*my_id_str, std::to_string(item->id.bare))) { result.is_encrypted = true; }
+	
 	result.date = message->dateTime();
 	result.effectId = item->effectId();
 	if (message->hasOutLayout()) {

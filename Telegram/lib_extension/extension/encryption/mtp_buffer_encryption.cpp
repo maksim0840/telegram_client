@@ -1,5 +1,7 @@
 #include "mtp_buffer_encryption.h"
 
+namespace ext {
+
 void Send::encrypt_the_buffer(mtpBuffer& buffer) {
 
     const int buffer_len = buffer.size();
@@ -14,6 +16,11 @@ void Send::encrypt_the_buffer(mtpBuffer& buffer) {
     if (buffer[REQUEST_TYPE_POSITION] == mtpc_msg_container) {
         container_bias = CONTAINER_BIAS;
     }
+
+    // Определяем id запроса
+    uint64_t request_id = static_cast<uint32_t>(buffer[REQUEST_ID_FIRST_POSITION + container_bias]) |
+                        (static_cast<uint64_t>(static_cast<uint32_t>(buffer[REQUEST_ID_SECOND_POSITION + container_bias])) << 32);
+    std::string request_id_str = std::to_string(request_id);
 
     // Счётчики имзенённых байтов для подсчёта длинны Payload
     int total_inserted_bytes_count = 0;
@@ -92,7 +99,7 @@ void Send::encrypt_the_buffer(mtpBuffer& buffer) {
         }
 
         // Шифруем сообщение
-        std::string encrypted_message = encrypt_the_message(message, chat_id_str);
+        std::string encrypted_message = encrypt_the_message(message, request_id_str, chat_id_str);
         uint32_t encrypted_message_len = encrypted_message.size();
 
         // Если ничего не поменялось, то выходим
@@ -179,14 +186,14 @@ void Send::encrypt_the_buffer(mtpBuffer& buffer) {
 }
 
 
-std::string Send::encrypt_the_message(const std::string& msg, std::string chat_id_str) {
+std::string Send::encrypt_the_message(const std::string& msg, const std::string& request_id, std::string chat_id_str) {
     KeysDataBase db;
 	AesKeyManager aes_manager;
     
     // Определяем свой id и заменяем id-шники собседников (если они не определены)
     std::optional<std::string> my_id_str = db.get_my_id();
     if (chat_id_str == "" || chat_id_str == "0") {
-        if (!my_id_str) { throw std::runtime_error("Ошибка получения параметра (собственного id )"); }
+        if (!my_id_str) { return msg; }
         else { chat_id_str = *my_id_str; }
     } 
     
@@ -204,9 +211,19 @@ std::string Send::encrypt_the_message(const std::string& msg, std::string chat_i
             m.text = aes_manager.encrypt_message(msg, *aes_key);
             std::cout << "!!!! to: " << chat_id_str << '\n';
             std::cout << "!!!! encrypt_message: " << msg << "; by: " << *aes_key << '\n';
+
+            // Добавление сообщение, как зашифрованное
+            MessagesParamsFiller params;
+            params.my_id = *my_id_str;
+            params.request_id = request_id;
+            params.key_n = *aes_key_n;
+            db.add_message_by_request_id(params);
+            
 			return m.get_text_with_options();
 		}
     }
 
     return msg;
 }
+
+} 

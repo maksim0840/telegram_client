@@ -1,5 +1,7 @@
 #include "keys_db.h"
 
+namespace ext {
+
 /* class KeysDataBaseHelper */
 
 std::string KeysDataBaseHelper::get_system_time() {
@@ -162,7 +164,7 @@ void KeysDataBase::add_chat_params(const ChatsParamsFiller& data) {
     stmt.execute();
 }
 
-void KeysDataBase::add_message(const MessagesParamsFiller& data) {
+void KeysDataBase::add_message_by_message_id(const MessagesParamsFiller& data) {
     const std::string sql_request = "INSERT INTO messages (my_id, message_id, key_n, date, status) VALUES (?, ?, ?, ?, ?);";
     std::string date = KeysDataBaseHelper::get_system_time();
 
@@ -170,6 +172,20 @@ void KeysDataBase::add_message(const MessagesParamsFiller& data) {
 
     stmt.bind_text(1, data.my_id);
     stmt.bind_text(2, data.message_id);
+    stmt.bind_int(3, data.key_n);
+    stmt.bind_text(4, date);
+    stmt.bind_int(5, 1); // status = 1
+    stmt.execute();
+}
+
+void KeysDataBase::add_message_by_request_id(const MessagesParamsFiller& data) {
+    const std::string sql_request = "INSERT INTO messages (my_id, request_id, key_n, date, status) VALUES (?, ?, ?, ?, ?);";
+    std::string date = KeysDataBaseHelper::get_system_time();
+
+    Statement stmt(db, sql_request);
+
+    stmt.bind_text(1, data.my_id);
+    stmt.bind_text(2, data.request_id);
     stmt.bind_int(3, data.key_n);
     stmt.bind_text(4, date);
     stmt.bind_int(5, 1); // status = 1
@@ -248,6 +264,15 @@ void KeysDataBase::increase_aes_messages_counter(const std::string& chat_id, con
     stmt.execute();
 }
 
+void KeysDataBase::add_message_id_by_request_id(const std::string& my_id, const std::string& request_id, const std::string& message_id) {
+    const std::string sql_request = "UPDATE messages SET message_id = ? WHERE my_id = ? AND request_id = ? AND status = 1;";
+    Statement stmt(db, sql_request);
+    stmt.bind_text(1, message_id);
+    stmt.bind_text(2, my_id);
+    stmt.bind_text(3, request_id);
+    stmt.execute();
+}
+
 std::optional<std::string> KeysDataBase::get_my_id() {
     const std::string sql_request = "SELECT * FROM " + KeysTablesUndefs.at(KeysTablesDefs::CHATS) + ";";
     Statement stmt(db, sql_request);
@@ -274,3 +299,4 @@ KeysDataBase::KeysDataBase() : DataBase(DB_KEYS) {
     create_keys_tables();
 }
 
+} // namespace ext

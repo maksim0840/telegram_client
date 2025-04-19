@@ -63,6 +63,8 @@ std::pair<std::string, std::string> RsaKeyManager::create_key(const int key_len)
         throw std::runtime_error(error_message);
     }
 
+    RAND_poll(); // для рандомизации ключей (иначе они будут одинаковыми при кажом новом вызове)
+
     // Заполняем структуру ключей
     if (!RSA_generate_key_ex(rsa, key_len, bn, nullptr)) {
         std::string error_message = "Ошибка генерации ключа: " + std::string(ERR_error_string(ERR_get_error(), nullptr));

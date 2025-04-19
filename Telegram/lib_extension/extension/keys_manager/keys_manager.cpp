@@ -63,8 +63,6 @@ std::pair<std::string, std::string> RsaKeyManager::create_key(const int key_len)
         throw std::runtime_error(error_message);
     }
 
-    RAND_poll(); // для рандомизации ключей (иначе они будут одинаковыми при кажом новом вызове)
-
     // Заполняем структуру ключей
     if (!RSA_generate_key_ex(rsa, key_len, bn, nullptr)) {
         std::string error_message = "Ошибка генерации ключа: " + std::string(ERR_error_string(ERR_get_error(), nullptr));
@@ -425,37 +423,6 @@ std::string AesKeyManager::decrypt_message(const std::string& message, const std
 
     EVP_CIPHER_CTX_free(ctx);
     return std::string(decrypted_data.begin(), decrypted_data.end());
-}
-
-int main(void) {
-
-    AesKeyManager aes_manager;
-    DHParamsStr params1 = aes_manager.get_dh_params();
-    DHParamsStr params2 = aes_manager.get_dh_params_secondly(params1.p, params1.g);
-    DHParamsStr params3 = aes_manager.get_dh_params_secondly(params1.p, params1.g);
-    
-    std::cout << params1.public_key << '\n' << params1.private_key;
-    std::cout << "\n\n";
-    std::cout << params2.public_key << '\n' << params2.private_key;
-    std::cout << "\n\n";
-    std::cout << params3.public_key << '\n' << params3.private_key;
-    std::cout << "\n\n";
-    
-    std::string sub_key1 = aes_manager.сreate_key_multi(params1, params3.public_key);
-    std::string sub_key2 = aes_manager.сreate_key_multi(params2, params1.public_key);
-    std::string sub_key3 = aes_manager.сreate_key_multi(params3, params2.public_key);
-    std::string key1 = aes_manager.сreate_key_multi(params1, sub_key3, true);
-    std::string key2 = aes_manager.сreate_key_multi(params2, sub_key1, true);
-    std::string key3 = aes_manager.сreate_key_multi(params3, sub_key2, true);
-
-    std::cout << key1;
-    std::cout << "\n\n";
-    std::cout << key2;
-    std::cout << "\n\n";
-    std::cout << key3;
-    std::cout << "\n\n";
-
-    return 0;
 }
 
 } // namespace ext

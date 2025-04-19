@@ -5,6 +5,7 @@
 #include <openssl/rand.h>
 #include <utility>
 #include "keys_format.h"
+#include <array>
 #include "dh.h"
 
 #define AES_KEY_LEN 256

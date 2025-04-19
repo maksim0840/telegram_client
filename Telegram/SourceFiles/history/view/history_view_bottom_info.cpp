@@ -232,6 +232,8 @@ void BottomInfo::paint(
 			p,
 			QPoint(right, firstLineBottom) + st::historySendStatePosition,
 			outerWidth);
+
+		
 		right -= st::historySendStateSpace;
 	}
 	else if (_data.flags & Data::Flag::OutLayout) {
@@ -493,7 +495,7 @@ QSize BottomInfo::countOptimalSize() {
 		return { st::historyShortcutStateSpace, st::msgDateFont->height };
 	}
 	auto width = 0;
-	if (_data.flags & (Data::Flag::OutLayout | Data::Flag::Sending)) {
+	if (_data.flags & (Data::Flag::OutLayout | Data::Flag::Sending) || _data.is_encrypted) {
 		width += st::historySendStateSpace;
 	}
 	width += _authorEditedDate.maxWidth();

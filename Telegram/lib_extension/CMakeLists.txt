@@ -5,7 +5,10 @@ add_subdirectory(extension/keys_manager)
 add_subdirectory(extension/commands_manager)
 add_subdirectory(extension/local_storage)
 add_subdirectory(extension/buttons)
+
 add_subdirectory(ThirdParty/SQLiteCpp)
+
+add_subdirectory(test)
 
 # связываем другие модули с расширением
 target_link_libraries(Telegram

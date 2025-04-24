@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <iostream>
 
+#pragma once
+
 namespace ext {
 
 // Структуры для хранения параметров DH

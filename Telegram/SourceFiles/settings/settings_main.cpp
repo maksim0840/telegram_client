@@ -5,6 +5,8 @@ the official desktop application for the Telegram messaging service.
 For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
+#include "../../lib_extension/extension/buttons/settings_buttons.h"
+
 #include "settings/settings_main.h"
 
 #include "api/api_credits.h"
@@ -385,6 +387,20 @@ void SetupLanguageButton(
 	});
 }
 
+// Новая вкладка для управления расширением
+void SetupExtensionButton(
+		not_null<Window::Controller*> window,
+		not_null<Ui::VerticalLayout*> container) {
+	const auto button = AddButtonWithIcon(
+		container,
+		rpl::single(QString("Extension")),
+		st::settingsButton,
+		{ &ext::SettingsButtons::getExtensionSettingsButton() });
+	button->setClickedCallback([=] {
+    	window->show(Box(PowerSavingBox));
+  });
+}
+
 void SetupSections(
 		not_null<Window::SessionController*> controller,
 		not_null<Ui::VerticalLayout*> container,
@@ -484,6 +500,7 @@ void SetupSections(
 
 	SetupPowerSavingButton(&controller->window(), container);
 	SetupLanguageButton(&controller->window(), container);
+	SetupExtensionButton(&controller->window(), container);
 
 	Ui::AddSkip(container);
 }

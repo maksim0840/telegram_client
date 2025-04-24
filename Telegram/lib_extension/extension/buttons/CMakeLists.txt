@@ -10,6 +10,8 @@ PRIVATE
     extension/buttons/message_bottom_info.h
     extension/buttons/message_bottom_info.cpp
     extension/buttons/icons.h
+    extension/buttons/settings_buttons.cpp
+    extension/buttons/settings_buttons.h
 )
 
 target_include_directories(extension_buttons

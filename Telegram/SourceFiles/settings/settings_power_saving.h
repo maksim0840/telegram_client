@@ -27,4 +27,6 @@ void PowerSavingBox(not_null<Ui::GenericBox*> box);
 
 [[nodiscard]] EditFlagsDescriptor<PowerSaving::Flags> PowerSavingLabels();
 
+void ExtensionSettingsBox(not_null<Ui::GenericBox*> box);
+
 } // namespace PowerSaving

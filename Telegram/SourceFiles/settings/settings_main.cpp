@@ -397,7 +397,7 @@ void SetupExtensionButton(
 		st::settingsButton,
 		{ &ext::SettingsButtons::getExtensionSettingsButton() });
 	button->setClickedCallback([=] {
-    	window->show(Box(PowerSavingBox));
+    	window->show(Box(ExtensionSettingsBox));
   });
 }
 

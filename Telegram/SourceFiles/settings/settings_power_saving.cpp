@@ -177,4 +177,37 @@ EditFlagsDescriptor<PowerSaving::Flags> PowerSavingLabels() {
 	}, .st = &st::powerSavingButton };
 }
 
+void ExtensionSettingsBox(not_null<Ui::GenericBox*> box) {
+	box->setTitle(rpl::single(QString("Extension settings")));
+	box->setWidth(st::boxWideWidth);
+
+	const auto container = box->verticalLayout();
+
+	// Добавим немного отступа сверху
+	Ui::AddSkip(container);
+
+	// Создаем тумблер
+	//const auto interfaceAnimations = container->add(object_ptr<Ui::SettingsButton>(
+	container->add(object_ptr<Ui::SettingsButton>(
+		container,
+		rpl::single(QString("DH fastmode")),
+		st::powerSavingButtonNoIcon
+	))->toggleOn(rpl::single(true)); // true — включен по умолчанию
+
+	// Добавим немного отступа снизу
+	Ui::AddSkip(container);
+
+	box->addButton(tr::lng_settings_save(), [=] {
+		// const bool enabled = interfaceAnimations->toggled();
+		// Сохрани `enabled`, если нужно
+		box->closeBox();
+	});
+
+	box->addButton(tr::lng_cancel(), [=] {
+		box->closeBox();
+	});
+}
+
+
+
 } // namespace Settings

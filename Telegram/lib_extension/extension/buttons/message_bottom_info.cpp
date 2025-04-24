@@ -13,7 +13,6 @@ const style::icon& MessageBottomInfo::getEncryptedMessageReadIcon() {
 	return encryptedMessageIcon;
 }
 
-// const style::color &historyIconFgInverted
 const style::icon& MessageBottomInfo::getEncryptedMessageNotReadIcon() {
 
 	static style::icon encryptedMessageInvertedIcon = [] {

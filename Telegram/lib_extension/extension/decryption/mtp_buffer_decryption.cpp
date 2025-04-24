@@ -2,6 +2,8 @@
 
 namespace ext {
 
+/* Receive */
+
 void Receive::decrypt_the_buffer(mtpBuffer& buffer, std::function<mtpBuffer(const mtpPrime*, const mtpPrime*)> ungzip_lambda) {
     
     const int buffer_len = buffer.size();
@@ -359,5 +361,69 @@ void Receive::check_id_for_accepted_messages(const mtpBuffer& buf) {
     if (my_id_str) { db.add_message_id_by_request_id(*my_id_str, request_id_str, message_id_str); }
 }
 
+/* Gzip */
+
+mtpBuffer Gzip::gzip(const mtpPrime *from, const mtpPrime *end) {
+    mtpBuffer result;
+
+    z_stream stream;
+    stream.zalloc = 0;
+    stream.zfree = 0;
+    stream.opaque = 0;
+    if (deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 16 + MAX_WBITS, 8, Z_DEFAULT_STRATEGY) != Z_OK) {
+        return result;
+    }
+
+    // Подготавливаем входные данные
+    mtpBuffer input(from, end);
+    stream.avail_in = input.size() * sizeof(mtpPrime);
+    stream.next_in = reinterpret_cast<Bytef*>(input.data());
+
+    // Буфер для сжатых данных
+    mtpBuffer compressed;
+    compressed.resize(input.size() * 2);
+    stream.avail_out = compressed.size() * sizeof(mtpPrime);
+    stream.next_out = reinterpret_cast<Bytef*>(compressed.data());
+
+    int res = deflate(&stream, Z_FINISH);
+    if (res != Z_STREAM_END) {
+        deflateEnd(&stream);
+        return mtpBuffer();
+    }
+
+    const auto compressed_size = compressed.size() * sizeof(mtpPrime) - stream.avail_out;
+    deflateEnd(&stream);
+
+    // TL-обёртка как MTPstring
+    QByteArray raw(reinterpret_cast<const char*>(compressed.data()), compressed_size);
+    const auto final_wrapped = wrap_mtp_string(raw);
+
+    // Копируем в mtpBuffer
+    result.resize((final_wrapped.size() + sizeof(mtpPrime) - 1) / sizeof(mtpPrime));
+    std::memcpy(result.data(), final_wrapped.data(), final_wrapped.size());
+
+    return result;
+}
+
+QByteArray Gzip::wrap_mtp_string(const QByteArray &data) {
+    QByteArray result;
+    const int size = data.size();
+
+    if (size < 254) {
+        result.append(static_cast<char>(size));
+        result.append(data);
+        while ((result.size() % 4) != 0) result.append('\0');
+    }
+    else {
+        result.append(char(254));
+        result.append(char(size & 0xFF));
+        result.append(char((size >> 8) & 0xFF));
+        result.append(char((size >> 16) & 0xFF));
+        result.append(data);
+        while ((result.size() % 4) != 0) result.append('\0');
+    }
+
+    return result;
+}
 
 } // namespace ext

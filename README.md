@@ -1,13 +1,5 @@
-# [Telegram Desktop][telegram_desktop] – Official Messenger
-
-# Пользователский клиент
--является дополнением к основнуму клиенту talegram версии 5.9.0 Клиент создан для безопасной работы, отпраки и полчучения сообщений.
-
-# Изменяемый код
-Чтобы быть точно уверенным, что отправляемые сообщения шифруются и телеграм не имеет к ним доступ, требуется перехватывать сообщение на более ранних стадиях его формирования. Сообщения будут шифроваться на этапе захвата графическим интерфейсом строки из input_field.
-
-# Сборка оиргинального клиента
-Оригинальный клиент и инструкция по билду находится в ветке telegram-5.9.0 После сборки готовый клиент будет находится в папке tdesktop/out/Release
+# Пользовательский клиент
+telegram_client является дополнением к основнуму клиенту Telegram Desktop версии 5.9.0. Клиент создан для безопасной работы, отправки и полчучения сообщений. Ознакомиться с исходным кодом оригинального клиента можно в ветке telegram-5.9.0 или на официальном GitHub-репозитории [tdesktop](https://github.com/telegramdesktop/tdesktop)
 
 # Ход работы:
 
@@ -65,53 +57,6 @@ Telegram/SourceFiles/history/history_widget.cpp
 
 20) добавил кнопки начала шифровки и его конца (были изменены файлы Telegram/SourceFiles/history/view/history_view_top_bar_widget.cpp/.h)
 
-Стоит изучить:
-
-Инофрмация из файла Telegram/SourceFiles/config.h (дополнения по api_id, api_hash):
-
-```
-#if defined TDESKTOP_API_ID && defined TDESKTOP_API_HASH
-
-constexpr auto ApiId = TDESKTOP_API_ID;
-constexpr auto ApiHash = QT_STRINGIFY(TDESKTOP_API_HASH);
-
-#else // TDESKTOP_API_ID && TDESKTOP_API_HASH
-
-// To build your version of Telegram Desktop you're required to provide
-// your own 'api_id' and 'api_hash' for the Telegram API access.
-//
-// How to obtain your 'api_id' and 'api_hash' is described here:
-// https://core.telegram.org/api/obtaining_api_id
-//
-// If you're building the application not for deployment,
-// but only for test purposes you can comment out the error below.
-//
-// This will allow you to use TEST ONLY 'api_id' and 'api_hash' which are
-// very limited by the Telegram API server.
-//
-// Your users will start getting internal server errors on login
-// if you deploy an app using those 'api_id' and 'api_hash'.
-
-#error You are required to provide API_ID and API_HASH.
-
-constexpr auto ApiId = 17349;
-constexpr auto ApiHash = "344583e45741c457fe1862106095a5eb";
-```
-ApiId используется в файлах:
-
-- ./Telegram/SourceFiles/api/api_authorizations.cpp
-- ./Telegram/SourceFiles/core/crash_reports.cpp
-- ./Telegram/SourceFiles/core/crash_report_window.cpp
-- ./Telegram/SourceFiles/mtproto/session_private.cpp
-- ./Telegram/SourceFiles/intro/intro_qr.cpp
-- ./Telegram/SourceFiles/intro/intro_phone.cpp
-- ./Telegram/configure.py
-
-ApiHash используется в файлах: 
-
-- ./Telegram/SourceFiles/intro/intro_qr.cpp
-- ./Telegram/SourceFiles/intro/intro_phone.cpp
-- ./Telegram/configure.py
 
 # Установка и запуск
 
@@ -147,6 +92,11 @@ free -h | awk '/Mem:/ {print $7}' # RAM (Для проекта доступну�
 - Итоговый размер проекта: 95 GB
 - Максимальное потребление памяти: 121 GB
 
+Получение api_id и api_hash:
+
+Для сборки клиента вам нужно знать собственные api_id и api_hash Telegram. Данные значения нужно указать в build-скрипте, который вы запускаете (circle_build.sh или build.sh). Инструкция по получению api
+[Инструкция по получению api](https://core.telegram.org/api/obtaining_api_id)
+
 Инструкция по сборке:
 
 0) Перед началом сборки должны быть установлены git, gcc, cmake, python, poetry, docker
@@ -162,9 +112,11 @@ git clone --recursive https://github.com/maksim0840/telegram_client
 ./telegram_client/Telegram/build/prepare/linux.sh
 ```
 
-4) Запустить сборку проекта (circle_build.sh - бесконечный цикл запуска сборки с игнорированием ошибок (использовать, если уверены в корректности всех файлов, build.sh - обычый запуск сборки с остановкой контейнера при возникновении даже незначительных ошибок)
+4) Указать свои значения api_id и api_hash в build-скрипте, который вы запускаете (circle_build.sh или build.sh)
+   
+5) Запустить сборку проекта (circle_build.sh - бесконечный цикл запуска сборки с игнорированием ошибок (использовать, если уверены в корректности всех файлов), build.sh - обычый запуск сборки с остановкой контейнера при возникновении даже незначительных ошибок)
 ```
 ./telegram_client/circle_build.sh
 ```
- 
-```
+
+После сборки готовый клиент будет находится в папке telegram_client/out/Release

@@ -85,3 +85,7 @@ git clone --recursive https://github.com/maksim0840/telegram_client
 ```
 
 **После сборки готовый клиент будет находится в папке telegram_client/out/Release**
+
+# Обратная связь
+
+При возникновении ошибок или сбоев буду благодарен, если вы сообщите об этом через [Issues](https://github.com/maksim0840/telegram_client/issues). 
